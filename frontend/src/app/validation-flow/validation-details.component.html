@@ -1,0 +1,81 @@
+<!--
+  Copyright 2019 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="row">Validation Step</div>
+<mat-radio-group *ngIf="inputData.validationSubType!='IMAGE_MATCHING_VALIDATION_ACTION'" class="example-radio-group" [(ngModel)]="inputData.model.selectItem">
+  <mat-radio-button class="example-radio-button" *ngFor="let vItem of inputData.model.vList" [value]="vItem.type">
+      <mat-form-field class="example-full-width">
+        <input class="radio-input" matInput placeholder="{{vItem.type}}" [(ngModel)]="vItem.value">
+      </mat-form-field>
+  </mat-radio-button>
+</mat-radio-group>
+
+<div class="row">Advanced</div>
+<div [hidden]="inputData.validationSubType!='IMAGE_MATCHING_VALIDATION_ACTION'">
+    <canvas id="snapshot" width="50" height="50">
+    </canvas>
+</div>
+<div *ngIf="inputData.validationSubType!='IMAGE_MATCHING_VALIDATION_ACTION'">
+  <mat-checkbox placeholder="Is Match Node Context" [(ngModel)]="inputData.model.isMatchNodeContext">Match Node Context</mat-checkbox>
+</div>
+<div *ngIf="inputData.validationSubType=='IMAGE_MATCHING_VALIDATION_ACTION'||((inputData.model.selectItem=='displayText' || inputData.model.selectItem=='resourceId')&&inputData.model.isMatchNodeContext==false)">
+  <mat-form-field *ngIf="inputData.validationSubType!='IMAGE_MATCHING_VALIDATION_ACTION'">
+    <mat-select placeholder="Match Type"  [(ngModel)]="inputData.model.matchType">
+      <mat-option value="Equals">Equals</mat-option>
+      <mat-option value="EqualsCaseSensitive">Equals (Case Sensitive)</mat-option>
+      <mat-option value="Contains">Contains</mat-option>
+      <mat-option value="RegEx">Regular expression</mat-option>
+      <mat-option value="IsAnyOf">IsAnyOf</mat-option>
+      <mat-option value="UserDefineMatch">UserDefineMatch</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select placeholder="Search Range"  [(ngModel)]="inputData.model.textPosition">
+      <mat-option value="FullScreen">FullScreen</mat-option>
+      <mat-option value="Strict">Strict</mat-option>
+      <mat-option value="Around">Around</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field *ngIf="inputData.validationSubType=='IMAGE_MATCHING_VALIDATION_ACTION'">
+    <input matInput placeholder="Matching Threshold (0.0-1)" [(ngModel)]="inputData.model.threshold">
+  </mat-form-field>
+</div>
+
+<div class="row" *ngIf="inputData.model.validationSubType !== 'CONDITION_CLICK_ACTION'">
+  <mat-form-field>
+    <mat-select placeholder="Stop Type" [(ngModel)]="inputData.model.selectedStopType">
+      <mat-option *ngFor="let sType of stopTypes" [value]="sType.name">{{ sType.display }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-mini-fab color="primary" (click)="openValidationDetailsInfoDlg()" matTooltip="Show Info"
+  matTooltipPosition="right" matTooltipShowDelay="500">
+    <i class="fa fa-info"></i>
+  </button>
+</div>
+<div class="row" *ngIf="inputData.model.validationSubType === 'CONDITION_CLICK_ACTION'">
+  <b>Note: Validation failure for Conditional Click does not fail the test, it only bypasses the click operation.</b>
+</div>
+
+<div class="row" *ngIf="inputData.model.validationSubType === 'LOOP_SCREEN_CONTENT_VALIDATION_ACTION'">Timeout (in seconds):
+  <mat-form-field>
+    <textarea rows="1" cols="10" matInput [(ngModel)]="inputData.model.timeout"></textarea>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select placeholder="Wait Until"  [(ngModel)]="inputData.model.waitUntil">
+      <mat-option value="WaitUntilAppear">Wait Until Appear</mat-option>
+      <mat-option value="WaitUntilDisappear">Wait Until Disappear</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>

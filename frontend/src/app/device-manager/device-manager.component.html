@@ -1,0 +1,94 @@
+<!--
+  Copyright 2019 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div>
+  <mat-tab-group class="tab-group" fxFlexFill>
+    <mat-tab label="Devices" fxLayout="column" fxFlexFill class="md-no-animation">
+      <mat-form-field>
+        <mat-select placeholder="Play Mode:" [(ngModel)]="selectedPlayMode" (change)="savePlayMode($event)">
+          <mat-option *ngFor="let pMode of playModes" [value]="pMode.name">{{ pMode.display }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="currentDevice" *ngIf="bindDevice.serial">
+        <b>Current Device: </b> {{bindDevice.serial}}
+      </div>
+      <div>
+        <mat-table #table [dataSource]="dataSource">
+          <ng-container matColumnDef="position">
+            <mat-header-cell *matHeaderCellDef> Slot. </mat-header-cell>
+            <mat-cell *matCellDef="let element"> {{element.position}} </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="device_serial">
+            <mat-header-cell *matHeaderCellDef> Device Serial </mat-header-cell>
+            <mat-cell *matCellDef="let element">
+              <div *ngIf="element.status===2;">
+                *
+              </div>
+              {{element.device_serial}}
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef> </mat-header-cell>
+            <mat-cell *matCellDef="let element" fxLayout="row">
+              <div [ngSwitch]="element.status">
+                <div *ngSwitchCase="0">
+                  No available device on this slot.
+                </div>
+
+                <div *ngSwitchCase="1">
+                  <button mat-raised-button (click)="initDevice(element.position-1)">
+                    Ready
+                  </button>
+                </div>
+
+                <div *ngSwitchCase="2">
+                  <button mat-raised-button (click)="initDevice(element.position-1)">
+                    Connected
+                  </button>
+                </div>
+
+                <div *ngSwitchCase="3">
+                  Connecting...
+                </div>
+
+                <div *ngSwitchDefault>
+                  UNKNOWN
+                </div>
+              </div>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="selected">
+            <mat-header-cell *matHeaderCellDef> Selected </mat-header-cell>
+            <mat-cell *matCellDef="let element">
+              <div class="star-icon" *ngIf="element.device_serial === bindDevice.serial">
+                <i class="fa fa-star" aria-hidden="true"></i>
+              </div>
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        </mat-table>
+      </div>
+    </mat-tab>
+    <mat-tab label="TV Remote">
+      <app-tv-remote-dialog></app-tv-remote-dialog>
+    </mat-tab>
+  </mat-tab-group>
+
+</div>

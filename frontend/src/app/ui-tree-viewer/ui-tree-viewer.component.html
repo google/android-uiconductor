@@ -1,0 +1,108 @@
+<!--
+  Copyright 2019 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="main-section">
+     <div class="top-bar" *ngIf="treeTopBarState && !hideTopBar">
+        <div class="btn-container">
+                <button mat-raised-button (click)="toggleHighlight()" class="uiViewerButton" [style.backgroundColor]="toggleStateColor">
+                        Toggle Highlight
+                </button>
+                <button mat-raised-button (click)="toggleInspectMode()" class="uiViewerButton" [style.backgroundColor]="toggleInspectColor">
+                        Inspect Device
+                        </button>
+                <button mat-raised-button (click)="expandAll()" class="uiViewerButton">
+                        Expand All
+                </button>
+                <button mat-raised-button (click)="closeAll()" class="uiViewerButton"> 
+                        Close All
+                </button>
+                <button mat-raised-button (click)="fetchXML()" class="uiViewerButton">
+                        Refresh XML
+                </button>
+                <button mat-raised-button (click)="showXml()" class="uiViewerButton"> 
+                        Device XML
+                </button>
+                <button mat-raised-button (click)="showAttr()" class="uiViewerButton float-right" [style.backgroundColor]="toggleAttributeColor">
+                        Toggle Attributes
+                </button>
+        </div>
+        <div class="searchInput">
+                <mat-form-field id="searchBar">
+                        <input [(ngModel)]="searchText" (keyup.enter)="searchTree()" matInput placeholder="Press enter to Search">
+                </mat-form-field>
+                <mat-form-field id="attributeSelect">
+                        <mat-select [(value)]="selectedSearchAttr">
+                                <mat-option *ngFor="let attr of searchAttributes" value="{{attr}}">
+                                        {{ attr }}
+                                </mat-option>
+                        </mat-select>
+                </mat-form-field>
+        </div>
+    </div>
+    <!-- Display when slider height is too small -->
+    <div *ngIf="!treeTopBarState && !hideTopBar">
+        <mat-menu #appMenu="matMenu">
+                <button mat-menu-item (click)="toggleHighlight()" [style.backgroundColor]="toggleStateColor">Toggle Highlight</button>
+                <button mat-menu-item (click)="toggleInspectMode()" [style.backgroundColor]="toggleInspectColor">Inspect Device</button>
+                <button mat-menu-item (click)="expandAll()">Expand All</button>
+                <button mat-menu-item (click)="closeAll()">Close All</button>
+                <button mat-menu-item (click)="fetchXML()">Refresh XML</button>
+                <button mat-menu-item (click)="showXml()">Device XML</button>
+        </mat-menu>
+
+        <button mat-icon-button [matMenuTriggerFor]="appMenu">
+                <i class="fa fa-bars" aria-hidden="true"></i>
+        </button>
+        <button mat-icon-button (click)="showAttr()" class="float-right">
+                <i class="fa fa-caret-square-o-down" aria-hidden="true" [style.color]="toggleAttributeColor"></i>
+        </button>
+        <div class="dropdownSearch">
+                <mat-form-field class="searchInput">
+                        <input [(ngModel)]="searchText" (keyup.enter)="searchTree()" matInput placeholder="Press enter to Search">
+                </mat-form-field>
+                <mat-form-field id="attributeSelect">
+                        <mat-select [(value)]="selectedSearchAttr">
+                                <mat-option *ngFor="let attr of searchAttributes" value="{{attr}}">
+                                        {{ attr }}
+                                </mat-option>
+                        </mat-select>
+                </mat-form-field>
+        </div>
+    </div>
+    <!-- Display when slider width is too small -->
+    <div *ngIf="hideTopBar" class="sideBar">
+        <mat-menu #appMenu="matMenu">
+                <button mat-menu-item (click)="toggleHighlight()" [style.backgroundColor]="toggleStateColor">Toggle Highlight</button>
+                <button mat-menu-item (click)="toggleInspectMode()" [style.backgroundColor]="toggleInspectColor">Inspect Device</button>
+                <button mat-menu-item (click)="showAttr()" [style.backgroundColor]="toggleAttributeColor">Toggle Attributes</button>
+                <button mat-menu-item (click)="expandAll()">Expand All</button>
+                <button mat-menu-item (click)="closeAll()">Close All</button>
+                <button mat-menu-item (click)="fetchXML()">Refresh XML</button>
+                <button mat-menu-item (click)="showXml()">Copy Device XML</button>
+        </mat-menu>
+
+        <button mat-icon-button [matMenuTriggerFor]="appMenu">
+                <i class="fa fa-bars" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="treeArea" [style.width.%]="treeAreaWidth">
+        <div #dataTree class="js-tree" [style.height.vh]="splitAreaHeight"></div>
+    </div>
+    <div class="attributeList" [style.display]="showAttributes" [style.height.vh]="splitAreaHeight">
+        <div *ngFor="let attribute of attributeList" class="attributeItem">
+                <div id="attributeTitle">{{ attribute.title }}</div> <div id="attributeValue">{{ attribute.value }}</div>
+        </div>
+    </div>
+</div>

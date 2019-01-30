@@ -1,0 +1,44 @@
+<!--
+  Copyright 2019 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="form-container">
+  <h3 >Fetch content from screen</h3>
+  <div class="selected-content">Selected content: <span class="selected-content-span">{{this.inputData.displayText}}</span></div>
+  <div>
+      <b>Selected By:</b>
+  </div>
+  <mat-radio-group [(ngModel)]="inputData.model.strategy" (change)="strategyChanged($event.value)">
+      <mat-radio-button value="POSITION" selected>Position</mat-radio-button>
+      <mat-radio-button value="RESOURCEID">ResourceId</mat-radio-button>
+      <mat-radio-button value="XPATH">XPath</mat-radio-button>
+    </mat-radio-group>
+  <mat-form-field>
+      <input matInput [(ngModel)]="inputData.model.selector" placeholder="Selector"  required>
+  </mat-form-field>
+
+  <div *ngIf="inputData.model.attributeVisible">
+    <mat-form-field>
+      <input matInput [(ngModel)]="inputData.model.attributeType" placeholder="XML Attribute Type">
+    </mat-form-field>
+  </div>
+  <b>Selected content: {{this.inputData.displayText}}</b>
+  <mat-form-field >
+
+    <input matInput [(ngModel)]="inputData.model.globalVariableName" placeholder="Variable Name (Must start with '$uicd_')" required>
+  </mat-form-field>
+
+  <mat-checkbox [(ngModel)]="inputData.model.isExportField">Export Field</mat-checkbox>
+
+</div>

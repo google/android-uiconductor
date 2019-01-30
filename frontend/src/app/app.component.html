@@ -1,0 +1,81 @@
+<!--
+  Copyright 2019 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="main-container" fxLayout='column'>
+  <mat-toolbar color="primary" class='main-toolbar' fxFlex="50px">
+    <button mat-icon-button>
+      <mat-icon matTooltip="Reinitialize devices" (click)="openDevicePickerDialog()">menu</mat-icon>
+    </button>
+    <span>Uicd</span>
+    <span class="toolbar-spacer"></span>
+    <button mat-icon-button class="toolbar-icon">
+      <mat-icon matTooltip="Restart Uicd" (click)="softRestart()">refresh</mat-icon>
+    </button>
+    <button mat-icon-button class="toolbar-icon">
+      <mat-icon>info</mat-icon>
+    </button>
+  </mat-toolbar>
+
+  <div class="device-prepare-overlay" *ngIf="devicePrepareLoading">
+    <mat-progress-bar mode="indeterminate" class="device-prepare-overlay-progressbar">
+    </mat-progress-bar>
+  </div>
+  <div class="main-body">
+    <split *ngIf="config" direction="horizontal" [disabled]="config.disabled" (dragEnd)="onDragEnd(-1, $event)">
+      <ng-template ngFor let-column [ngForOf]="config.columns" let-icol="index">
+        <split-area *ngIf="column.visible" [order]="icol" [size]="column.size">
+          <split direction="vertical" [disabled]="config.disabled" (dragEnd)="onDragEnd(icol, $event)">
+            <ng-template ngFor let-row [ngForOf]="column.rows" let-irow="index">
+              <split-area *ngIf="row.visible" [order]="irow" [size]="row.size" [style.overflow]="row.isScrollable">
+                <div [ngSwitch]="row.type" class="bloc">
+                  <div *ngSwitchCase="'recorder'" class="panel">
+                    <app-recorder [(initedDevices)]="initedDevices"></app-recorder>
+                  </div>
+                  <div *ngSwitchCase="'workflow'" class="panel">
+                    <app-workflow [(playingLogs)]="playingLogs" [(initedDevices)]="initedDevices"></app-workflow>
+                  </div>
+                  <div *ngSwitchCase="'log_area'" class="panel">
+                    <mat-tab-group class="main-col-middle" fxFlexFill (selectedTabChange)="tabChanged($event)">
+                      <mat-tab label="Log" class="md-no-animation">
+                        <log-panel class="log-panel" [(playingLogs)]="playingLogs">
+                        </log-panel>
+                      </mat-tab>
+                      <mat-tab label="UI Viewer">
+                        <ui-tree-viewer #uiViewer [inUiViewerTab]="inUiViewer" [splitAreaHeight]="splitAreaHeight" [treeTopBarState]="treeTopBarState" [hideTopBar]="hideTopBar"></ui-tree-viewer>
+                      </mat-tab>
+                    </mat-tab-group>
+                  </div>
+                  <div *ngSwitchCase="'action_list'" class="panel">
+                    <app-test-case-list></app-test-case-list>
+                  </div>
+                  <div *ngSwitchCase="'device_manager'" class="panel">
+                    <app-device-manager [(initedDevices)]="initedDevices" #deviceManager></app-device-manager>
+                  </div>
+                  <div *ngSwitchDefault class="panel">
+                    <p>{{ row | json }}</p>
+                  </div>
+                </div>
+              </split-area>
+            </ng-template>
+          </split>
+        </split-area>
+      </ng-template>
+    </split>
+  </div>
+  <div class="footer-div" fxFlex="25px">
+    <span class="footer-content">UI Conductor @Google</span>
+  </div>
+
+</div>

@@ -1,0 +1,74 @@
+<!--
+  Copyright 2019 Google Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<h1>Action Details</h1>
+<h5 *ngIf="currentUser !== actionData.createdBy" class="createdByLabel">
+    Created by: <span *ngIf="!actionData.createdBy">No Owner</span>
+    <span *ngIf="actionData.createdBy">{{actionData.createdBy}}</span>, Editing is restricted
+</h5>
+<div class="example-container">
+    <mat-form-field>
+        <input matInput placeholder="Action Id" [(ngModel)]="actionData.actionId" readonly>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Name" [(ngModel)]="actionData.name" required [disabled]="currentUser !== actionData.createdBy">
+      <mat-error *ngIf="!actionData.name">You must input a name.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <input matInput placeholder="Delay After(Ms)" type="number" [(ngModel)]="actionData.delayAfterActionMs" [disabled]="currentUser !== actionData.createdBy">
+    </mat-form-field>
+
+    <mat-form-field *ngIf="isCompoundAction()">
+      <input matInput placeholder="Repeat Time" [(ngModel)]="actionData.repeatTime" [disabled]="!isCompoundAction()" >
+    </mat-form-field>
+
+    <mat-form-field>
+        <input matInput placeholder="Action Type" [(ngModel)]="actionData.actionType" [disabled]="true">
+    </mat-form-field>
+
+    <div *ngIf="actionData.actionType == 'CLICK_ACTION';then clickSection">here is ignored</div>
+
+    <ng-template #clickSection>
+            <mat-checkbox placeholder="Is Raw xy" ng-disabled [(ngModel)]="actionData.isRawXY">is raw XY</mat-checkbox>
+    </ng-template>
+
+    <mat-form-field>
+        <textarea matInput placeholder="Description" [(ngModel)]="actionData.actionDescription" [disabled]="currentUser !== actionData.createdBy"></textarea>
+    </mat-form-field>
+</div>
+
+<div [hidden]="(!data.saveWorkflow || !isNewWorkflow) && !isMoveAction">
+    <mat-form-field>
+        <mat-select placeholder="Folder" [(ngModel)]="saveToFolderId">
+        <mat-option *ngFor="let folder of folderList" [value]="folder.id">{{ folder.value }}</mat-option>
+        </mat-select>
+    </mat-form-field>
+</div>
+
+<div>
+    <mat-checkbox  [(ngModel)]="actionData.runAlways" [disabled]="currentUser !== actionData.createdBy">Run Always (run current step even if previous step failed)</mat-checkbox>
+</div>
+
+<div>
+  <button mat-raised-button (click)="saveAction()" #btn1>Save</button>
+  <button mat-raised-button (click)="cancelDialog()" #btn2>Cancel</button>
+  <button mat-raised-button (click)="deleteAction()" #btn2>Delete</button>
+  <button mat-raised-button (click)="playAction()" #btn2>Play</button>
+  <button mat-raised-button *ngIf="showEditDetails" (click)="editAction()">Edit Details</button>
+  <button mat-raised-button (click)="playWorkflowFromCurrentAction()" #btn2>
+      Play Workflow From Here</button>
+</div>

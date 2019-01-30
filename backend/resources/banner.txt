@@ -1,0 +1,16 @@
+${Ansi.RED} NNNNNNNN        NNNNNNNN
+${Ansi.GREEN} N:::::::N       N::::::N
+${Ansi.BLUE} N::::::::N      N::::::N
+${Ansi.RED} N:::::::::N     N::::::N
+${Ansi.GREEN} N::::::::::N    N::::::Nuuuuuu    uuuuuuwwwwwww           wwwww           wwwwwwwaaaaaaaaaaaaa
+${Ansi.BLUE} N:::::::::::N   N::::::Nu::::u    u::::u w:::::w         w:::::w         w:::::w a::::::::::::a
+${Ansi.RED} N:::::::N::::N  N::::::Nu::::u    u::::u  w:::::w       w:::::::w       w:::::w  aaaaaaaaa:::::a
+${Ansi.GREEN} N::::::N N::::N N::::::Nu::::u    u::::u   w:::::w     w:::::::::w     w:::::w            a::::a
+${Ansi.BLUE} N::::::N  N::::N:::::::Nu::::u    u::::u    w:::::w   w:::::w:::::w   w:::::w      aaaaaaa:::::a
+${Ansi.RED} N::::::N   N:::::::::::Nu::::u    u::::u     w:::::w w:::::w w:::::w w:::::w     aa::::::::::::a
+${Ansi.GREEN} N::::::N    N::::::::::Nu::::u    u::::u      w:::::w:::::w   w:::::w:::::w     a::::aaaa::::::a
+${Ansi.BLUE} N::::::N     N:::::::::Nu:::::uuuu:::::u       w:::::::::w     w:::::::::w     a::::a    a:::::a
+${Ansi.RED} N::::::N      N::::::::Nu:::::::::::::::uu      w:::::::w       w:::::::w      a::::a    a:::::a
+${Ansi.GREEN} N::::::N       N:::::::N u:::::::::::::::u       w:::::w         w:::::w       a:::::aaaa::::::a
+${Ansi.BLUE} N::::::N        N::::::N  uu::::::::uu:::u        w:::w           w:::w         a::::::::::aa:::a
+${Ansi.RED} NNNNNNNN         NNNNNNN    uuuuuuuu  uuuu         www             www           aaaaaaaaaa  aaaa

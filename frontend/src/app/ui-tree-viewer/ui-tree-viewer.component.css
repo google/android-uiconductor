@@ -1,0 +1,95 @@
+/*
+ * Copyright 2019 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.js-tree {
+  font-size: 2rem;
+  padding: 2rem;
+}
+
+.main-section {
+  padding: 1px;
+  background-color: white;
+}
+
+.attributeList {
+  background-color: white;
+  text-align: left;
+  float: left;
+  width: 40%;
+  overflow-y: auto;
+}
+
+.treeArea{
+  background-color: white;
+  float: left;
+  overflow-y: auto;
+}
+
+.attributeItem {
+  width: 100%;
+  padding: 0px 5px 0px 0px;
+  border: 0.5px solid grey;
+}
+
+#attributeTitle {
+  display: inline-block;
+  width: 13rem;
+  padding: 5px;
+  background-color: whitesmoke;
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.5rem;
+}
+
+#attributeValue {
+  display: inline-block;
+  padding: 5px 5px 5px 5px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.5rem;
+}
+
+.uiViewerButton {
+  display: inline-block;
+  margin: 5px;
+}
+
+.btn-container{
+  padding: 5px;
+}
+
+.searchInput {
+  padding-left: 20px;
+  width: 80%;
+}
+
+.dropdownSearch {
+  display: inline-block;
+}
+
+.float-right {
+  float: right;
+}
+
+.sideBar {
+  margin-bottom: -35px;
+}
+
+#searchBar {
+  width: 80%;
+}
+
+#attributeSelect {
+  width: 10%;
+}
