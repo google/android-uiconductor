@@ -229,8 +229,7 @@ public class ADBCommandLineUtil {
 
   // If more than one device is connected, some machines will show "error: unknown host service";
   // need to provide a deviceId to prevent this. There will be one pitfall, allocating ports is
-  // not an atomic operation. There is a small chance of a race condition in MH. However, we
-  // don't have a easy way to solve it for now, it would require changes on the mobileharness side.
+  // not an atomic operation.
   public static int getFirstAvailablePortSlot(
       String deviceId, int startIndex, int deviceCount) throws UicdExternalCommandException {
     List<String> output = new ArrayList<>();

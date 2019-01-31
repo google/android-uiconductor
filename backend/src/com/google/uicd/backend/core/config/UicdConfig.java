@@ -36,8 +36,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * Global config class for Uicd com.google.uicd.backend.core The variables such as DB connections and test output home dir
- * need to be set before use uicd com.google.uicd.backend.core
+ * Global config class for Uicd com.google.uicd.backend.core The variables such as DB connections
+ * and test output home dir need to be set before use uicd com.google.uicd.backend.core
  */
 public class UicdConfig {
 
@@ -92,6 +92,15 @@ public class UicdConfig {
     this.adbShellPath = adbShellPath;
   }
 
+  public String getDBConnStr() {
+    if (mysqlConnectionString != null && !mysqlConnectionString.isEmpty()) {
+      return mysqlConnectionString;
+    }
+    return "jdbc:mysql://localhost:" + mysqlport
+        + "/uicddb?autoReconnect=true&user=root&password=uicdawesome&useUnicode=true"
+        + "&characterEncoding=utf-8";
+  }
+
   public Connection getDBConnection() throws UicdExcpetion {
     if (connection == null) {
       this.initDefaultLocalDBConnection();
@@ -99,18 +108,15 @@ public class UicdConfig {
     return connection;
   }
 
+
   public void setDBConnection(Connection connection) {
     this.connection = connection;
   }
 
   public void initDefaultLocalDBConnection() throws UicdExcpetion {
     try {
-      String connStr = mysqlConnectionString;
-      if (connStr.isEmpty()) {
-        connStr = "jdbc:mysql://localhost:" + mysqlport + "/uicddb?autoReconnect=true&user=root&password=uicdawesome";
-      }
       connection =
-          DriverManager.getConnection(connStr);
+          DriverManager.getConnection(getDBConnStr());
     } catch (SQLException e) {
       throw new UicdExcpetion("Cannot connect to Mysql");
     }
@@ -213,7 +219,6 @@ public class UicdConfig {
     return logLevel;
   }
 
-  // required by mobileharness
   public void setLogLevel(Level logLevel) {
     this.logLevel = logLevel;
   }

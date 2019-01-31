@@ -34,13 +34,10 @@ public class Application {
 
   @Bean
   public DataSource dataSource() {
-   // final DriverManagerDataSource dataSource = new DriverManagerDataSource("jdbc:mysql://localhost:3308/uicddb?autoReconnect=true&user=root&password=uicdawesome");
+
     final DriverManagerDataSource dataSource = new DriverManagerDataSource();
     dataSource.setDriverClassName("com.mysql.jdbc.Driver");
-    dataSource.setUrl("jdbc:mysql://localhost:3308/uicddb?autoReconnect=true&useUnicode=true&characterEncoding=utf-8");
-    dataSource.setUsername("root");
-    dataSource.setPassword("uicdawesome");
-
+    dataSource.setUrl(UicdConfig.getInstance().getDBConnStr());
     return dataSource;
   }
 

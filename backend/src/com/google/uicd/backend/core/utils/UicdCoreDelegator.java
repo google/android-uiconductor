@@ -81,8 +81,7 @@ public class UicdCoreDelegator extends Handler {
     this.restartMinicap = restartMinicap;
   }
 
-  // This method will be only called in the local mode (when we have frontend and minicap). On the
-  // mobileharness continuous run, the BiConsumer is null, restartMinicap will be skipped.
+  // This method will be only called in the local mode (when we have frontend and minicap).
   public void tryRestartMinicap(String deviceId, int rotate) {
     if (restartMinicap != null) {
       restartMinicap.accept(deviceId, rotate);

@@ -117,7 +117,6 @@ public class ActionPlayer {
     actionExecutionResult.setPlayStatus(playStatus);
   }
 
-  // used only by mobileharness driver
   public void initDevicesDisplayScale() {
     for (AndroidDeviceDriver driver : androidDeviceDriverList) {
       driver.setScaleByDeviceType();

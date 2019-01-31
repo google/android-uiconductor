@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+cd#!/bin/bash -eu
 #
 # Copyright 2019 Google Inc.
 #
@@ -15,10 +15,13 @@
 # limitations under the License.
 
 
-release_dir=`pwd`
+
 cd ..
 root_dir=`pwd`
-cd $release_dir
+mkdir release
+cd release
+release_dir=`pwd`
+
 mkdir -p deps/xmldumper
 mkdir -p backend
 mkdir -p uicdcli
@@ -49,8 +52,13 @@ cd $root_dir/backend/src/com/google/uicd/backend/core
 mvn install
 cd $root_dir/backend/src/com/google/uicd/backend/commandline
 mvn package
-cp $root_dir/backend/src/com/google/uicd/backend/commandline/target/commandline-0.1.0-jar-with-dependencies.jar $release_dir/uicdcli/uicd-commandline.jar
+cp $root_dir/backend/src/com/google/uicd/backend/commandline/target/uicd-commandline-0.1.0-jar-with-dependencies.jar $release_dir/uicdcli/uicd-commandline.jar
+cp $root_dir/backend/src/com/google/uicd/backend/commandline/uicdcli.sh $release_dir/uicdcli
 
 # uicd sh
 
+
 # nuwacfg
+cd release_dir
+chmod -R a+rw .
+echo -e "username=$(whoami)\nuicddatapath=$PWD/backend/\nxmldumperversion=1.0.1\nmysqlconnectionstr=<mysqlconnectionstr>\n" > ./release/uicd.cfg
