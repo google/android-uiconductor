@@ -43,3 +43,10 @@ else
     launch_backend
     launch_frontend
 fi
+
+echo "Prepare for exit and clean up..."
+trap clean_up 0
+
+# exit until manually kill
+# infinity does not work for Mac..
+sleep 2147483647;

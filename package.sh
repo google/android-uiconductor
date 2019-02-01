@@ -15,9 +15,8 @@
 # limitations under the License.
 
 
-
-cd ..
 root_dir=`pwd`
+rm -rf release
 mkdir release
 cd release
 release_dir=`pwd`
@@ -27,7 +26,7 @@ mkdir -p backend
 mkdir -p uicdcli
 
 # build uicd xmldumper server
-cd ../xmldumper
+cd $root_dir/xmldumper
 ./gradlew assembleDebug assembleAndroidTest
 
 cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk $release_dir/deps/xmldumper/uicd-xmldumper-server-test-v1.0.1.apk
@@ -56,15 +55,18 @@ cp $root_dir/backend/src/com/google/uicd/backend/commandline/target/uicd-command
 cp $root_dir/backend/src/com/google/uicd/backend/commandline/uicdcli.sh $release_dir/uicdcli
 
 # uicd start.sh
-cp $root_dir/misc/start.sh $release_dir
+cp $root_dir/misc/start_sample.sh $release_dir/start.sh
+chmod a+x $release_dir/start.sh
 
 # nuwacfg
 cd $release_dir
 chmod -R a+rw .
-echo -e "username=$(whoami)\nuicddatapath=$PWD/backend/\nxmldumperversion=1.0.1\nmysqlconnectionstr=<mysqlconnectionstr>\n" > ./release/uicd.cfg
+echo -e "username=$(whoami)\nuicdbasepath=$PWD\nxmldumperversion=1.0.1\nmysqlconnectionstr=<mysqlconnectionstr>\n" > ./uicd.cfg
 
 
 # deps
 cp -r $root_dir/misc/minicap $release_dir/deps
-
 echo "Finished build uiconductor"
+
+
+
