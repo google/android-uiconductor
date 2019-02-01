@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # Copyright 2019 Google Inc.
 #
@@ -24,7 +24,6 @@ launch_backend() {
   adb devices
   java -Xmx1024m -jar uicd-service-0.1.0.jar &
   sleep 10
-  cd ..
 }
 launch_frontend() {
   echo "================================= Launch Frontend ================================================"
