@@ -22,7 +22,6 @@ cd release
 release_dir=`pwd`
 
 mkdir -p deps/xmldumper
-mkdir -p backend
 mkdir -p uicdcli
 
 # build uicd xmldumper server
@@ -38,7 +37,7 @@ cd $root_dir/backend
 mvn clean
 mvn package
 
-cp -f target/uicd-service-*.jar $release_dir/backend
+cp -f target/uicd-service-*.jar $release_dir
 
 # build frontend
 cd $root_dir/frontend
