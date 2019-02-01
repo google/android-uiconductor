@@ -1,16 +1,17 @@
-${Ansi.RED} NNNNNNNN        NNNNNNNN
-${Ansi.GREEN} N:::::::N       N::::::N
-${Ansi.BLUE} N::::::::N      N::::::N
-${Ansi.RED} N:::::::::N     N::::::N
-${Ansi.GREEN} N::::::::::N    N::::::Nuuuuuu    uuuuuuwwwwwww           wwwww           wwwwwwwaaaaaaaaaaaaa
-${Ansi.BLUE} N:::::::::::N   N::::::Nu::::u    u::::u w:::::w         w:::::w         w:::::w a::::::::::::a
-${Ansi.RED} N:::::::N::::N  N::::::Nu::::u    u::::u  w:::::w       w:::::::w       w:::::w  aaaaaaaaa:::::a
-${Ansi.GREEN} N::::::N N::::N N::::::Nu::::u    u::::u   w:::::w     w:::::::::w     w:::::w            a::::a
-${Ansi.BLUE} N::::::N  N::::N:::::::Nu::::u    u::::u    w:::::w   w:::::w:::::w   w:::::w      aaaaaaa:::::a
-${Ansi.RED} N::::::N   N:::::::::::Nu::::u    u::::u     w:::::w w:::::w w:::::w w:::::w     aa::::::::::::a
-${Ansi.GREEN} N::::::N    N::::::::::Nu::::u    u::::u      w:::::w:::::w   w:::::w:::::w     a::::aaaa::::::a
-${Ansi.BLUE} N::::::N     N:::::::::Nu:::::uuuu:::::u       w:::::::::w     w:::::::::w     a::::a    a:::::a
-${Ansi.RED} N::::::N      N::::::::Nu:::::::::::::::uu      w:::::::w       w:::::::w      a::::a    a:::::a
-${Ansi.GREEN} N::::::N       N:::::::N u:::::::::::::::u       w:::::w         w:::::w       a:::::aaaa::::::a
-${Ansi.BLUE} N::::::N        N::::::N  uu::::::::uu:::u        w:::w           w:::w         a::::::::::aa:::a
-${Ansi.RED} NNNNNNNN         NNNNNNN    uuuuuuuu  uuuu         www             www           aaaaaaaaaa  aaaa
+Font Name: Doh
+${Ansi.RED}  UUUUUUUU     UUUUUUUUIIIIIIIIII      CCCCCCCCCCCCCDDDDDDDDDDDDD
+${Ansi.GREEN}  U::::::U     U::::::UI::::::::I   CCC::::::::::::CD::::::::::::DDD
+${Ansi.BLUE}  U::::::U     U::::::UI::::::::I CC:::::::::::::::CD:::::::::::::::DD
+${Ansi.RED}  UU:::::U     U:::::UUII::::::IIC:::::CCCCCCCC::::CDDD:::::DDDDD:::::D
+${Ansi.GREEN}   U:::::U     U:::::U   I::::I C:::::C       CCCCCC  D:::::D    D:::::D
+${Ansi.BLUE}   U:::::D     D:::::U   I::::IC:::::C                D:::::D     D:::::D
+${Ansi.RED}   U:::::D     D:::::U   I::::IC:::::C                D:::::D     D:::::D
+${Ansi.GREEN}   U:::::D     D:::::U   I::::IC:::::C                D:::::D     D:::::D
+${Ansi.BLUE}   U:::::D     D:::::U   I::::IC:::::C                D:::::D     D:::::D
+${Ansi.RED}   U:::::D     D:::::U   I::::IC:::::C                D:::::D     D:::::D
+${Ansi.GREEN}   U:::::D     D:::::U   I::::IC:::::C                D:::::D     D:::::D
+${Ansi.BLUE}   U::::::U   U::::::U   I::::I C:::::C       CCCCCC  D:::::D    D:::::D
+${Ansi.RED}   U:::::::UUU:::::::U II::::::IIC:::::CCCCCCCC::::CDDD:::::DDDDD:::::D
+${Ansi.GREEN}    UU:::::::::::::UU  I::::::::I CC:::::::::::::::CD:::::::::::::::DD
+${Ansi.BLUE}      UU:::::::::UU    I::::::::I   CCC::::::::::::CD::::::::::::DDD
+${Ansi.RED}        UUUUUUUUU      IIIIIIIIII      CCCCCCCCCCCCCDDDDDDDDDDDDD

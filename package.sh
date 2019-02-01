@@ -65,7 +65,7 @@ echo -e "username=$(whoami)\nuicdbasepath=$PWD\nxmldumperversion=1.0.1\nmysqlcon
 
 # deps
 cp -r $root_dir/misc/minicap $release_dir/deps
-echo "Finished build uiconductor"
+echo "Finished build UIConductor"
 
 
 

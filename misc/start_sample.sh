@@ -20,7 +20,6 @@ clean_up() {
 
 launch_backend() {
   echo "================================= Launch Backend ================================================"
-  cd backend
   # test adb
   adb devices
   java -Xmx1024m -jar uicd-service-0.1.0.jar &
@@ -30,7 +29,7 @@ launch_backend() {
 launch_frontend() {
   echo "================================= Launch Frontend ================================================"
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    google-chrome --disable-web-security --chrome-frame --window-size=800,1080 --window-position=580,240 --user-data-dir="$PWD" --app="file://$PWD/dist/index.html"
+    google-chrome --disable-web-security --chrome-frame --user-data-dir="$PWD" --app="file://$PWD/dist/index.html"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     osascript mac_chrome.scpt
   fi;
