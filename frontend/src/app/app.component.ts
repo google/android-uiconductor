@@ -53,7 +53,7 @@ const defaultConfig: IConfig = {
       size: 57,
       rows: [
         {visible: true, size: 65, type: 'workflow', isScrollable: 'auto'},
-        {visible: true, size: 35, type: 'log_area', isScrollable: 'auto'},
+        {visible: true, size: 35, type: 'log_area', isScrollable: 'hidden'},
       ],
     },
     {

@@ -30,23 +30,23 @@
 
   <div class="device-prepare-overlay" *ngIf="devicePrepareLoading">
     <mat-progress-bar mode="indeterminate" class="device-prepare-overlay-progressbar">
-    </mat-progress-bar>
-  </div>
-  <div class="main-body">
+   </mat-progress-bar>
+ </div>
+  <div class="main-body" fxLayout='row wrap'>
     <split *ngIf="config" direction="horizontal" [disabled]="config.disabled" (dragEnd)="onDragEnd(-1, $event)">
       <ng-template ngFor let-column [ngForOf]="config.columns" let-icol="index">
         <split-area *ngIf="column.visible" [order]="icol" [size]="column.size">
           <split direction="vertical" [disabled]="config.disabled" (dragEnd)="onDragEnd(icol, $event)">
             <ng-template ngFor let-row [ngForOf]="column.rows" let-irow="index">
-              <split-area *ngIf="row.visible" [order]="irow" [size]="row.size" [style.overflow]="row.isScrollable">
-                <div [ngSwitch]="row.type" class="bloc">
-                  <div *ngSwitchCase="'recorder'" class="panel">
+              <split-area *ngIf="row.visible" [order]="irow" [size]="row.size" [style.overflow]="row.isScrollable" >
+                <div [ngSwitch]="row.type" class="bloc recorder-area-wrapper">
+                  <div *ngSwitchCase="'recorder'" class="panel recorder-area-wrapper">
                     <app-recorder [(initedDevices)]="initedDevices"></app-recorder>
                   </div>
                   <div *ngSwitchCase="'workflow'" class="panel">
                     <app-workflow [(playingLogs)]="playingLogs" [(initedDevices)]="initedDevices"></app-workflow>
                   </div>
-                  <div *ngSwitchCase="'log_area'" class="panel">
+                  <div *ngSwitchCase="'log_area'" class="panel log-area-wrapper">
                     <mat-tab-group class="main-col-middle" fxFlexFill (selectedTabChange)="tabChanged($event)">
                       <mat-tab label="Log" class="md-no-animation">
                         <log-panel class="log-panel" [(playingLogs)]="playingLogs">
@@ -57,8 +57,8 @@
                       </mat-tab>
                     </mat-tab-group>
                   </div>
-                  <div *ngSwitchCase="'action_list'" class="panel">
-                    <app-test-case-list></app-test-case-list>
+                  <div *ngSwitchCase="'action_list'" class="panel test-case-wrapper">
+                    <app-test-case-list fxFlexFill></app-test-case-list>
                   </div>
                   <div *ngSwitchCase="'device_manager'" class="panel">
                     <app-device-manager [(initedDevices)]="initedDevices" #deviceManager></app-device-manager>

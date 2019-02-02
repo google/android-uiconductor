@@ -89,7 +89,10 @@
   height: 100%;
   opacity: 0.5;
   z-index: 99;
+  position: absolute;
+  top: 0px;
 }
+
 .device-prepare-overlay-progressbar {
   width: 400px;
    left: 45%;
@@ -159,4 +162,23 @@
 
 .toolbar-spacer {
   flex: 1 1 auto;
+}
+
+.test-case-wrapper {
+  display: flex;
+  height: 100%;
+}
+.log-area-wrapper {
+  display: flex;
+  height: 500px;
+  width: 100%;
+}
+
+.recorder-area-wrapper {
+  display: flex;
+  height: 500px;
+}
+
+.workspace-log-splitter {
+  overflow: hidden !important;
 }
