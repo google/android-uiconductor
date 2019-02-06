@@ -9,9 +9,9 @@ Android UIConductor is a platform that allow user to create E2E workflow very ea
 
 
 ## Requirement
-Jdk 8+
-adb installed
-a local/remote MySql Database
+- Jdk 8+
+- adb installed
+- a local/remote MySql Database
 
 
 ## Basic Usage
