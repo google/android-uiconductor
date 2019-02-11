@@ -21,15 +21,15 @@ mkdir release
 cd release
 release_dir=`pwd`
 
-mkdir -p deps/xmldumper
+mkdir -p deps/xmldumper_apks
 mkdir -p uicdcli
 
 # build uicd xmldumper server
 cd $root_dir/xmldumper
 ./gradlew assembleDebug assembleAndroidTest
 
-cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk $release_dir/deps/xmldumper/uicd-xmldumper-server-test-v1.0.1.apk
-cp app/build/outputs/apk/debug/app-debug.apk $release_dir/deps/xmldumper/uicd-xmldumper-server-v1.0.1.apk
+cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk $release_dir/deps/xmldumper_apks/uicd-xmldumper-server-test-v1.0.1.apk
+cp app/build/outputs/apk/debug/app-debug.apk $release_dir/deps/xmldumper_apks/uicd-xmldumper-server-v1.0.1.apk
 
 # build backend jar
 cd $root_dir/backend
