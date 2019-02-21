@@ -9,7 +9,7 @@ Android UIConductor is a platform that allow users to create E2E workflow very e
 
 
 ## Requirement
-- Linux (Mac and windows should also work, but need write the pakcage and start script for each platform)
+- Linux (Mac and Windows should also work, but need write the pakcage and start script for each platform)
 - Jdk 8+
 - Android SDK 28
 - adb installed and setup correctly in the env
