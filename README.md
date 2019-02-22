@@ -21,7 +21,7 @@ Android UIConductor is a platform that allow users to create E2E workflow very e
 ## Installation
 1. Create an empty database schema called "uicddb"
 2. Execute backend/src/com/google/uicd/backend/recorder/db/initdb.sql to init the database schema.
-3. Set the ANDROID_HOME to your SDK location
+3. Set the ANDROID_HOME to your SDK location   (you can skip step3 and step4 if you want to use the prebuild one)
 4. run ./package.sh to build everything into the release folder
 5. Set the db connection string in the release/uicd.cfg to something like this:
    jdbc:mysql://localhost:3306/uicddb?autoReconnect=true&user=root&password=admin&useUnicode=true&characterEncoding=utf-8
