@@ -1,7 +1,5 @@
 # Android UIConductor
 
-This is not an official Google product.
-
 Android UIConductor is a platform that allow users to create E2E workflow very easily.
 
 ## Screen Shot
