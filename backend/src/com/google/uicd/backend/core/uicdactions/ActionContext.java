@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
-import com.google.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.wireless.qa.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -33,14 +36,16 @@ public class ActionContext {
   private PlayMode playMode = PlayMode.SINGLE;
   private int actionSequenceIndex = 0;
   private boolean cancelRequested = false;
+  private double playSpeedFactor = 1.0;
+  private static final String PNG_EXTENSION = ".png";
 
-  private final UicdGlobalVariableMap globalVariableMap = new UicdGlobalVariableMap();
+  private UicdGlobalVariableMap globalVariableMap = new UicdGlobalVariableMap();
 
-  int getNextActionSequenceIndex() {
+  protected int getNextActionSequenceIndex() {
     return actionSequenceIndex++;
   }
 
-  int getCurrentActionSequenceIndex() {
+  public int getCurrentActionSequenceIndex() {
     return actionSequenceIndex;
   }
 
@@ -48,8 +53,7 @@ public class ActionContext {
     return executionId;
   }
 
-
-  int getCurrentDeviceIndex() {
+  public int getCurrentDeviceIndex() {
     return currentDeviceIndex;
   }
 
@@ -89,21 +93,35 @@ public class ActionContext {
     devicesStatus.put(deviceId, PlayStatus.FAIL);
   }
 
+  @VisibleForTesting
+  public void setDevicesStatus(String deviceId, PlayStatus status) {
+    devicesStatus.put(deviceId, status);
+  }
+
   public void removeStatus(String deviceId) {
     devicesStatus.remove(deviceId);
   }
 
   public boolean canRunAction(String deviceId) {
+    if (this.playMode == playMode.MULTIDEVICE) {
+      return this.devicesStatus.values().stream().noneMatch(x-> x == PlayStatus.FAIL);
+    }
     return devicesStatus.getOrDefault(deviceId, PlayStatus.READY) != PlayStatus.FAIL;
+  }
+
+  public void setGlobalVariableMap(UicdGlobalVariableMap uicdGlobalVariableMap) {
+    this.globalVariableMap = uicdGlobalVariableMap;
   }
 
   public String expandUicdGlobalVariable(String target, String deviceId) {
     // target could have multiple $uicd, we need replace all of them
-    if (target.contains(UicdGlobalVariableMap.UICD_DEVICEID_PARAM_KEYWORD)) {
-      target =
-          target.replace(
-              UicdGlobalVariableMap.UICD_DEVICEID_PARAM_KEYWORD, deviceId);
+    for (String keyWord : UicdGlobalVariableMap.PARAM_KEYWORD_LIST) {
+      String devicdIdKeyword = UicdGlobalVariableMap.getUicdDeviceidParamKeyword(keyWord);
+      if (target.contains(devicdIdKeyword)) {
+        target = target.replace(devicdIdKeyword, deviceId);
+      }
     }
+
     for (String key : this.globalVariableMap.getRawMap().keySet()) {
       if (target.contains(key)) {
         target = target.replace(key, this.globalVariableMap.getRawValue(key));
@@ -115,6 +133,28 @@ public class ActionContext {
 
   public UicdGlobalVariableMap getGlobalVariableMap() {
     return globalVariableMap;
+  }
+
+  public double getPlaySpeedFactor() {
+    return playSpeedFactor;
+  }
+
+  public void setPlaySpeedFactor(double playSpeedFactor) {
+    // Speed can not be smaller than 10% of the original speed
+    this.playSpeedFactor = Math.max(playSpeedFactor, 0.1);
+  }
+
+  /**
+   * Gets a descriptive path from this action context instance.
+   *
+   * @return Full path of the screenshot specific to the currently playing action..
+   */
+  public String getScreenCapFullPath() {
+    return Paths.get(
+            UicdConfig.getInstance().getTestOutputFolder(),
+            this.getExecutionId().toString(),
+            this.getCurrentPlayingActionId() + PNG_EXTENSION)
+        .toString();
   }
 
   /**

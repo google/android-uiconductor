@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.xmlparser;
+package com.google.wireless.qa.uicd.backend.core.xmlparser;
 
-import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
 import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -49,8 +49,7 @@ public class XmlHelper {
       List<String> xmls, Position pos, double xRatio, double yRatio) {
     XmlParser xmlParser = new XmlParser(xmls, xRatio, yRatio);
     Optional<NodeContext> smallestNode =
-        xmlParser.findSmallestNode(xmlParser.getNodeContextsList(), pos);
-
+        xmlParser.findSmallestNode(xmlParser.getNodeContextsList(), pos, xRatio, yRatio);
     Optional<NodeContext> rootNode = xmlParser.findLowestMeaningfulNode(smallestNode);
     if (!rootNode.isPresent() || rootNode.get().getCountVal() == 0) {
       return NodeContext.createRawClickNodeContext(pos);
@@ -113,7 +112,9 @@ public class XmlHelper {
       Optional<NodeContext> matchedLeafNode =
           xmlParser.findSmallestNode(
               xmlParser.getNodeContextsList(),
-              candidateNodeContext.getBounds().getCenterWithOffset(savedRootNode.getRelativePos()));
+              candidateNodeContext.getBounds().getCenterWithOffset(savedRootNode.getRelativePos()),
+              xRatio,
+              yRatio);
       candidateNodeContext.setLeafNodeContext(matchedLeafNode.get());
     }
     return candidateNodeContext;

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,24 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.devicesdriver;
+package com.google.wireless.qa.uicd.backend.core.devicesdriver;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.CHANGE_EVENT_FILE_MODE;
+import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.DOUBLE_CLICK_TEMPLATE;
+import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS;
+import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.GET_TOUCH_EVENT_CMD;
+import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.google.uicd.backend.core.constants.DeviceOrientation;
-import com.google.uicd.backend.core.constants.StrategyType;
-import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.core.utils.HttpProxyUtils;
-import com.google.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.uicd.backend.core.xmlparser.Position;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
+import com.google.wireless.qa.uicd.backend.core.constants.StrategyType;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.HttpProxyUtils;
+import com.google.wireless.qa.uicd.backend.core.utils.ImageUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Position;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -76,7 +81,8 @@ public class AndroidDeviceDriver {
 
   private static final Set<String> TV_DEVICE_TYPES = new HashSet<>(Arrays.asList("fugu", "elfin"));
   private static final Set<String> AUTO_DEVICE_TYPES =
-      new HashSet<>(Arrays.asList("bat_land", "bat"));
+      new HashSet<>(Arrays.asList("bat_land", "bat", "hawk"));
+  // TODO(yuchenhe): add wearable product types
   private static final Set<String> WEARABLE_DEVICE_TYPES = new HashSet<>(Arrays.asList());
   private static final boolean DOUBLE_CLICK = true;
 
@@ -105,15 +111,41 @@ public class AndroidDeviceDriver {
       logger.info("Skip click at (0,0)");
       return "";
     }
-    int deviceX = scaleToTargetPx(hostScreenX, hostScreenWidth, device.getWidth());
-    int deviceY = scaleToTargetPx(hostScreenY, hostScreenHeight, device.getHeight());
+    int deviceX = ImageUtil.scaleToTargetPx(hostScreenX, hostScreenWidth, device.getWidth());
+    int deviceY = ImageUtil.scaleToTargetPx(hostScreenY, hostScreenHeight, device.getHeight());
 
     logger.info("Click real device: " + deviceX + ", " + deviceY);
     if (isDoubleClick) {
+      doubleClickWithAdb(deviceX, deviceY);
+    } else {
       clickDeviceWithAdb(deviceX, deviceY);
     }
-    clickDeviceWithAdb(deviceX, deviceY);
     return "";
+  }
+
+  private void doubleClickWithAdb(int hostScreenX, int hostScreenY) {
+    try {
+      List<String> output = new ArrayList<>();
+      ADBCommandLineUtil.executeAdb(
+          GET_TOUCH_EVENT_CMD,
+          this.getDeviceId(),
+          output,
+          (int) EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS.getSeconds());
+      String event = output.get(0);
+      ADBCommandLineUtil.executeAdb(ROOT_ACCESS_CMD, this.getDeviceId());
+      ADBCommandLineUtil.executeAdb(
+          String.format(CHANGE_EVENT_FILE_MODE, event), this.getDeviceId());
+      ADBCommandLineUtil.executeAdb(
+          String.format(
+              DOUBLE_CLICK_TEMPLATE.replace("%s", event),
+              hostScreenX,
+              hostScreenY,
+              hostScreenX,
+              hostScreenY),
+          this.getDeviceId());
+    } catch (UicdExternalCommandException | IndexOutOfBoundsException e) {
+      logger.info("Fail to execute adb input." + e.getMessage());
+    }
   }
 
   private void clickDeviceWithAdb(int hostScreenX, int hostScreenY) {
@@ -165,8 +197,8 @@ public class AndroidDeviceDriver {
       logger.info("Skip click at (0,0)");
       return;
     }
-    int deviceX = scaleToTargetPx(hostScreenX, hostScreenWidth, device.getWidth());
-    int deviceY = scaleToTargetPx(hostScreenY, hostScreenHeight, device.getHeight());
+    int deviceX = ImageUtil.scaleToTargetPx(hostScreenX, hostScreenWidth, device.getWidth());
+    int deviceY = ImageUtil.scaleToTargetPx(hostScreenY, hostScreenHeight, device.getHeight());
 
     logger.info("Long click real device: " + deviceX + ", " + deviceY + " " + duration + " ms.");
     try {
@@ -181,8 +213,8 @@ public class AndroidDeviceDriver {
 
   public String dragStart(int x, int y) {
     dragInProgress = true;
-    int deviceX = scaleToTargetPx(x, hostScreenWidth, device.getWidth());
-    int deviceY = scaleToTargetPx(y, hostScreenHeight, device.getHeight());
+    int deviceX = ImageUtil.scaleToTargetPx(x, hostScreenWidth, device.getWidth());
+    int deviceY = ImageUtil.scaleToTargetPx(y, hostScreenHeight, device.getHeight());
     HashMap<String, String> coordinationMap = new HashMap<>();
     coordinationMap.put("x", String.valueOf(deviceX));
     coordinationMap.put("y", String.valueOf(deviceY));
@@ -199,8 +231,8 @@ public class AndroidDeviceDriver {
     if (!dragInProgress) {
       return "";
     }
-    int deviceX = scaleToTargetPx(x, hostScreenWidth, device.getWidth());
-    int deviceY = scaleToTargetPx(y, hostScreenHeight, device.getHeight());
+    int deviceX = ImageUtil.scaleToTargetPx(x, hostScreenWidth, device.getWidth());
+    int deviceY = ImageUtil.scaleToTargetPx(y, hostScreenHeight, device.getHeight());
     HashMap<String, String> coordinationMap = new HashMap<>();
     coordinationMap.put("x", String.valueOf(deviceX));
     coordinationMap.put("y", String.valueOf(deviceY));
@@ -215,8 +247,8 @@ public class AndroidDeviceDriver {
 
   public String dragStop(int x, int y) {
     dragInProgress = false;
-    int deviceX = scaleToTargetPx(x, hostScreenWidth, device.getWidth());
-    int deviceY = scaleToTargetPx(y, hostScreenHeight, device.getHeight());
+    int deviceX = ImageUtil.scaleToTargetPx(x, hostScreenWidth, device.getWidth());
+    int deviceY = ImageUtil.scaleToTargetPx(y, hostScreenHeight, device.getHeight());
     HashMap<String, String> coordinationMap = new HashMap<>();
     coordinationMap.put("x", String.valueOf(deviceX));
     coordinationMap.put("y", String.valueOf(deviceY));
@@ -235,10 +267,13 @@ public class AndroidDeviceDriver {
       int hostScreenEndX,
       int hostScreenEndY,
       boolean isZoomIn) {
-    int deviceStartX = scaleToTargetPx(hostScreenStartX, hostScreenWidth, device.getWidth());
-    int deviceStartY = scaleToTargetPx(hostScreenStartY, hostScreenHeight, device.getHeight());
-    int deviceEndX = scaleToTargetPx(hostScreenEndX, hostScreenWidth, device.getWidth());
-    int deviceEndY = scaleToTargetPx(hostScreenEndY, hostScreenHeight, device.getHeight());
+    int deviceStartX =
+        ImageUtil.scaleToTargetPx(hostScreenStartX, hostScreenWidth, device.getWidth());
+    int deviceStartY =
+        ImageUtil.scaleToTargetPx(hostScreenStartY, hostScreenHeight, device.getHeight());
+    int deviceEndX = ImageUtil.scaleToTargetPx(hostScreenEndX, hostScreenWidth, device.getWidth());
+    int deviceEndY =
+        ImageUtil.scaleToTargetPx(hostScreenEndY, hostScreenHeight, device.getHeight());
 
     Position startP1 =
         new Position((deviceStartX + deviceEndX) / 2, (deviceStartY + deviceEndY) / 2);
@@ -270,10 +305,13 @@ public class AndroidDeviceDriver {
 
   public void swipeDevice(
       int hostScreenStartX, int hostScreenStartY, int hostScreenEndX, int hostScreenEndY) {
-    int deviceStartX = scaleToTargetPx(hostScreenStartX, hostScreenWidth, device.getWidth());
-    int deviceStartY = scaleToTargetPx(hostScreenStartY, hostScreenHeight, device.getHeight());
-    int deviceEndX = scaleToTargetPx(hostScreenEndX, hostScreenWidth, device.getWidth());
-    int deviceEndY = scaleToTargetPx(hostScreenEndY, hostScreenHeight, device.getHeight());
+    int deviceStartX =
+        ImageUtil.scaleToTargetPx(hostScreenStartX, hostScreenWidth, device.getWidth());
+    int deviceStartY =
+        ImageUtil.scaleToTargetPx(hostScreenStartY, hostScreenHeight, device.getHeight());
+    int deviceEndX = ImageUtil.scaleToTargetPx(hostScreenEndX, hostScreenWidth, device.getWidth());
+    int deviceEndY =
+        ImageUtil.scaleToTargetPx(hostScreenEndY, hostScreenHeight, device.getHeight());
 
     deviceEndY = Math.min(device.getHeight(), deviceEndY);
     deviceStartY = Math.min(device.getHeight() - 5, deviceStartY);
@@ -303,7 +341,7 @@ public class AndroidDeviceDriver {
     try {
       map = mapper.readValue(rawResponse, new TypeReference<Map<String, Object>>() {});
       @SuppressWarnings("unchecked") // safe covariant cast
-          Map<String, String> xmlMap = (Map<String, String>) map.get("value");
+      Map<String, String> xmlMap = (Map<String, String>) map.get("value");
       xmls = combineXmls(xmlMap);
     } catch (ClassCastException | IOException e) {
       logger.info(System.err.toString());
@@ -384,13 +422,6 @@ public class AndroidDeviceDriver {
     return HTTP_LOCALHOST + device.getXmlDumperHostPort();
   }
 
-  private int scaleToTargetPx(int inputX, int srcRange, int targetRange) {
-    int scaledPx = (int) (1.0 * inputX / srcRange * targetRange);
-    scaledPx = Math.max(0, scaledPx);
-    scaledPx = Math.min(targetRange - 1, scaledPx);
-    return scaledPx;
-  }
-
   private int covertCharToKeyCode(int c) {
     if (c >= 48 && c <= 57) {
       return c - 41;
@@ -421,6 +452,7 @@ public class AndroidDeviceDriver {
     return c;
   }
 
+  // TODO(yuchenhe) provide better way to detect devicetype
   public DeviceDimension setScaleByDeviceType() {
     int originalWidth = device.getWidth();
     int originalHeight = device.getHeight();
@@ -473,7 +505,7 @@ public class AndroidDeviceDriver {
             getDeviceId(), device.getXmlDumperHostPort(), device.getXmlDumperDevicePort());
 
     // Sleep 5 seconds to make sure
-    Uninterruptibles.sleepUninterruptibly(TIME_TO_START_XML_DUMPER_SERVER.toMillis(), MILLISECONDS);
+    Uninterruptibles.sleepUninterruptibly(TIME_TO_START_XML_DUMPER_SERVER);
     isXmlDumperStarted = true;
   }
 
@@ -488,9 +520,14 @@ public class AndroidDeviceDriver {
   public void rotateDevice(DeviceOrientation deviceOrientation)
       throws UicdExternalCommandException {
     if (!device.getOrientation().equals(deviceOrientation)) {
+      UicdCoreDelegator.getInstance().tryStopMinicap(getDeviceId());
+      String disableAutoRotateCmd = "adb shell settings put system accelerometer_rotation 0";
       String executeCmd =
           "shell settings put system user_rotation " + deviceOrientation.getOrientation();
+
+      ADBCommandLineUtil.executeAdb(disableAutoRotateCmd, getDeviceId(), true);
       ADBCommandLineUtil.executeAdb(executeCmd, getDeviceId(), true);
+
       isRestartMinicap = true;
       isMinicapStarted = false;
       device.setOrientation(deviceOrientation);

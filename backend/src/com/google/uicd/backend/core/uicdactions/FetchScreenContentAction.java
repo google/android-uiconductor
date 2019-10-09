@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
-import com.google.uicd.backend.core.constants.ContentMatchType;
-import com.google.uicd.backend.core.constants.StrategyType;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
-import com.google.uicd.backend.core.xmlparser.Bounds;
-import com.google.uicd.backend.core.xmlparser.NodeContext;
-import com.google.uicd.backend.core.xmlparser.TextValidator;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
-import com.google.uicd.backend.core.xmlparser.XmlParser;
+import com.google.wireless.qa.uicd.backend.core.constants.ContentMatchType;
+import com.google.wireless.qa.uicd.backend.core.constants.StrategyType;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.TextValidator;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlParser;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +46,7 @@ public class FetchScreenContentAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     if (baseAction instanceof FetchScreenContentAction) {
       FetchScreenContentAction otherAction = (FetchScreenContentAction) baseAction;
       this.strategy = otherAction.strategy;
@@ -98,11 +98,11 @@ public class FetchScreenContentAction extends BaseAction {
       }
     }
     if (globalVariableName.isEmpty()
-        || !globalVariableName.contains(UicdGlobalVariableMap.UICD_PARAM_KEYWORD)) {
+        || !UicdGlobalVariableMap.containsGlobalVariableKeyWord(globalVariableName)) {
       logger.warning(
           String.format(
               "Variable name should be not empty and start with %s",
-              UicdGlobalVariableMap.UICD_PARAM_KEYWORD));
+              String.join(" or ", UicdGlobalVariableMap.PARAM_KEYWORD_LIST)));
     } else if (screenContent.isEmpty()) {
       logger.warning("screenContent is empty!");
     } else {

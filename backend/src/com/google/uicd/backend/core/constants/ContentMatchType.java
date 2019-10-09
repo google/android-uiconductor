@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.constants;
+package com.google.wireless.qa.uicd.backend.core.constants;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 /**
  * ContentMatchType, different type of content matching, used in screen content validation and log
@@ -30,11 +32,14 @@ public enum ContentMatchType {
   ContentMatchType(String contentMatchTypeName) {
     this.contentMatchTypeName = contentMatchTypeName;
   }
+
   private final String contentMatchTypeName;
 
+  @JsonCreator
   public static ContentMatchType fromString(String value) {
     for (ContentMatchType contentMatchType : ContentMatchType.values()) {
-      if (contentMatchType.contentMatchTypeName.equals(value)) {
+      if (contentMatchType.contentMatchTypeName.equalsIgnoreCase(value)
+          || contentMatchType.toString().equalsIgnoreCase(value)) {
         return contentMatchType;
       }
     }

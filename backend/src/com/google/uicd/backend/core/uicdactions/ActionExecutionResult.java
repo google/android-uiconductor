@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -29,6 +29,7 @@ import java.util.logging.Logger;
  * ActionExecutionResult, use this class to store the actual execution result from uicd, the result
  * is in the tree structure, similar to the action tree. go/uicd-design-doc for more details.
  *
+ * @author tccyp@google.com
  */
 @JsonAutoDetect(
     fieldVisibility = ANY,
@@ -117,6 +118,14 @@ public class ActionExecutionResult {
     this.content = content;
   }
 
+  /** setScreenCapOutput set the execution result for screenCap action. */
+  public void setImgValidationScreenCapOutput(String screenshotPath, String content) {
+    this.setOutputType(OutputType.IMG_VALIDATION);
+    this.externalFileType = ExternalFileType.SCREENSHOT;
+    this.setExternalFilePath(screenshotPath);
+    this.content = content;
+  }
+
   /** setLogOutput set the execution result for the logcat action */
   public void setLogOutput(String logFilePath, String content) {
     this.setOutputType(OutputType.LOG);
@@ -168,6 +177,7 @@ public class ActionExecutionResult {
     SCREENSHOT,
     LOG,
     VALIDATION,
+    IMG_VALIDATION,
     REGULAR,
     ALLDEVICES,
     COMPOUND

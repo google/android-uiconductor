@@ -1,21 +1,10 @@
-/* Copyright 2019 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+# This file is a temp file currently only keep for reference. All the tables are created in MySql
+# Workbench manually.
+
 -- mysql -u root -p  < initdb.sql
-DROP DATABASE IF EXISTS `uicddb`;
-CREATE SCHEMA `uicddb` ;
-CREATE TABLE `uicddb`.`uicd_testcase` (
+DROP DATABASE IF EXISTS `yuidb`;
+CREATE SCHEMA `yuidb` ;
+CREATE TABLE `yuidb`.`yui_testcase` (
   `uuid` VARCHAR(60) NOT NULL PRIMARY KEY,
   `type` VARCHAR(60) NOT NULL,
   `name` VARCHAR(100) NOT NULL,
@@ -26,7 +15,7 @@ CREATE TABLE `uicddb`.`uicd_testcase` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
    INDEX idx_action_type(`type`));
 
-CREATE TABLE `uicddb`.`uicd_testcases_tree` (
+CREATE TABLE `yuidb`.`yui_testcases_tree` (
   `uuid` VARCHAR(60) NOT NULL PRIMARY KEY,
   `user_id` VARCHAR(60),
   `project_id` VARCHAR(60),
@@ -36,7 +25,7 @@ CREATE TABLE `uicddb`.`uicd_testcases_tree` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
   INDEX idx_action_type(`user_id`));
 
-CREATE TABLE `uicddb`.`uicd_test_history` (
+CREATE TABLE `yuidb`.`yui_test_history` (
   `uuid` VARCHAR(60) NOT NULL PRIMARY KEY,
   `testcase_uuid` VARCHAR(60),
   `user_id` VARCHAR(60),
@@ -48,3 +37,17 @@ CREATE TABLE `uicddb`.`uicd_test_history` (
   `created_by` VARCHAR(50),
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
   INDEX idx_action_type(`user_id`));
+
+CREATE TABLE `yuidb`.`uicd_projects` (
+  `project_id` VARCHAR(60) NOT NULL PRIMARY KEY,
+  `user_id` VARCHAR(60) NOT NULL,
+  `group_id` VARCHAR(60) NOT NULL,
+  `project_name` VARCHAR(100) NOT NULL,
+  `created_by` VARCHAR(50),
+  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  INDEX idx_user_id(`user_id`));
+
+-- Create a new unique combination
+ALTER TABLE `yuidb`.`uicd_projects` ADD UNIQUE `unique_project_name_per_user`(`user_id`,`project_name`);
+-- Drop created index by name
+# ALTER TABLE `yuidb`.`uicd_projects` DROP INDEX `unique_project_name_per_user`;

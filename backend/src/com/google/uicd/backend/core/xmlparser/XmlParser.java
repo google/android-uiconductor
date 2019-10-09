@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.xmlparser;
+package com.google.wireless.qa.uicd.backend.core.xmlparser;
 
 import com.google.common.collect.HashBiMap;
-import com.google.uicd.backend.core.constants.UicdConstant;
-import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
-import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.wireless.qa.uicd.backend.core.constants.UicdConstant;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
@@ -37,6 +38,8 @@ public class XmlParser {
   // ScrollScreenContentValidationAction sometimes doesn't work.
   private static final int ELEMENT_MIN_WIDTH_HEIGHT_THRESHOLD = 10;
   private static final double FULL_SCREEN_NODE_SIZE_THRESHOLD = 0.8;
+
+  private static final int MIN_NODES_IN_SINGLE_LAYER = 8;
 
   public HashBiMap<Bounds, NodeContext> boundsElementHashBiMap = HashBiMap.create();
   private double xRatio;
@@ -60,6 +63,10 @@ public class XmlParser {
     } catch (Exception e) {
       UicdCoreDelegator.getInstance().logException(e);
     }
+  }
+
+  public Optional<NodeContext> findNodeContextByQuery(Query query) {
+    return nodeContextsList.stream().filter(x -> x.matchQuery(query)).findFirst();
   }
 
   public Optional<NodeContext> findNodeContextByResourceIdAndBounds(
@@ -101,8 +108,9 @@ public class XmlParser {
     return res.orElse(null);
   }
 
-  public Optional<NodeContext> findSmallestNode(List<NodeContext> nodeContexts, Position pos) {
-    List<NodeContext> filteredNodes = filterByPosition(nodeContexts, pos);
+  public Optional<NodeContext> findSmallestNode(
+      List<NodeContext> nodeContexts, Position pos, double xRatio, double yRatio) {
+    List<NodeContext> filteredNodes = filterByPosition(nodeContexts, pos, xRatio, yRatio);
     if (filteredNodes.isEmpty()) {
       return Optional.empty();
     }
@@ -126,14 +134,14 @@ public class XmlParser {
   }
 
   // find area that contains x, y
-  private List<NodeContext> filterByPosition(List<NodeContext> nodeContexts, Position pos) {
+  private static List<NodeContext> filterByPosition(
+      List<NodeContext> nodeContexts, Position pos, double xRatio, double yRatio) {
     List<NodeContext> filteredNodeContextList = new ArrayList<>();
     for (NodeContext nodeContext : nodeContexts) {
       Bounds bounds = nodeContext.getBounds();
-      if (!bounds.isInCurrentBounds(pos)) {
-        continue;
+      if (bounds.isInCurrentBounds(pos) && bounds.isValidBoundsOnScreen(xRatio, yRatio)) {
+        filteredNodeContextList.add(nodeContext);
       }
-      filteredNodeContextList.add(nodeContext);
     }
     return filteredNodeContextList;
   }
@@ -195,13 +203,13 @@ public class XmlParser {
 
   // If current node's size is too big and it is some Layout Node, it won't be the valid smallest
   // node
-  private boolean isQualifiedSmallestNode(NodeContext nodeContext) {
+  private static boolean isQualifiedSmallestNode(NodeContext nodeContext) {
     return nodeContext.getBounds().areaSize()
             < (Bounds.getFullScreenBounds().areaSize() * FULL_SCREEN_NODE_SIZE_THRESHOLD)
         || !nodeContext.getClassName().contains("Layout");
   }
 
-  private void sortByLayerAndBounds(List<NodeContext> nodeContexts) {
+  private static void sortByLayerAndBounds(List<NodeContext> nodeContexts) {
     Collections.sort(
         nodeContexts,
         Comparator.comparingInt(NodeContext::getXmlLayerIndex)
@@ -209,11 +217,41 @@ public class XmlParser {
             .thenComparingDouble((NodeContext n) -> n.getBounds().areaSize()));
   }
 
-  /* convert xml node to nodeContext */
+  /** Convert xml node to nodeContext. Nodes in meaningless layer will be filtered out. */
   private void initBounds(List<Element> roots) throws UicdXMLFormatException {
     int xmlLayerIndex = 0;
     for (Element root : roots) {
-      initBoundsFromRoot(root, xmlLayerIndex++);
+      initBoundsFromRoot(root, xmlLayerIndex);
+      filterMeaninglessLayers(xmlLayerIndex);
+      xmlLayerIndex++;
+    }
+  }
+
+  /**
+   * In order to avoid including some meaningless layer that users have a very low chance to select,
+   * all nodes in that layer will be filtered out. It would be considered as meaningless layer if
+   * there's only less than {@code MIN_NODES_IN_SINGLE_LAYER} nodes and none of them have text,
+   * contentDesc set and every node is on the edge of the screen.
+   */
+  private void filterMeaninglessLayers(int currentXmlLayerIndex) {
+    List<NodeContext> nodesInCurrentLayer =
+        getNodeContextsList().stream()
+            .filter(nodeContext -> nodeContext.getXmlLayerIndex() == currentXmlLayerIndex)
+            .collect(Collectors.toList());
+    if (nodesInCurrentLayer.size() < MIN_NODES_IN_SINGLE_LAYER) {
+      boolean meaninglessLayer = true;
+      for (NodeContext node : nodesInCurrentLayer) {
+        if (!node.getText().isEmpty()
+            || !node.getContentDesc().isEmpty()
+            || !node.getBounds().onEdge()) {
+          meaninglessLayer = false;
+          break;
+        }
+      }
+      if (meaninglessLayer) {
+        getNodeContextsList()
+            .removeIf(nodeContext -> nodeContext.getXmlLayerIndex() == currentXmlLayerIndex);
+      }
     }
   }
 
@@ -257,7 +295,7 @@ public class XmlParser {
     }
   }
 
-  private String getNodeAttrAsString(Element node, String attrName) {
+  private static String getNodeAttrAsString(Element node, String attrName) {
     if (node.attribute(attrName) == null) {
       return "";
     }

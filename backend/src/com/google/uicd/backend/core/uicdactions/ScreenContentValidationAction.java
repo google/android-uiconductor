@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.uicd.backend.core.constants.ContentMatchType;
-import com.google.uicd.backend.core.constants.ScreenContentSearchType;
-import com.google.uicd.backend.core.constants.StopType;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
-import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ScreenContentValidationActionSantinizer;
-import com.google.uicd.backend.core.xmlparser.Bounds;
-import com.google.uicd.backend.core.xmlparser.NodeContext;
-import com.google.uicd.backend.core.xmlparser.TextValidator;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
-import com.google.uicd.backend.core.xmlparser.XmlParser;
+import com.google.wireless.qa.uicd.backend.core.constants.ContentMatchType;
+import com.google.wireless.qa.uicd.backend.core.constants.ContextStorageType;
+import com.google.wireless.qa.uicd.backend.core.constants.ElementSelectorType;
+import com.google.wireless.qa.uicd.backend.core.constants.ScreenContentSearchType;
+import com.google.wireless.qa.uicd.backend.core.constants.StopType;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ScreenContentValidationActionSantinizer;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.TextValidator;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlParser;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
@@ -37,20 +39,21 @@ import java.util.Optional;
 @JsonDeserialize(converter = ScreenContentValidationActionSantinizer.class)
 public class ScreenContentValidationAction extends ValidationAction {
 
-  public static final String VALIDATE_TYPE_RESOURCE_ID = "resourceid";
-  public static final String VALIDATE_TYPE_TEXT = "displayText";
-  public static final String VALIDATE_TYPE_CHECKED = "checked";
-  protected String selectedText;
-  protected String selectedType;
+  private String selectedText;
+  private ElementSelectorType selectedType;
   @JsonIgnore protected NodeContext foundNodeContext;
   @JsonIgnore protected String validateInfo;
   private Bounds selectedBound;
+
+  private ContextStorageType contextStorageType = ContextStorageType.CONTEXT_BASED;
+  private ScreenContentSearchType screenContentSearchType;
   // advanced search
   protected NodeContext savedNodeContext;
-  private ScreenContentSearchType screenContentSearchType;
+
 
   public ScreenContentValidationAction() {}
 
+  @Deprecated
   public ScreenContentValidationAction(
       Bounds selectedBound,
       String type,
@@ -60,7 +63,7 @@ public class ScreenContentValidationAction extends ValidationAction {
       NodeContext nodeContext,
       StopType stopType) {
     this.selectedBound = selectedBound;
-    this.selectedType = type;
+    this.selectedType = ElementSelectorType.fromString(type);
     this.stopType = stopType;
     this.screenContentSearchType = ScreenContentSearchType.fromString(boundsSearchType);
     this.setName(this.getClass().getSimpleName());
@@ -80,7 +83,27 @@ public class ScreenContentValidationAction extends ValidationAction {
     }
   }
 
+  public ScreenContentValidationAction(ValidationReqDetails validationReqDetails) {
+    this.selectedBound = validationReqDetails.getSelectedBounds();
+    this.selectedType = validationReqDetails.getElementSelectorType();
+    this.stopType = validationReqDetails.getStopType();
+    this.screenContentSearchType = validationReqDetails.getScreenContentSearchType();
+    this.setName(this.getClass().getSimpleName());
+    this.selectedText = validationReqDetails.getContentData();
+    this.contextStorageType = validationReqDetails.getContextStorageType();
+    if (validationReqDetails.getNodeContext().isPresent()) {
+      this.savedNodeContext = validationReqDetails.getNodeContext().get();
+    }
+    if (validationReqDetails.getContextStorageType() == ContextStorageType.TEXT_BASED) {
+      TextValidator textValidator =
+          new TextValidator(this.selectedText, validationReqDetails.getContentMatchType());
+      this.setTextValidator(textValidator);
+    }
+
+  }
+
   protected void clear() {
+    super.clear();
     foundNodeContext = new NodeContext();
   }
 
@@ -100,7 +123,7 @@ public class ScreenContentValidationAction extends ValidationAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateAction(baseAction);
 
     if (baseAction instanceof ScreenContentValidationAction) {
       ScreenContentValidationAction otherAction = (ScreenContentValidationAction) baseAction;
@@ -108,7 +131,8 @@ public class ScreenContentValidationAction extends ValidationAction {
       this.selectedType = otherAction.selectedType;
       this.stopType = otherAction.stopType;
       this.screenContentSearchType = otherAction.screenContentSearchType;
-      this.textValidator.setPatternValue(this.selectedText);
+      this.textValidator = otherAction.textValidator;
+      this.contextStorageType = otherAction.contextStorageType;
     }
   }
 
@@ -130,7 +154,8 @@ public class ScreenContentValidationAction extends ValidationAction {
 
   // TODO  need change the content from nearby
   @Override
-  public boolean validateRaw(ActionContext actionContext, AndroidDeviceDriver androidDeviceDriver)
+  protected boolean validateRaw(
+      ActionContext actionContext, AndroidDeviceDriver androidDeviceDriver)
       throws UicdDeviceHttpConnectionResetException {
     List<String> xmls = androidDeviceDriver.fetchCurrentXML();
     String targetText =
@@ -146,20 +171,20 @@ public class ScreenContentValidationAction extends ValidationAction {
             actionContext.expandUicdGlobalVariable(
                 this.textValidator.getPatternValue(), androidDeviceDriver.getDeviceId()),
             this.textValidator.getContentMatchType());
-    // first we validate content
-    if (savedNodeContext == null) {
 
+    // first we validate content
+    if (savedNodeContext == null || this.contextStorageType != ContextStorageType.CONTEXT_BASED) {
       XmlParser xmlParser =
           new XmlParser(
               xmls, androidDeviceDriver.getWidthRatio(), androidDeviceDriver.getHeightRatio());
       Optional<NodeContext> candidateNode = Optional.empty();
       int distanceThreshold = getDistanceThreshold(androidDeviceDriver);
-      if (selectedType.equalsIgnoreCase(VALIDATE_TYPE_RESOURCE_ID)) {
+      if (selectedType == ElementSelectorType.RESOURCE_ID) {
         candidateNode =
             xmlParser.findNodeContextByResourceIdAndBounds(
                 localTextValidator, this.selectedBound, distanceThreshold);
 
-      } else if (selectedType.equalsIgnoreCase(VALIDATE_TYPE_TEXT)) {
+      } else if (selectedType == ElementSelectorType.DISPLAY_TEXT) {
 
         candidateNode =
             xmlParser.findNodeContextByTextValidatorAndBounds(
@@ -196,7 +221,7 @@ public class ScreenContentValidationAction extends ValidationAction {
           return false;
         }
       }
-      if (selectedType.equalsIgnoreCase(VALIDATE_TYPE_CHECKED)) {
+      if (selectedType == ElementSelectorType.CHECK) {
         if (foundNodeContext.findNodeByCheckStatus(Boolean.parseBoolean(targetText)) == null) {
           return false;
         }
@@ -242,14 +267,13 @@ public class ScreenContentValidationAction extends ValidationAction {
     }
 
     String foundsText = "";
-    String logContent = "";
 
-    if (selectedType.equalsIgnoreCase(VALIDATE_TYPE_RESOURCE_ID)) {
+    if (selectedType == ElementSelectorType.RESOURCE_ID) {
       foundsText = foundNodeContext == null ? "unknown" : foundNodeContext.getResourceId();
     } else {
       foundsText = foundNodeContext == null ? "unknown" : foundNodeContext.getDisplayEstimate();
     }
-    logContent =
+    String logContent =
         String.format(
             "Validation Result: %b. StopType: %s. Looking for %s: %s of %s, found node: %s,",
             this.validationResult,
@@ -261,39 +285,41 @@ public class ScreenContentValidationAction extends ValidationAction {
     actionExecutionResult.setRegularOutput(logContent);
     actionExecutionResult.setActionId(this.getActionId().toString());
     actionExecutionResult.setPlayStatus(this.playStatus);
+    // TODO yuchen Also save to log service?
     return actionExecutionResult;
   }
 
-  private boolean validateTextInTree(NodeContext nodeContext) {
-    String xmlText = "";
-    switch (selectedType) {
-      case "resourceId":
-        xmlText = nodeContext.getResourceId();
-        break;
-      case "checked":
-        xmlText = Boolean.toString(nodeContext.isChecked());
-        break;
-      case "displayText":
-        xmlText = nodeContext.getDisplayEstimate();
-        break;
-      default:
-        // fall through
-    }
-    if (this.getTextValidator().isMatch(xmlText)) {
-      return true;
-    }
-
-    for (NodeContext child : nodeContext.getChildren()) {
-      if (validateTextInTree(child)) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   private void createDefaultTextValidator() {
     TextValidator textValidator =
         new TextValidator(this.selectedText, ContentMatchType.fromString("Equals"));
     this.setTextValidator(textValidator);
+  }
+
+  public ElementSelectorType getSelectedType() {
+    return selectedType;
+  }
+
+  public void setSelectedType(
+      ElementSelectorType selectedType) {
+    this.selectedType = selectedType;
+  }
+
+  public NodeContext getSavedNodeContext() {
+    return savedNodeContext;
+  }
+
+  public void setSavedNodeContext(
+      NodeContext savedNodeContext) {
+    this.savedNodeContext = savedNodeContext;
+  }
+
+  public ScreenContentSearchType getScreenContentSearchType() {
+    return screenContentSearchType;
+  }
+
+  public void setScreenContentSearchType(
+      ScreenContentSearchType screenContentSearchType) {
+    this.screenContentSearchType = screenContentSearchType;
   }
 }

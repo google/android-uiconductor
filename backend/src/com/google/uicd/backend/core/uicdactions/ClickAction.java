@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
-import com.google.uicd.backend.core.constants.StrategyType;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.uicd.backend.core.xmlparser.NodeContext;
-import com.google.uicd.backend.core.xmlparser.Position;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.wireless.qa.uicd.backend.core.constants.StrategyType;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Position;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
 import java.util.List;
 
 /** ClickAction */
@@ -46,7 +46,7 @@ public class ClickAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     if (baseAction instanceof ClickAction) {
       ClickAction otherAction = (ClickAction) baseAction;
       this.isRawXY = otherAction.isRawXY;
@@ -57,6 +57,9 @@ public class ClickAction extends BaseAction {
 
   @Override
   public String getDisplay() {
+    if (isDoubleClick) {
+      return "Double Click";
+    }
     if (isByElement) {
       return String.format("%s - %s", strategy, selector);
     }

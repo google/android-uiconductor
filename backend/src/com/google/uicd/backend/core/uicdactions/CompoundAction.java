@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
-import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
+import static com.google.common.base.Strings.isNullOrEmpty;
+
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayMode;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
+import com.google.wireless.qa.uicd.backend.core.utils.AdditionalData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +33,15 @@ public class CompoundAction extends BaseAction implements Cloneable {
   public List<String> childrenIdList = new ArrayList<>();
   private int repeatTime = 1;
   private boolean failAtTheEnd = false;
+  private final AdditionalData additionalData = new AdditionalData();
+
+  @Override
+  public String getName() {
+    if (isNullOrEmpty(this.name)) {
+      setName("Default_Workflow_" + getActionId().toString().substring(0, 4));
+    }
+    return this.name;
+  }
 
   @Override
   public String getDisplay() {
@@ -68,6 +80,9 @@ public class CompoundAction extends BaseAction implements Cloneable {
 
     for (int i = 0; i < repeatTime; i++) {
       for (BaseAction action : childrenActions) {
+        // Update currently playing action ID.
+        actionContext.setCurrentPlayingActionId(action.getActionId());
+
         if (stopCurrentLevel) {
           action.playStatus = PlayStatus.SKIPPED;
         } else {
@@ -131,9 +146,22 @@ public class CompoundAction extends BaseAction implements Cloneable {
     }
   }
 
+  public void removeLastAction() {
+    if (this.childrenActions.isEmpty()) {
+      return;
+    }
+    this.removeByIndex(this.childrenIdList.size() - 1);
+  }
+
+  public void removeByIndex(int index) {
+    this.childrenActions.remove(index);
+    this.childrenIdList.remove(index);
+  }
+
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    boolean runAlwaysChanged = baseAction.runAlways != this.runAlways;
+    super.updateCommonFields(baseAction);
 
     if (baseAction instanceof CompoundAction) {
       CompoundAction otherAction = (CompoundAction) baseAction;
@@ -153,6 +181,21 @@ public class CompoundAction extends BaseAction implements Cloneable {
       childrenActions = new ArrayList<>();
       for (String childId : childrenIdList) {
         childrenActions.add(map.get(UUID.fromString(childId)));
+      }
+      if (runAlwaysChanged) {
+        setRunAlwaysForChildren(this.runAlways);
+      }
+    }
+  }
+
+  private void setRunAlwaysForChildren(boolean isRunWays) {
+    for (BaseAction childAction : childrenActions) {
+      if (childAction != null) {
+        childAction.runAlways = isRunWays;
+        if (childAction instanceof CompoundAction) {
+          CompoundAction childCompound = (CompoundAction) childAction;
+          childCompound.setRunAlwaysForChildren(isRunWays);
+        }
       }
     }
   }
@@ -182,6 +225,9 @@ public class CompoundAction extends BaseAction implements Cloneable {
               "Cycling reference. Can not add child Action: %s", action.getActionId().toString()));
       return;
     }
+    if (action.getName().isEmpty()) {
+      action.setName(action.getDisplay());
+    }
     childrenActions.add(action);
     childrenIdList.add(action.getActionId().toString());
   }
@@ -203,5 +249,9 @@ public class CompoundAction extends BaseAction implements Cloneable {
     newAction.childrenActions = new ArrayList<>(this.childrenActions);
     newAction.childrenIdList = new ArrayList<>(this.childrenIdList);
     return newAction;
+  }
+
+  public AdditionalData getAdditionalData() {
+    return this.additionalData;
   }
 }

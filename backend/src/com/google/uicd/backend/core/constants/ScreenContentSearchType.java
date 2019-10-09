@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.constants;
+package com.google.wireless.qa.uicd.backend.core.constants;
 
-/**
- * ScreenContentSearchType
- */
+import com.fasterxml.jackson.annotation.JsonCreator;
+
+/** ScreenContentSearchType */
 public enum ScreenContentSearchType {
   STRICT("Strict"),
   AROUND("Around"),
@@ -28,11 +28,14 @@ public enum ScreenContentSearchType {
   ScreenContentSearchType(String screenContentSearchType) {
     this.screenContentSearchType = screenContentSearchType;
   }
+
   private final String screenContentSearchType;
 
+  @JsonCreator
   public static ScreenContentSearchType fromString(String value) {
     for (ScreenContentSearchType screenContentSearchType : ScreenContentSearchType.values()) {
-      if (screenContentSearchType.screenContentSearchType.equals(value)) {
+      if (screenContentSearchType.screenContentSearchType.equalsIgnoreCase(value)
+          || screenContentSearchType.toString().equalsIgnoreCase(value)) {
         return screenContentSearchType;
       }
     }
@@ -42,5 +45,4 @@ public enum ScreenContentSearchType {
   public String getSearchContentType() {
     return screenContentSearchType;
   }
-
 }

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.xmlparser;
+package com.google.wireless.qa.uicd.backend.core.xmlparser;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -20,8 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Splitter;
-import com.google.uicd.backend.core.constants.ScreenContentSearchType;
-import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.wireless.qa.uicd.backend.core.constants.ScreenContentSearchType;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,6 +35,10 @@ public class Bounds {
   private static final double AREA_EPSILON = 0.01;
   private static final double SIMILAR_SIZE_THRESHOLD = 0.3;
   private static final double BOUNDS_AROUND_RANGE_RATIO = 0.2;
+  // The minimum width of element on screen is the battery image in status bar which is 21px, so we
+  // set minimum height and width to 20px to include it.
+  private static final double VALID_BOUNDS_MIN_HEIGHT_PX = 20;
+  private static final double VALID_BOUNDS_MIN_WIDTH_PX = 20;
 
   public Bounds() {
   }
@@ -82,6 +86,9 @@ public class Bounds {
     return bounds;
   }
 
+  /**
+   * TODO(jacksun) what is this for
+   */
   public Bounds getNearByBounds(double ratio) {
     double xx1 = Math.max(this.getCenter().x - this.getWidth() / 2.0 * (1.0 + ratio), 0.0);
     double xx2 = Math
@@ -181,6 +188,17 @@ public class Bounds {
     }
   }
 
+  /** Check whether a bounds is too small. */
+  public boolean isValidBoundsOnScreen(double xRatio, double yRatio) {
+    double width = getWidth();
+    double height = getHeight();
+    boolean notTooSmall =
+        width * xRatio >= VALID_BOUNDS_MIN_WIDTH_PX
+            && height * yRatio >= VALID_BOUNDS_MIN_HEIGHT_PX;
+    boolean notTooThin = (width > height ? width / height : height / width) < 20;
+    return notTooSmall && notTooThin;
+  }
+
   @Override
   public String toString() {
     return "bounds:[" + x1 + "," + y1 + "][" + x2 + "," + y2 + "], center:" + getCenter();
@@ -202,5 +220,9 @@ public class Bounds {
       /** screenContentSearchType == ScreenContentSearchType.STRICT Do nothing */
       return new Bounds(x1, y1, x2, y2);
     }
+  }
+
+  public boolean onEdge() {
+    return this.x1 == 0 || this.x2 == 0 || this.y1 == 0 || this.y2 == 0;
   }
 }

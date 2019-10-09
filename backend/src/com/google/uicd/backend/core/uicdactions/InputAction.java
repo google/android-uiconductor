@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 
 /** InputAction For keyboard input */
 public class InputAction extends BaseAction {
@@ -49,7 +49,7 @@ public class InputAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     if (baseAction instanceof InputAction) {
       InputAction otherAction = (InputAction) baseAction;
       this.isSingleChar = otherAction.isSingleChar;

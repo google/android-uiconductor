@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.recorder.websocket.minicap;
+package com.google.wireless.qa.uicd.backend.recorder.websocket.minicap;
 
 import com.google.common.base.Ascii;
 import com.google.common.primitives.Ints;
-import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.devicesdriver.Device;
-import com.google.uicd.backend.core.devicesdriver.DeviceDimension;
-import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapJettyServer;
-import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
+import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.Device;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.DeviceDimension;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.CommandLineUtil;
+import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapJettyServer;
+import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,18 +37,16 @@ import java.util.logging.Logger;
 
 public class MinicapUtil {
   private static Logger logger = LogManager.getLogManager().getLogger("uicd");
-  public static HashMap<AndroidDeviceDriver, MinicapService> deviceMinicapMapping = new HashMap();
+  public static HashMap<AndroidDeviceDriver, MinicapService> deviceMinicapMapping = new HashMap<>();
   public static HashMap<AndroidDeviceDriver, MinicapJettyServer> deviceMinicapServerMapping =
-      new HashMap();
+      new HashMap<>();
   // The path to minicap on the device. It has to be linux format, don't use paths.get().
   private static final String MINICAP_TMP_DIR_ON_DEVICE = "/data/local/tmp/minicap-devel";
 
   public static String restartMinicap(String deviceId, int rotate) {
     String ret = "";
     Optional<AndroidDeviceDriver> androidDeviceDriver =
-        deviceMinicapServerMapping
-            .keySet()
-            .stream()
+        deviceMinicapServerMapping.keySet().stream()
             .filter(p -> p.getDeviceId().equals(deviceId))
             .findFirst();
     if (!androidDeviceDriver.isPresent()) {
@@ -78,8 +77,8 @@ public class MinicapUtil {
       // Push minicap.so
       ADBCommandLineUtil.executeAdb(
           String.format(
-              "adb push %s %s", getMinicapFilePath(device, minicapBasePath),
-              MINICAP_TMP_DIR_ON_DEVICE),
+              "adb push %s %s",
+              getMinicapFilePath(device, minicapBasePath), MINICAP_TMP_DIR_ON_DEVICE),
           device.getDeviceId());
     } catch (UicdExternalCommandException e) {
       logger.warning("Failed to push minicap files." + e.getMessage());
@@ -88,9 +87,8 @@ public class MinicapUtil {
 
   private static void grantMinicapPermission(Device device) {
     try {
-      ADBCommandLineUtil.executeAdb(String.format("shell chmod -R 777 %s",
-          MINICAP_TMP_DIR_ON_DEVICE),
-          device.getDeviceId());
+      ADBCommandLineUtil.executeAdb(
+          String.format("shell chmod -R 777 %s", MINICAP_TMP_DIR_ON_DEVICE), device.getDeviceId());
     } catch (UicdExternalCommandException e) {
       logger.warning("Failed to grant permission for minicap files." + e.getMessage());
     }
@@ -104,26 +102,27 @@ public class MinicapUtil {
 
     // For PPR1, the standard minicap.so for android-28 doesn't work. Keep this logic here since
     // there are still some devices in PPR1.
-    if (buildId.toUpperCase().contains("PPR1")) {
+    if (Ascii.toUpperCase(buildId).contains("PPR1")
+        || Ascii.toUpperCase(device.getReleaseVersion()).equals("9")) {
       minicapVersionSuffix = "28-ppr1";
     }
 
-    // 29(Android Q) is the max version minicap currently supports.
+    // 29 (Android Q) is the max version minicap currently supports.
     if (sdkIntVersion == null
         || sdkIntVersion > 28
-        || Ascii.toUpperCase(device.getReleaseVersion()).equals("Q")) {
-      minicapVersionSuffix = "29";
+        || Ascii.toUpperCase(device.getReleaseVersion()).equals("R")) {
+      minicapVersionSuffix = "master";
     }
 
     return Paths.get(
-        minicapBasePath,
-        "jni",
-        "minicap-shared",
-        "aosp",
-        "libs",
-        "android-" + minicapVersionSuffix,
-        abi,
-        "minicap.so")
+            minicapBasePath,
+            "jni",
+            "minicap-shared",
+            "aosp",
+            "libs",
+            "android-" + minicapVersionSuffix,
+            abi,
+            "minicap.so")
         .toString();
   }
 
@@ -193,6 +192,19 @@ public class MinicapUtil {
           + ",\"status\":\"done\", \"command result\":\""
           + String.join(" ", ret)
           + "\"}";
+    }
+  }
+
+  public static void stopMinicap(String deviceId) {
+    String stopMinicapCmd =
+        String.format(
+            "adb -s %s shell ps | grep minicap | awk '{print $2}' | xargs adb -s %s shell kill",
+            deviceId, deviceId);
+
+    try {
+      CommandLineUtil.execute(stopMinicapCmd, new ArrayList<>(), true);
+    } catch (UicdExternalCommandException e) {
+      logger.warning("Can not stop minicap.");
     }
   }
 

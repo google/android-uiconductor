@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,26 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.controllers;
+package com.google.wireless.qa.uicd.backend.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.constants.DeviceOrientation;
-import com.google.uicd.backend.core.constants.UicdConstant;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.devicesdriver.Device;
-import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
-import com.google.uicd.backend.core.exceptions.UicdActionException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.core.utils.HostInfoUtil;
-import com.google.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.uicd.backend.core.xmlparser.Bounds;
-import com.google.uicd.backend.app.Application;
-import com.google.uicd.backend.recorder.websocket.minicap.MinicapUtil;
-import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
-import com.google.uicd.backend.recorder.workflowmgr.WorkflowManager;
+import com.google.wireless.qa.uicd.backend.app.Application;
+import com.google.wireless.qa.uicd.backend.controllers.requests.PlayActionRequest;
+import com.google.wireless.qa.uicd.backend.controllers.responses.DevicesStatusResponse;
+import com.google.wireless.qa.uicd.backend.controllers.responses.GetUserPresetGlobalVariableResponse;
+import com.google.wireless.qa.uicd.backend.controllers.responses.ImageResponse;
+import com.google.wireless.qa.uicd.backend.controllers.responses.ImagesResponse;
+import com.google.wireless.qa.uicd.backend.controllers.responses.ProjectResponse;
+import com.google.wireless.qa.uicd.backend.controllers.responses.ScreenDimensionsResponse;
+import com.google.wireless.qa.uicd.backend.controllers.responses.UuidResponse;
+import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
+import com.google.wireless.qa.uicd.backend.core.constants.UicdConstant;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.Device;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ValidationReqDetails;
+import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
+import com.google.wireless.qa.uicd.backend.recorder.services.ProjectManager;
+import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.MinicapUtil;
+import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
+import com.google.wireless.qa.uicd.backend.recorder.workflowmgr.WorkflowManager;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,6 +52,7 @@ import java.util.concurrent.Callable;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +60,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** MainController. */
+@ComponentScan("com.google.wireless.qa.uicd.backend.*")
 @EnableAutoConfiguration
 @RestController
 public class MainController {
@@ -57,6 +71,7 @@ public class MainController {
   private static final boolean DOUBLE_CLICK = true;
   private DevicesDriverManager devicesDriverManager;
   @Autowired WorkflowManager workflowManager;
+  @Autowired ProjectManager projectManager;
 
   @CrossOrigin(origins = "*")
   @RequestMapping("/getDevicesList")
@@ -90,13 +105,13 @@ public class MainController {
     };
   }
 
-  // NOTE: This is used for test purposes only (e.g, Postman). Currently we don't provide
-  // a call to stopXmldumperServer on frontend.
+  // NOTE: This is used for test purposes only (e.g, Postman). Currently we don't provide a call to
+  // stopXmlDumperServer on frontend, only MoblieHarness will stop xmldumper after a test.
   @CrossOrigin(origins = "*")
-  @RequestMapping("/stopXmldumperServer")
-  public Callable<String> stopXmldumperServer(@RequestParam("deviceId") String deviceId) {
+  @RequestMapping("/stopXmlDumperServer")
+  public Callable<String> stopXmlDumperServer(@RequestParam("deviceId") String deviceId) {
     return () -> {
-      devicesDriverManager.stopXmldumperServer(deviceId);
+      devicesDriverManager.stopXmlDumperServer(deviceId);
       return DONE;
     };
   }
@@ -121,8 +136,7 @@ public class MainController {
   public Callable<String> getDeviceRatios() {
     double heightRatio = devicesDriverManager.getSelectedAndroidDeviceDriver().getHeightRatio();
     double widthRatio = devicesDriverManager.getSelectedAndroidDeviceDriver().getWidthRatio();
-    return () ->
-        String.format("{\"width\":  %f, \"height\":  %f}", widthRatio, heightRatio);
+    return () -> String.format("{\"width\":  %f, \"height\":  %f}", widthRatio, heightRatio);
   }
 
   @CrossOrigin(origins = "*")
@@ -137,26 +151,10 @@ public class MainController {
     };
   }
 
-  /**
-   * Use POST method instead of GET in order to transmit the template image data, which has larger
-   * size than usual parameters. For convenience, all the data has been stored into JSON format and
-   * converted into string.
-   */
-  @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/imageValidationClick", method = RequestMethod.POST)
-  public Callable<String> imageValidationClick(
-      @RequestBody String imageValidationClickMetadataJson) {
-    return () -> {
-      workflowManager.recordAndImageValidationClick(imageValidationClickMetadataJson);
-      return DONE;
-    };
-  }
-
   @CrossOrigin(origins = "*")
   @RequestMapping("/dragStart")
   public Callable<String> dragDown(
-      @RequestParam(value = "x") Integer x,
-      @RequestParam(value = "y") Integer y) {
+      @RequestParam(value = "x") Integer x, @RequestParam(value = "y") Integer y) {
     return () -> {
       workflowManager.dragStart(x, y);
       return DONE;
@@ -166,8 +164,7 @@ public class MainController {
   @CrossOrigin(origins = "*")
   @RequestMapping("/dragMove")
   public Callable<String> dragMove(
-      @RequestParam(value = "x") Integer x,
-      @RequestParam(value = "y") Integer y) {
+      @RequestParam(value = "x") Integer x, @RequestParam(value = "y") Integer y) {
     return () -> {
       workflowManager.dragMove(x, y);
       return DONE;
@@ -177,8 +174,7 @@ public class MainController {
   @CrossOrigin(origins = "*")
   @RequestMapping("/dragStop")
   public Callable<String> dragStop(
-      @RequestParam(value = "x") Integer x,
-      @RequestParam(value = "y") Integer y) {
+      @RequestParam(value = "x") Integer x, @RequestParam(value = "y") Integer y) {
     return () -> {
       workflowManager.dragStop(x, y);
       return DONE;
@@ -224,55 +220,12 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping("/addValidationStep")
-  public Callable<String> addValidationStep(
-      @RequestParam(value = "x1") double startX,
-      @RequestParam(value = "y1") double startY,
-      @RequestParam(value = "x2") double endX,
-      @RequestParam(value = "y2") double endY,
-      @RequestParam(value = "elementType") String elementType,
-      @RequestParam(value = "value") String value,
-      @RequestParam(value = "textMatchType") String textMatchType,
-      @RequestParam(value = "textPosition") String textPosition,
-      @RequestParam(value = "contentStorageType") String contentStorageType,
-      @RequestParam(value = "stopType") String stopType,
-      @RequestParam(value = "isLoopValidation") boolean isLoopValidation,
-      @RequestParam(value = "isConditionClick") boolean isConditionClick,
-      @RequestParam(value = "isScrollValidation") boolean isScrollValidation,
-      @RequestParam(value = "scrollDirection") Integer scrollDirection,
-      @RequestParam(value = "timeout") Integer timeout,
-      @RequestParam(value = "isWaitUntilDisappear") boolean isWaitUntilDisappear) {
+  @RequestMapping(value = "/addValidationStep", method = RequestMethod.POST)
+  public Callable<String> addValidationStep(@RequestBody String validationReqDetailsJson) {
     return () -> {
-      Bounds selectedBounds = new Bounds(startX, startY, endX, endY);
-      workflowManager.recordScreenValidation(
-          selectedBounds,
-          elementType,
-          value,
-          textMatchType,
-          textPosition,
-          contentStorageType,
-          stopType,
-          isLoopValidation,
-          isConditionClick,
-          isScrollValidation,
-          scrollDirection,
-          timeout,
-          isWaitUntilDisappear);
-      return DONE;
-    };
-  }
-
-  /**
-   * Use POST method instead of GET in order to transmit the template image data, which has larger
-   * size than usual parameters. For convenience, all the data has been stored into JSON format and
-   * converted into string.
-   */
-  @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/addImageMatchingValidationStep", method = RequestMethod.POST)
-  public Callable<String> addImageMatchingValidationStep(
-      @RequestBody String imageMatchingValidationStepMetadataJson) {
-    return () -> {
-      workflowManager.recordScreenImageMatchingValidation(imageMatchingValidationStepMetadataJson);
+      ValidationReqDetails validationReqDetails =
+          ValidationReqDetails.fromJson(validationReqDetailsJson);
+      workflowManager.recordScreenValidation(validationReqDetails);
       return DONE;
     };
   }
@@ -332,21 +285,26 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping("/playCurrentWorkflow")
-  public Callable<String> playCurrentWorkflow() {
-    return () -> workflowManager.playCurrent();
+  @RequestMapping(value = "/playCurrentWorkflow", method = RequestMethod.POST)
+  public Callable<String> playCurrentWorkflow(@RequestBody PlayActionRequest playActionRequest) {
+    return () -> workflowManager.playCurrent(playActionRequest.getPlaySpeedFactor());
   }
 
   @CrossOrigin(origins = "*")
   @RequestMapping(value = "/playCurrentWorkflowFromAction", method = RequestMethod.POST)
-  public Callable<String> playCurrentWorkflowFromAction(@RequestBody String uuidStr) {
-    return () -> workflowManager.playCurrentWorkflowFromAction(uuidStr);
+  public Callable<String> playCurrentWorkflowFromAction(
+      @RequestBody PlayActionRequest playActionRequest) {
+    return () ->
+        workflowManager.playCurrentWorkflowFromAction(
+            playActionRequest.getActionId(), playActionRequest.getPlaySpeedFactor());
   }
 
   @CrossOrigin(origins = "*")
   @RequestMapping(value = "/playAction", method = RequestMethod.POST)
-  public Callable<String> playAction(@RequestBody String uuidStr) {
-    return () -> workflowManager.playAction(uuidStr);
+  public Callable<String> playAction(@RequestBody PlayActionRequest playActionRequest) {
+    return () ->
+        workflowManager.playAction(
+            playActionRequest.getActionId(), playActionRequest.getPlaySpeedFactor());
   }
 
   @CrossOrigin(origins = "*")
@@ -372,8 +330,8 @@ public class MainController {
 
   @CrossOrigin(origins = "*")
   @RequestMapping(value = "/removeAction", method = RequestMethod.POST)
-  public String removeAction(@RequestBody String uuidStr) {
-    workflowManager.removeAction(uuidStr);
+  public String removeAction(@RequestBody int index) {
+    workflowManager.removeAction(index);
     return DONE;
   }
 
@@ -454,18 +412,6 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping("/deleteActionByUUID")
-  public String deleteAction(@RequestParam(value = "uuidStr") String uuidStr) {
-    try {
-      workflowManager.deleteAction(uuidStr);
-      return DONE;
-    } catch (UicdActionException e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
-    return FAILED;
-  }
-
-  @CrossOrigin(origins = "*")
   @RequestMapping("/copyAction")
   public String copyAction(@RequestParam(value = "uuidStr") String uuidStr) {
     try {
@@ -483,10 +429,37 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/saveCurrentWorkflowWithoutMetadata", method = RequestMethod.POST)
+  public Callable<Boolean> saveCurrentWorkflowWithoutMetadata() {
+    return () -> workflowManager.saveCurrentWorkflowWithoutMetadata();
+  }
+
+  @CrossOrigin(origins = "*")
   @RequestMapping(value = "/updateActionMetadata", method = RequestMethod.POST)
   public Callable<String> updateActionMetadata(@RequestBody String actionMetadataJson) {
     return () -> {
       workflowManager.updateActionMetadata(actionMetadataJson);
+      return DONE;
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/updateValidationAction", method = RequestMethod.POST)
+  public Callable<String> updateValidationAction(@RequestBody String validationReqDetailsJson,
+      @RequestParam(value = "uuidStr") String uuidStr) {
+    return () -> {
+      ValidationReqDetails validationReqDetails =
+          ValidationReqDetails.fromJson(validationReqDetailsJson);
+      workflowManager.updateValidationAction(uuidStr, validationReqDetails);
+      return DONE;
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/reorderActions", method = RequestMethod.POST)
+  public Callable<String> reorderActions(@RequestBody List<String> actionIdList) {
+    return () -> {
+      workflowManager.reorderActions(actionIdList);
       return DONE;
     };
   }
@@ -526,8 +499,65 @@ public class MainController {
       objectNode.set(
           "hasInitedDevices",
           mapper.convertValue(
-              devicesDriverManager.getXmldumperDriverList().size() > 0, JsonNode.class));
+              devicesDriverManager.getXmlDumperDriverList().size() > 0, JsonNode.class));
       return objectNode.toString();
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/getInitializedDevicesDetails")
+  public Callable<DevicesStatusResponse> getInitializedDevicesDetails() {
+    return () -> DevicesStatusResponse.create(devicesDriverManager.getDevicesStatusDetails());
+  }
+
+  // TODO(tccyp): after migrate to new frontend, we need to clean up all the init apis, only need
+  // one api.
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/initDevicesFromListV2")
+  public Callable<DevicesStatusResponse> initDevicesFromListV2(
+      @RequestParam(value = "devicesIdList") List<String> devicesIdList,
+      @RequestParam(value = "isCleanInit", defaultValue = "false") boolean isCleanInit) {
+    return () -> {
+      initDevicesInternal(devicesIdList, isCleanInit);
+      return DevicesStatusResponse.create(devicesDriverManager.getDevicesStatusDetails());
+    };
+  }
+
+  private void initDevicesInternal(
+      @RequestParam("devicesIdList") List<String> devicesIdList,
+      @RequestParam(value = "isCleanInit", defaultValue = "false") boolean isCleanInit)
+      throws UicdExternalCommandException, UicdDeviceException {
+    MinicapServerManager.getInstance().clearAll();
+    if (isCleanInit || devicesDriverManager.initXmlDumperDevices.isEmpty()) {
+      devicesDriverManager.initDevicesList(devicesIdList, false /* autoAllocate */);
+    }
+    for (String deviceId : devicesIdList) {
+      if (!devicesDriverManager.initXmlDumperDevices.contains(deviceId)) {
+        // pre-run on the device
+        // e.g. disable auto orientation
+        devicesDriverManager.turnOffAutoRotation(deviceId);
+
+        // init xmldumper
+        devicesDriverManager.initXmlDumperDevices.add(deviceId);
+        devicesDriverManager.startXmlDumperServer(deviceId, true /* isUpdateApk */);
+        AndroidDeviceDriver driver = devicesDriverManager.getAndroidDriverByDeviceId(deviceId);
+        int rotation =
+            driver.getDevice().getOrientation().equals(DeviceOrientation.PORTRAIT) ? 0 : 90;
+        MinicapUtil.startMinicap(driver, rotation);
+      }
+    }
+  }
+
+  // TODO(tccyp): after migrate to new frontend, we need to clean up all the init apis, only need
+  // one api.
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/initDevicesFromList")
+  public Callable<String> initDevicesFromList(
+      @RequestParam(value = "devicesIdList") List<String> devicesIdList,
+      @RequestParam(value = "isCleanInit", defaultValue = "false") boolean isCleanInit) {
+    return () -> {
+      initDevicesInternal(devicesIdList, isCleanInit);
+      return devicesDriverManager.getDevicesStatus();
     };
   }
 
@@ -556,8 +586,7 @@ public class MainController {
         objectNode.set(
             "port",
             mapper.convertValue(
-                devicesDriverManager.getMasterDevice().getMinicapWebServerPort(),
-                JsonNode.class));
+                devicesDriverManager.getMasterDevice().getMinicapWebServerPort(), JsonNode.class));
       } else {
         objectNode.set("device", mapper.convertValue("", JsonNode.class));
       }
@@ -580,16 +609,6 @@ public class MainController {
         objectNode.set("server_port", mapper.convertValue(-1, JsonNode.class));
       }
       return objectNode.toString();
-    };
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping("/getImageValidationOption")
-  public Callable<String> getImageValidationOption() {
-    return () -> {
-      return (UicdConfig.getInstance().getImageValidationOption() && HostInfoUtil.isUnix())
-          ? "{\"imageValidationOption\":true}"
-          : "{\"imageValidationOption\":false}";
     };
   }
 
@@ -679,7 +698,8 @@ public class MainController {
     return () -> {
       HashMap<String, String> versionInfo = new HashMap<>();
       versionInfo.put("Uicd", UicdConstant.UICD_VERSION);
-
+      // TODO(tccyp): detele xmlDumper and Uicd fields once we publish new version of FE.
+      versionInfo.put("backendVersion", UicdConstant.UICD_VERSION);
       String xmlDumperApkVersion = "";
       for (String deviceId : devicesDriverManager.initXmlDumperDevices) {
         Optional<String> xmlDumperVersion = devicesDriverManager.getXmlDumperVersion(deviceId);
@@ -694,7 +714,123 @@ public class MainController {
       }
 
       versionInfo.put("xmlDumper", xmlDumperApkVersion);
+      // TODO(tccyp): detele xmlDumper and Uicd fields once we publish new version of FE.
+      versionInfo.put("xmlDumperVersion", xmlDumperApkVersion);
       return new ObjectMapper().writeValueAsString(versionInfo);
     };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/setPlaySpeedFactor", method = RequestMethod.POST)
+  public Callable<String> setPlaySpeedFactor(@RequestBody double playSpeedFactor) {
+    return () -> {
+      workflowManager.setPlaySpeedFactor(playSpeedFactor);
+      return DONE;
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/getUserPresetGlobalVariable")
+  public Callable<GetUserPresetGlobalVariableResponse> getUserPresetGlobalVariable() {
+    return () ->
+        GetUserPresetGlobalVariableResponse.create(
+            workflowManager.getGlobalVariableMapInPlainString());
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/setUserPresetGlobalVariable", method = RequestMethod.POST)
+  public Callable<String> setUserPresetGlobalVariable(@RequestBody String globalVariableStr) {
+    return () -> {
+      workflowManager.setGlobalVariableMapStringFormat(globalVariableStr);
+      return DONE;
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/takeScreenshot", method = RequestMethod.GET)
+  public Callable<ImageResponse> takeScreenshot() {
+    return () -> ImageResponse.create(workflowManager.takeScreenshot());
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/addImage", method = RequestMethod.POST)
+  public Callable<UuidResponse> addImage(@RequestBody String imgBase64Str) {
+    return () -> UuidResponse.create(workflowManager.addImage(imgBase64Str));
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/deleteImage", method = RequestMethod.POST)
+  public Callable<String> deleteImage(@RequestBody String uuid) {
+    return () -> {
+      workflowManager.deleteImage(uuid);
+      return DONE;
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/updateImage", method = RequestMethod.POST)
+  public Callable<String> updateImage(@RequestBody String uuid, @RequestBody String imgBase64Str) {
+    return () -> {
+      workflowManager.updateImage(uuid, imgBase64Str);
+      return DONE;
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/getImage", method = RequestMethod.GET)
+  public Callable<ImageResponse> getImage(@RequestParam(value = "imgUuid") String imgUuid) {
+    return () -> ImageResponse.create(workflowManager.getImage(imgUuid));
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/getScaledScreenDimensions", method = RequestMethod.GET)
+  public Callable<ScreenDimensionsResponse> getScaledScreenDimensions() {
+    return () ->
+        ScreenDimensionsResponse.create(
+            workflowManager.getScaledScreenWidth(), workflowManager.getScaledScreenHeight());
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/createProject", method = RequestMethod.POST)
+  public Callable<ProjectResponse> createProject(@RequestBody String projectName) {
+    return () -> projectManager.createProject(projectName);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/deleteProjectByProjectId", method = RequestMethod.POST)
+  public Callable<ProjectResponse> deleteProject(@RequestBody String projectId) {
+    return () -> projectManager.deleteProjectByProjectId(projectId);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/getProjectList")
+  public Callable<ProjectResponse> getProjectListOfCurrentUser() {
+    return () -> projectManager.getProjectListOfCurrentUser();
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/getProjectListByUsername", method = RequestMethod.GET)
+  public Callable<ProjectResponse> getProjectListByUsername(
+      @RequestParam(value = "username") String username) {
+    return () -> projectManager.getProjectListByUsername(username);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/setCurrentProject", method = RequestMethod.POST)
+  public Callable<ProjectResponse> setCurrentProject(@RequestBody String projectId) {
+    return () -> projectManager.setCurrentProject(projectId);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/getScaledRegions", method = RequestMethod.POST)
+  public Callable<String> getScaledRegions(@RequestBody String regionsJson) {
+    return () -> workflowManager.getScaledRegions(regionsJson);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/exportRefImagesForWorkflow")
+  public Callable<ImagesResponse> exportRefImagesForWorkflow(
+      @RequestParam(value = "uuidStr") String uuidStr) {
+    return () -> ImagesResponse.create(workflowManager.getUuidToBase64RefImgs(uuidStr));
   }
 }

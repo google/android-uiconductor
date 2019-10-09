@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.devicesdriver;
+package com.google.wireless.qa.uicd.backend.core.devicesdriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Splitter;
-import com.google.uicd.backend.core.constants.DeviceOrientation;
-import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,13 +104,13 @@ public class Device {
 
   private int deviceIndex;
 
-  // TODO: change to deviceDimension
+  // TODO(tccyp), change to deviceDimension
   private int width;
   private int height;
   private String product;
   private String model;
   private String device;
-  private DeviceOrientation orientation;
+  private DeviceOrientation orientation = DeviceOrientation.PORTRAIT;
 
   private final Map<String, String> properties = new HashMap<>();
 
@@ -261,6 +261,12 @@ public class Device {
     node.put("device", this.device);
 
     return node.toString();
+  }
+
+  // Information need for frontend to connect backend service.
+  public DeviceStatus getDeviceStatus() {
+    return DeviceStatus.create(
+        this.deviceId, this.minicapWebServerPort, this.deviceIndex, "", this.width, this.height);
   }
 
   public static List<Device> getDevicesListFromString(List<String> commandLineOut) {

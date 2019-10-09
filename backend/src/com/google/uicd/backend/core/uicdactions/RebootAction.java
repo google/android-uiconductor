@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.devicesdriver.DeviceCallbackHandler;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.DeviceCallbackHandler;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
+import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +39,7 @@ public class RebootAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     if (baseAction instanceof RebootAction) {
       RebootAction otherAction = (RebootAction) baseAction;
       onlyReconnectToDevice = otherAction.onlyReconnectToDevice;
@@ -48,7 +48,7 @@ public class RebootAction extends BaseAction {
 
   @Override
   protected int play(
-      AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) throws UicdExcpetion {
+      AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) throws UicdException {
     List<String> output = new ArrayList<>();
     if (!onlyReconnectToDevice) {
       ADBCommandLineUtil.executeReboot(androidDeviceDriver.getDeviceId(), output);

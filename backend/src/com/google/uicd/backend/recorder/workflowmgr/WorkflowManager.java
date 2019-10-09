@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,53 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.recorder.workflowmgr;
+package com.google.wireless.qa.uicd.backend.recorder.workflowmgr;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.constants.DeviceOrientation;
-import com.google.uicd.backend.core.constants.JsonFlag;
-import com.google.uicd.backend.core.constants.StopType;
-import com.google.uicd.backend.core.db.ActionEntity;
-import com.google.uicd.backend.core.db.ActionStorageManager;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.devicesdriver.DeviceCallbackHandler;
-import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
-import com.google.uicd.backend.core.exceptions.UicdActionException;
-import com.google.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.uicdactions.ActionContext;
-import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
-import com.google.uicd.backend.core.uicdactions.ActionExecutionResult;
-import com.google.uicd.backend.core.uicdactions.ActionPlayer;
-import com.google.uicd.backend.core.uicdactions.BaseAction;
-import com.google.uicd.backend.core.uicdactions.ClickAction;
-import com.google.uicd.backend.core.uicdactions.CompoundAction;
-import com.google.uicd.backend.core.uicdactions.ConditionClickAction;
-import com.google.uicd.backend.core.uicdactions.DragAction;
-import com.google.uicd.backend.core.uicdactions.ImageMatchingValidationAction;
-import com.google.uicd.backend.core.uicdactions.ImageValidationClickAction;
-import com.google.uicd.backend.core.uicdactions.InputAction;
-import com.google.uicd.backend.core.uicdactions.LongClickAction;
-import com.google.uicd.backend.core.uicdactions.LoopScreenContentValidationAction;
-import com.google.uicd.backend.core.uicdactions.ScreenContentValidationAction;
-import com.google.uicd.backend.core.uicdactions.ScreenRotateAction;
-import com.google.uicd.backend.core.uicdactions.ScrollScreenContentValidationAction;
-import com.google.uicd.backend.core.uicdactions.SwipeAction;
-import com.google.uicd.backend.core.uicdactions.ZoomAction;
-import com.google.uicd.backend.core.utils.UicdSnippetClientDriver;
-import com.google.uicd.backend.core.xmlparser.Bounds;
-import com.google.uicd.backend.core.xmlparser.NodeContext;
-import com.google.uicd.backend.core.xmlparser.Position;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
-import com.google.uicd.backend.recorder.db.TestCaseHistoryDAO;
-import com.google.uicd.backend.recorder.db.TestCaseHistoryEntity;
-import com.google.uicd.backend.recorder.websocket.minicap.MinicapUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.api.client.util.Base64;
+import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
+import com.google.wireless.qa.uicd.backend.core.constants.JsonFlag;
+import com.google.wireless.qa.uicd.backend.core.db.ImageStorageManager;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.DeviceCallbackHandler;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayMode;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionExecutionResult;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionPlayer;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.BaseAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ClickAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.CompoundAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.DragAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.InputAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.LongClickAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ScreenContentValidationAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ScreenRotateAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.SwipeAction;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ValidationReqDetails;
+import com.google.wireless.qa.uicd.backend.core.uicdactions.ZoomAction;
+import com.google.wireless.qa.uicd.backend.core.utils.ImageUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.JsonUtil;
+import com.google.wireless.qa.uicd.backend.core.utils.Region;
+import com.google.wireless.qa.uicd.backend.core.utils.UicdSnippetClientDriver;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.Position;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.wireless.qa.uicd.backend.recorder.db.DbActionStorageManager;
+import com.google.wireless.qa.uicd.backend.recorder.db.TestHistoryEntity;
+import com.google.wireless.qa.uicd.backend.recorder.services.TestHistoryManager;
+import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.MinicapUtil;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,128 +69,81 @@ import java.util.UUID;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
+import javax.imageio.ImageIO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+/** Manages workflow. */
 @Service
 public class WorkflowManager {
 
   private CompoundAction workspaceCompoundAction = new CompoundAction();
   private ActionContext actionContext = null;
   private DevicesDriverManager devicesDriverManager;
-  private ActionStorageManager actionStorageManager;
-  @Autowired TestCaseHistoryDAO testCaseHistoryDAO;
+
+  @Autowired
+  private DbActionStorageManager actionStorageManager;
+
+  @Autowired
+  private ApplicationContext applicationContext;
+
+  private ImageStorageManager imageStorageManager;
+  @Autowired TestHistoryManager testHistoryManager;
+
   private PlayMode playMode = PlayMode.SINGLE;
-  private Logger logger = LogManager.getLogManager().getLogger("Uicd");
+  private Logger logger = LogManager.getLogManager().getLogger("uicd");
   private NodeContext dragNodeContext;
+
+  private String globalVariableMapStr = "";
 
   public void addAction(String uuid) throws UicdActionException {
     workspaceCompoundAction.addAction(actionStorageManager.getActionByUUID(uuid));
   }
 
   private void addAction(BaseAction action) {
-    actionStorageManager.saveAction(action);
     action.setDeviceIndex(devicesDriverManager.getSelectedDeviceIndex());
+    actionStorageManager.saveAction(action);
     workspaceCompoundAction.addAction(action);
+    actionStorageManager.saveAction(workspaceCompoundAction);
   }
 
-  public void recordScreenValidation(
-      Bounds selectedBounds,
-      String elementType,
-      String value,
-      String textMatchType,
-      String boundsSearchType,
-      String contentStorageType,
-      String stopType,
-      boolean isLoopValidation,
-      boolean isConditionClick,
-      boolean isScrollValidation,
-      Integer scrollDirection,
-      Integer timeout,
-      boolean isWaitUntilDisappear) {
+  /**
+   * Record validations by saving the validation request details and adding to workspace.
+   *
+   * @param validationReqDetails Validation request details retrieved from Json.
+   */
+  public void recordScreenValidation(ValidationReqDetails validationReqDetails) {
     AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
-    NodeContext nodeContext = null;
-    if (contentStorageType.equals("contextbased")) {
-      nodeContext =
-          XmlHelper.getContextFromBound(
-              androidDeviceDriver.fetchCurrentXML(),
-              selectedBounds,
-              androidDeviceDriver.getWidthRatio(),
-              androidDeviceDriver.getHeightRatio());
-    }
 
-    if (isLoopValidation) {
-      this.addAction(
-          new LoopScreenContentValidationAction(
-              selectedBounds,
-              elementType,
-              value,
-              textMatchType,
-              boundsSearchType,
-              nodeContext,
-              StopType.valueOf(stopType),
-              timeout,
-              isWaitUntilDisappear));
-    } else if (isConditionClick) {
-      this.addAction(
-          new ConditionClickAction(
-              selectedBounds,
-              elementType,
-              value,
-              textMatchType,
-              boundsSearchType,
-              nodeContext,
-              StopType.valueOf(stopType)));
-    } else if (isScrollValidation) {
-      this.addAction(
-          new ScrollScreenContentValidationAction(
-              selectedBounds,
-              elementType,
-              value,
-              textMatchType,
-              boundsSearchType,
-              nodeContext,
-              StopType.valueOf(stopType),
-              scrollDirection));
-    } else {
-      this.addAction(
-          new ScreenContentValidationAction(
-              selectedBounds,
-              elementType,
-              value,
-              textMatchType,
-              boundsSearchType,
-              nodeContext,
-              StopType.valueOf(stopType)));
+    validationReqDetails =
+        validationReqDetails.withNodeContext(
+            XmlHelper.getContextFromBound(
+                androidDeviceDriver.fetchCurrentXML(),
+                validationReqDetails.getSelectedBounds(),
+                androidDeviceDriver.getWidthRatio(),
+                androidDeviceDriver.getHeightRatio()));
+
+    BaseAction action = validationReqDetails.toAction();
+    if (action != null) {
+      this.addAction(action);
     }
   }
 
-  /* action to perform image matching validation on current phone screen */
-  public void recordScreenImageMatchingValidation(String imageMatchingValidationStepMetadataJson) {
-    byte[] mapData = imageMatchingValidationStepMetadataJson.getBytes();
-    Map<String, String> map = new HashMap<>();
-    ObjectMapper objectMapper = new ObjectMapper();
+  public void updateValidationAction(String uuidStr, ValidationReqDetails validationReqDetails)
+      throws UicdActionException {
+    BaseAction action = actionStorageManager.getActionByUUID(uuidStr);
 
-    try {
-      map = objectMapper.readValue(mapData, HashMap.class);
-    } catch (IOException e) {
-      logger.severe(e.getMessage());
-      return;
+    if (action instanceof ScreenContentValidationAction
+        && ((ScreenContentValidationAction) action).getSavedNodeContext() != null) {
+      ScreenContentValidationAction screenContentValidationAction =
+          (ScreenContentValidationAction) action;
+      validationReqDetails =
+          validationReqDetails.withNodeContext(screenContentValidationAction.getSavedNodeContext());
     }
 
-    StopType stopType = StopType.valueOf(map.get("stopType"));
-    String boundsSearchType = map.get("textPosition");
-    String imageData = map.get("imageData");
-    double[] coordinates = new double[4];
-    coordinates[0] = Double.parseDouble(map.get("startX"));
-    coordinates[1] = Double.parseDouble(map.get("startY"));
-    coordinates[2] = Double.parseDouble(map.get("endX"));
-    coordinates[3] = Double.parseDouble(map.get("endY"));
-    Bounds bounds = new Bounds(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
-    double threshold = Double.parseDouble(map.get("threshold"));
-    this.addAction(
-        new ImageMatchingValidationAction(
-            boundsSearchType, stopType, imageData, bounds, threshold));
+    action.updateAction(validationReqDetails.toAction());
+    actionStorageManager.saveAction(action);
   }
 
   /* actions from the user direct input on the cast screen */
@@ -216,44 +172,6 @@ public class WorkflowManager {
             androidDeviceDriver.getWidthRatio(),
             androidDeviceDriver.getHeightRatio());
     addAction(new LongClickAction(nodeContext, duration));
-    androidDeviceDriver.longClickDevice(x, y, duration);
-  }
-
-  /* action to perform image matching validation and click if match */
-  public void recordAndImageValidationClick(String imageValidationClickMetadataJson) {
-    byte[] mapData = imageValidationClickMetadataJson.getBytes();
-    Map<String, String> map = new HashMap<>();
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    try {
-      map = objectMapper.readValue(mapData, HashMap.class);
-    } catch (IOException e) {
-      logger.severe(e.getMessage());
-      return;
-    }
-
-    String boundsSearchType = map.get("textPosition");
-    String imageData = map.get("imageData");
-    double[] coordinates = new double[4];
-    coordinates[0] = Double.parseDouble(map.get("startX"));
-    coordinates[1] = Double.parseDouble(map.get("startY"));
-    coordinates[2] = Double.parseDouble(map.get("endX"));
-    coordinates[3] = Double.parseDouble(map.get("endY"));
-    Bounds bounds = new Bounds(coordinates[0], coordinates[1], coordinates[2], coordinates[3]);
-    double threshold = Double.parseDouble(map.get("threshold"));
-    boolean isDoubleClick = map.get("clickType").equals("DoubleClick");
-    this.addAction(
-        new ImageValidationClickAction(
-            boundsSearchType, imageData, bounds, threshold, isDoubleClick));
-    AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
-    try {
-      androidDeviceDriver.clickDevice(
-          (int) (coordinates[0] + coordinates[2]) / 2,
-          (int) (coordinates[1] + coordinates[3]) / 2,
-          isDoubleClick);
-    } catch (UicdDeviceHttpConnectionResetException e) {
-      logger.severe(e.getMessage());
-    }
   }
 
   public void recordAndSwipe(int startX, int startY, int endX, int endY) {
@@ -268,7 +186,7 @@ public class WorkflowManager {
     androidDeviceDriver.inputKeyCode(keyCode);
   }
 
-  public void recordAndZoom(int x1, int y1, int x2, int y2, boolean isZoomin){
+  public void recordAndZoom(int x1, int y1, int x2, int y2, boolean isZoomin) {
     AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
     addAction(new ZoomAction(x1, y1, x2, y2, isZoomin));
     androidDeviceDriver.zoomDevice(x1, y1, x2, y2, isZoomin);
@@ -290,7 +208,7 @@ public class WorkflowManager {
   }
 
   public List<String> getAllAvailableSnippetMethods(String packageName) {
-    UicdSnippetClientDriver UicdSnippetClientDriver =
+    UicdSnippetClientDriver uicdSnippetClientDriver =
         new UicdSnippetClientDriver(
             packageName,
             devicesDriverManager.getSelectedAndroidDeviceDriver().getDeviceId(),
@@ -300,8 +218,8 @@ public class WorkflowManager {
                 .getSnippetClientHostPort());
     List<String> methodList = new ArrayList<>();
     try {
-      if (UicdSnippetClientDriver.startAppAndConnect()) {
-        Optional<String> result = UicdSnippetClientDriver.sendRpcRequest("help", "[]");
+      if (uicdSnippetClientDriver.startAppAndConnect()) {
+        Optional<String> result = uicdSnippetClientDriver.sendRpcRequest("help", "[]");
         if (result.isPresent()) {
           for (String line : result.get().split("\n")) {
             // The valid response example:
@@ -353,6 +271,7 @@ public class WorkflowManager {
   // Get workflow and load it to workspace
   public String loadWorkflow(String uuidStr) throws UicdActionException {
     this.workspaceCompoundAction = (CompoundAction) actionStorageManager.getActionByUUID(uuidStr);
+    this.globalVariableMapStr = workspaceCompoundAction.getAdditionalData().getGlobalVariableStr();
     return workspaceCompoundAction.toJson(JsonFlag.FRONTEND);
   }
 
@@ -369,9 +288,12 @@ public class WorkflowManager {
   public String saveCurrentWorkflow(String actionMetadataJson) {
     // Copying a testcase generates a workspace with new uuid
     workspaceCompoundAction = (CompoundAction) updateActionMetadata(actionMetadataJson);
-    actionStorageManager.saveDescentActionsInMap(
-        this.workspaceCompoundAction.getActionId().toString());
+    actionStorageManager.saveAction(this.workspaceCompoundAction);
     return this.workspaceCompoundAction.toJson(JsonFlag.FRONTEND);
+  }
+
+  public boolean saveCurrentWorkflowWithoutMetadata() {
+    return actionStorageManager.saveAction(this.workspaceCompoundAction);
   }
 
   public Optional<String> getActionDetails(String uuidStr) throws UicdActionException {
@@ -383,25 +305,18 @@ public class WorkflowManager {
     return Optional.of(action.toJson(JsonFlag.FRONTEND));
   }
 
-  public void removeAction(String uuidStr) {
-    workspaceCompoundAction.removeAction(uuidStr);
+  public void removeAction(int index) {
+    workspaceCompoundAction.removeByIndex(index);
   }
 
   public void removeLastAction() {
-    if (workspaceCompoundAction.childrenActions.isEmpty()) {
-      return;
-    }
-    workspaceCompoundAction.removeAction(
-        workspaceCompoundAction
-            .childrenActions
-            .get(workspaceCompoundAction.childrenActions.size() - 1)
-            .getActionId()
-            .toString());
+    workspaceCompoundAction.removeLastAction();
+    actionStorageManager.saveAction(workspaceCompoundAction);
   }
 
   public String createNewWorkSpace() {
     this.workspaceCompoundAction = new CompoundAction();
-    actionStorageManager.saveAction(workspaceCompoundAction, true);
+    actionStorageManager.saveAction(workspaceCompoundAction);
     return this.workspaceCompoundAction.toJson(JsonFlag.FRONTEND);
   }
 
@@ -410,11 +325,12 @@ public class WorkflowManager {
   }
 
   /* actions from the user direct input on the cast screen end */
-  public String playCurrent() throws UicdDeviceException, UicdActionException {
-    return playAction(this.workspaceCompoundAction.getActionId().toString());
+  public String playCurrent(double speedFactor) throws UicdDeviceException, UicdActionException {
+    return playAction(this.workspaceCompoundAction.getActionId().toString(), speedFactor);
   }
 
-  public String playCurrentWorkflowFromAction(String actionId) throws UicdDeviceException {
+  public String playCurrentWorkflowFromAction(String actionId, double speedFactor)
+      throws UicdDeviceException {
     CompoundAction temp;
     try {
       if (!workspaceCompoundAction.childrenIdList.contains(actionId)) {
@@ -430,21 +346,29 @@ public class WorkflowManager {
       temp.childrenIdList.remove(0);
       temp.childrenActions.remove(0);
     }
-    return playAction(temp);
+    return playAction(temp, speedFactor);
   }
 
-  public String playAction(String actionId) throws UicdActionException, UicdDeviceException {
-    return playAction(actionStorageManager.getActionByUUID(actionId));
+  public String playAction(String actionId, double playSpeedFactor)
+      throws UicdActionException, UicdDeviceException {
+    // If actionId is not provided by frontend, backend will play the current workspace.
+    if (actionId.isEmpty()) {
+      actionId = this.workspaceCompoundAction.getActionId().toString();
+    }
+    return playAction(actionStorageManager.getActionByUUID(actionId), playSpeedFactor);
   }
 
-  private String playAction(BaseAction currentAction) throws UicdDeviceException {
+  private String playAction(BaseAction currentAction, double playSpeedFactor)
+      throws UicdDeviceException {
 
     actionContext = new ActionContext();
     actionContext.setPlayMode(playMode);
     actionContext.setCurrentDeviceIndex(devicesDriverManager.getSelectedDeviceIndex());
+    actionContext.getGlobalVariableMap().fillRawMapByJsonOrPlainStr(globalVariableMapStr);
     resetPlaybackState();
+    actionContext.setPlaySpeedFactor(playSpeedFactor);
     ActionPlayer actionPlayer =
-        new ActionPlayer(devicesDriverManager.getXmldumperDriverList(), actionContext);
+        new ActionPlayer(devicesDriverManager.getXmlDumperDriverList(), actionContext);
     ActionExecutionResult actionExecutionResult = actionPlayer.playAction(currentAction);
     try {
       saveTestHistory(actionExecutionResult, currentAction);
@@ -470,28 +394,29 @@ public class WorkflowManager {
     return actionStorageManager.updateActionMetadata(jsonData);
   }
 
-  public void deleteAction(String uuid) throws UicdActionException {
-    actionStorageManager.deleteAction(uuid);
-  }
-
   public String copyAction(String uuid) throws UicdActionException, CloneNotSupportedException {
     CompoundAction oldAction = (CompoundAction) actionStorageManager.getActionByUUID(uuid);
     CompoundAction newAction = (CompoundAction) oldAction.clone();
     actionStorageManager.saveAction(newAction);
-    return ((BaseAction) newAction).toJson(JsonFlag.FRONTEND);
+    return newAction.toJson(JsonFlag.FRONTEND);
   }
 
+  /* Initialize objects that are not managed by Spring. WorkflowManager is actually the boundary of
+   * Spring MVC and core library which is independent of Spring and used by uicdcli and
+   * Mobileharness. Make it public otherwise ErrorProne in g3 will have a warning about init is
+   * never used.
+   */
   @PostConstruct
-  private void init() {
+  public void init() {
     DeviceCallbackHandler.getInstance().setDeviceCallBack(MinicapUtil::deviceCallbackOperation);
-    actionStorageManager = new ActionStorageManager(true);
     actionStorageManager.saveAction(workspaceCompoundAction);
     devicesDriverManager = DevicesDriverManager.getInstance();
+    imageStorageManager = ImageStorageManager.getInstance();
   }
 
   private void saveTestHistory(
-      ActionExecutionResult actionExecutionResult, BaseAction currentAction) {
-    TestCaseHistoryEntity testCaseHistoryEntity = new TestCaseHistoryEntity();
+      ActionExecutionResult actionExecutionResult, BaseAction currentAction) throws UicdException {
+    TestHistoryEntity testCaseHistoryEntity = new TestHistoryEntity();
     testCaseHistoryEntity.setUuid(UUID.randomUUID().toString());
     testCaseHistoryEntity.setCreatedBy(UicdConfig.getInstance().getCurrentUser());
     testCaseHistoryEntity.setTestcaseUuid(currentAction.getActionId().toString());
@@ -499,7 +424,7 @@ public class WorkflowManager {
     testCaseHistoryEntity.setTestMsg(
         currentAction.getActionType() + ": " + currentAction.getDisplay());
     testCaseHistoryEntity.setTestResult(actionExecutionResult.getPlayStatus().toString());
-    testCaseHistoryDAO.saveTestExecution(testCaseHistoryEntity);
+    testHistoryManager.save(testCaseHistoryEntity);
   }
 
   public void dragStart(Integer x, Integer y) {
@@ -524,7 +449,111 @@ public class WorkflowManager {
     devicesDriverManager.getSelectedAndroidDeviceDriver().dragStop(x, y);
   }
 
-  public List<ActionEntity> getActionByName(String name, String type) {
-    return actionStorageManager.getActionByName(name, type);
+  public CompoundAction getCurrentWorkflow() {
+    return this.workspaceCompoundAction;
+  }
+
+  /**
+   * Reorder the current workflow compound's children Action based on the order of actionIdList,
+   * enable user to reorder by "drag and drop" on frontend.
+   *
+   * @param actionIdList the new order of the children actions
+   */
+  public void reorderActions(List<String> actionIdList) {
+    if (this.workspaceCompoundAction == null) {
+      logger.warning("Reorder empty workspace. Backend/Frontend out of sync.");
+      return;
+    }
+    this.workspaceCompoundAction.childrenIdList = actionIdList;
+    List<BaseAction> updatedActionList = new ArrayList<>();
+    for (String id : actionIdList) {
+      updatedActionList.add(
+          this.workspaceCompoundAction.childrenActions.stream()
+              .filter(action -> action.getActionId().toString().equals(id))
+              .findFirst()
+              .get());
+    }
+    this.workspaceCompoundAction.childrenActions = updatedActionList;
+
+    actionStorageManager.saveAction(this.workspaceCompoundAction);
+  }
+
+  public String getGlobalVariableMapInPlainString() {
+    return globalVariableMapStr;
+  }
+
+  public void setGlobalVariableMapStringFormat(String globalVariableMapStr) {
+    workspaceCompoundAction.getAdditionalData().setGlobalVariableStr(globalVariableMapStr);
+    this.globalVariableMapStr = globalVariableMapStr;
+  }
+
+  /**
+   * Sets the workflow replay speed on the fly. Only can be triggered from frontend. In MH or CLI,
+   * it will still use the default speed.
+   *
+   * @param playSpeedFactor the speed factor of the replay. 1.0 means normal speed.
+   */
+  public void setPlaySpeedFactor(double playSpeedFactor) {
+    if (actionContext == null) {
+      return;
+    }
+    actionContext.setPlaySpeedFactor(playSpeedFactor);
+  }
+
+  public String takeScreenshot() throws UicdException, IOException {
+    String deviceId = devicesDriverManager.getSelectedAndroidDeviceDriver().getDeviceId();
+    String screenshotTmpPath = UicdConfig.getInstance().getTestOutputFolder();
+    screenshotTmpPath = Paths.get(screenshotTmpPath, deviceId, "tmpScreenCapture.png").toString();
+    ImageUtil.saveScreenshotToLocal(deviceId, screenshotTmpPath);
+    BufferedImage bImage = ImageIO.read(new File(screenshotTmpPath));
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    ImageIO.write(bImage, "png", bos);
+    return Base64.encodeBase64String(bos.toByteArray());
+  }
+
+  public String addImage(String imgBase64Str) {
+    String uuid = UUID.randomUUID().toString();
+    byte[] imgBytes = Base64.decodeBase64(imgBase64Str);
+    imageStorageManager.addImage(uuid, imgBytes);
+    return uuid;
+  }
+
+  public void deleteImage(String uuid) {
+    imageStorageManager.deleteImage(uuid);
+  }
+
+  public void updateImage(String uuid, String imgBase64Str) {
+    byte[] imgBytes = Base64.decodeBase64(imgBase64Str);
+    imageStorageManager.updateImage(uuid, imgBytes);
+  }
+
+  public String getImage(String uuid) {
+    return Base64.encodeBase64String(imageStorageManager.getImage(uuid));
+  }
+
+  public String getScaledRegions(String regionsJson) {
+    List<Region> scaledRegions = new ArrayList<>();
+    AndroidDeviceDriver deviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
+    for (Region region : JsonUtil.fromJson(regionsJson, new TypeReference<List<Region>>() {})) {
+      scaledRegions.add(
+          region.getScaledRegion(
+              /* hostScrnWidth= */ deviceDriver.getHostScreenWidth(),
+              /* hostScrnHeight= */ deviceDriver.getHostScreenHeight(),
+              /* devPhyWidth= */ deviceDriver.getDevice().getWidth(),
+              /* devPhyHeight= */ deviceDriver.getDevice().getHeight()));
+    }
+    return JsonUtil.toJson(scaledRegions);
+  }
+
+  public int getScaledScreenWidth() {
+    return devicesDriverManager.getSelectedAndroidDeviceDriver().getHostScreenWidth();
+  }
+
+  public int getScaledScreenHeight() {
+    return devicesDriverManager.getSelectedAndroidDeviceDriver().getHostScreenHeight();
+  }
+
+  public Map<String, String> getUuidToBase64RefImgs(String uuid) throws UicdActionException {
+    return actionStorageManager.getUuidToBase64RefImgs(uuid);
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.uicdactions;
+package com.google.wireless.qa.uicd.backend.core.uicdactions;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -20,13 +20,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
-import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.exceptions.UicdHostException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.core.xmlparser.TextValidator;
+import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.wireless.qa.uicd.backend.core.exceptions.UicdHostException;
+import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.wireless.qa.uicd.backend.core.xmlparser.TextValidator;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -46,6 +46,8 @@ public class LogcatValidationAction extends ValidationAction {
 
   public String commandLine;
 
+  public Integer commandlineExecutionTimeoutSec;
+
   @JsonIgnore protected String logFilePath;
 
   // when logcatOnly is true, we don't do validation
@@ -59,10 +61,11 @@ public class LogcatValidationAction extends ValidationAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateAction(baseAction);
     LogcatValidationAction logcatAction = (LogcatValidationAction) baseAction;
     this.commandLine = logcatAction.commandLine;
-
+    this.stopType = logcatAction.getStopType();
+    this.commandlineExecutionTimeoutSec = logcatAction.commandlineExecutionTimeoutSec;
     this.logcatOnly = logcatAction.logcatOnly;
     this.setTextValidator(
         new TextValidator(
@@ -96,7 +99,7 @@ public class LogcatValidationAction extends ValidationAction {
 
   @Override
   protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
-      throws UicdExcpetion {
+      throws UicdException {
     this.logcatOutput.clear();
     saveLogToLocalFile(actionContext, androidDeviceDriver);
     if (!logcatOnly) {
@@ -117,8 +120,8 @@ public class LogcatValidationAction extends ValidationAction {
       // logFilePath will be null if play() has not been called yet
       if (logFilePath != null) {
         if (logcatOnly) {
-        actionExecutionResult.setLogOutput(
-            URLEncoder.encode(logFilePath, "UTF-8"), this.getDisplay());
+          actionExecutionResult.setLogOutput(
+              URLEncoder.encode(logFilePath, "UTF-8"), this.getDisplay());
         } else {
           actionExecutionResult.setLogOutput(
               URLEncoder.encode(logFilePath, "UTF-8"), this.getDisplay());
@@ -149,7 +152,10 @@ public class LogcatValidationAction extends ValidationAction {
     String targetCommandLine =
         actionContext.expandUicdGlobalVariable(this.commandLine, androidDeviceDriver.getDeviceId());
     ADBCommandLineUtil.executeAdbLogcatCommand(
-        targetCommandLine, androidDeviceDriver.getDeviceId(), logcatOutput);
+        targetCommandLine,
+        androidDeviceDriver.getDeviceId(),
+        logcatOutput,
+        commandlineExecutionTimeoutSec);
 
     // write output to file ?
     // SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");

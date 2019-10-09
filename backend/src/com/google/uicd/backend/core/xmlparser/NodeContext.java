@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.core.xmlparser;
+package com.google.wireless.qa.uicd.backend.core.xmlparser;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -28,8 +28,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.uicd.backend.core.constants.UicdConstant;
-import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.wireless.qa.uicd.backend.core.constants.UicdConstant;
+import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -253,6 +253,7 @@ public class NodeContext {
     return cVal;
   }
 
+  // TODO(tccyp) may be we should use the cosine similarity
   public boolean isSimilarField(String field1, String otherField) {
     if (field1.isEmpty() || otherField.isEmpty()) {
       return false;
@@ -263,6 +264,38 @@ public class NodeContext {
         > 0.8;
   }
 
+  /**
+   * Returns true if either root node or any of it's children evaluates
+   * correct with given query.
+   * Example:
+   * Query:
+   * {
+   *   "condition": "and",
+   *   "rules": [
+   *     {"field": "resourceId", "operator": "=", "value": "com.android.sample:SampleId"},
+   *     {"field": "text", "operator": "=", "value": "Sample Text"},
+   *   ],
+   * }
+   * NodeContext:
+   *  resourceId = "com.android.sample:SampleId"
+   *  text = "Sample Text"
+   *  children = null
+   * matches: true
+   * If any of the fields were to be changed this would return false, also if any of the children
+   * matches the query this would return true.
+   */
+  public boolean matchQuery(Query query) {
+    boolean result = query.eval(this);
+    if (result) {
+      return true;
+    }
+    for (NodeContext child : this.children) {
+      if (child.matchQuery(query)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   public MatchResult matchNode(NodeContext nodeContext) {
 

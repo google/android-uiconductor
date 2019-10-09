@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,48 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.uicd.backend.recorder.db;
+package com.google.wireless.qa.uicd.backend.recorder.db;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.utils.UicdCoreDelegator;
-import java.io.IOException;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.google.wireless.qa.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
+import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
 import java.time.Instant;
-import java.util.List;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
+/** Container of test cases tree for database */
+@Entity
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@Table(name = "yui_testcases_tree")
 public class TestCaseTreeEntity {
 
-  private String uuid;
+  @Id private String uuid;
   private String userId;
   private String projectId;
   private String groupId;
+
+  @Column(length = 5000000)
   private String treeDetails;
+
   private String createdBy;
   private Instant createdAt;
-
-  public static String listToJson(List<TestCaseTreeEntity> testcaseList) {
-    String jsonDataString = "";
-    ObjectMapper mapper = new ObjectMapper();
-    try {
-      jsonDataString = mapper.writeValueAsString(testcaseList);
-    } catch (JsonProcessingException e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
-    return jsonDataString;
-  }
-
-  public static TestCaseTreeEntity fromJson(String jsonDataString) {
-    TestCaseTreeEntity testCaseTreeEntity = new TestCaseTreeEntity();
-    ObjectMapper mapper = new ObjectMapper();
-    try {
-      testCaseTreeEntity = mapper.readValue(jsonDataString, testCaseTreeEntity.getClass());
-    } catch (IOException e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
-
-    return testCaseTreeEntity;
-  }
 
   public String getUuid() {
     return uuid;
@@ -67,7 +53,7 @@ public class TestCaseTreeEntity {
     return userId;
   }
 
-  public void setUser_id(String userId) {
+  public void setUserId(String userId) {
     this.userId = userId;
   }
 
@@ -75,7 +61,7 @@ public class TestCaseTreeEntity {
     return projectId;
   }
 
-  public void setProject_id(String projectId) {
+  public void setProjectId(String projectId) {
     this.projectId = projectId;
   }
 
@@ -83,7 +69,7 @@ public class TestCaseTreeEntity {
     return groupId;
   }
 
-  public void setGroup_id(String groupId) {
+  public void setGroupId(String groupId) {
     this.groupId = groupId;
   }
 
@@ -91,15 +77,15 @@ public class TestCaseTreeEntity {
     return treeDetails;
   }
 
-  public void setTree_details(String treeDetails) {
+  public void setTreeDetails(String treeDetails) {
     this.treeDetails = treeDetails;
   }
 
   public String getCreatedBy() {
-    return UicdConfig.getInstance().getCurrentUser();
+    return createdBy;
   }
 
-  public void setCreated_by(String createdBy) {
+  public void setCreatedBy(String createdBy) {
     this.createdBy = createdBy;
   }
 
@@ -107,18 +93,20 @@ public class TestCaseTreeEntity {
     return createdAt;
   }
 
-  public void setCreated_at(Instant createdAt) {
+  public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
   }
 
-  public String toJson() {
-    String jsonDataString = "";
-    ObjectMapper mapper = new ObjectMapper();
-    try {
-      jsonDataString = mapper.writeValueAsString(this);
-    } catch (JsonProcessingException e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
-    return jsonDataString;
+  public static TestCaseTreeEntity fromUpdateTestCaseTreeRequest(
+      UpdateTestCaseTreeRequest updateTestCaseTreeRequest) {
+    TestCaseTreeEntity testCaseTreeEntity = new TestCaseTreeEntity();
+    testCaseTreeEntity.setUuid(updateTestCaseTreeRequest.getUuid().orElse(""));
+    testCaseTreeEntity.setUserId(updateTestCaseTreeRequest.getUserId().orElse(""));
+    testCaseTreeEntity.setGroupId(updateTestCaseTreeRequest.getGroupId().orElse(""));
+    testCaseTreeEntity.setProjectId(updateTestCaseTreeRequest.getProjectId().orElse(""));
+    testCaseTreeEntity.setTreeDetails(updateTestCaseTreeRequest.getTreeDetails());
+    testCaseTreeEntity.setCreatedBy(UicdConfig.getInstance().getCurrentUser());
+    testCaseTreeEntity.setCreatedAt(Instant.now());
+    return testCaseTreeEntity;
   }
 }
