@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -25,16 +25,16 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.constants.ActionType;
-import com.google.wireless.qa.uicd.backend.core.constants.JsonFlag;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores.BaseActionDBIgnoreFields;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores.ClickActionIgnoreFields;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores.CompoundActionDBIgnoreFields;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.ActionType;
+import com.google.uicd.backend.core.constants.JsonFlag;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseActionDBIgnoreFields;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.ClickActionIgnoreFields;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.CompoundActionDBIgnoreFields;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

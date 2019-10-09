@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.app;
+package com.google.uicd.backend.app;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.config.UicdConfig;
 import java.nio.file.Paths;
 import java.util.Properties;
 

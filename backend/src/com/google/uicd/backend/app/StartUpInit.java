@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.app;
+package com.google.uicd.backend.app;
 
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.log.LogUtil;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.log.LogWebSocketHandler;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.MinicapUtil;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.recorder.websocket.log.LogUtil;
+import com.google.uicd.backend.recorder.websocket.log.LogWebSocketHandler;
+import com.google.uicd.backend.recorder.websocket.minicap.MinicapUtil;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.db;
+package com.google.uicd.backend.recorder.db;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.google.wireless.qa.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
+import com.google.uicd.backend.core.config.UicdConfig;
 import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Entity;

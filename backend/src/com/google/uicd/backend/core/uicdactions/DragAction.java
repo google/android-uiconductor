@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import com.google.common.collect.Iterables;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Position;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
+import com.google.uicd.backend.core.xmlparser.Position;
+import com.google.uicd.backend.core.xmlparser.XmlHelper;
 import java.awt.Point;
 import java.time.Duration;
 import java.util.ArrayList;

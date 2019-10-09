@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.devicesdriver;
+package com.google.uicd.backend.core.devicesdriver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Splitter;
-import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.constants.DeviceOrientation;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

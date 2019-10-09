@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.exceptions;
+package com.google.uicd.backend.core.exceptions;
 
 /** Exception class for classifying exceptions met while running ImageUtil methods. */
 public class UicdImageException extends UicdException {

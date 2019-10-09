@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.CHANGE_EVENT_FILE_MODE;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.DOUBLE_TAP_POWER_BUTTON_CMD;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.GET_POWER_BUTTON_EVENT_CMD;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
+import static com.google.uicd.backend.core.utils.ADBCommands.CHANGE_EVENT_FILE_MODE;
+import static com.google.uicd.backend.core.utils.ADBCommands.DOUBLE_TAP_POWER_BUTTON_CMD;
+import static com.google.uicd.backend.core.utils.ADBCommands.EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS;
+import static com.google.uicd.backend.core.utils.ADBCommands.GET_POWER_BUTTON_EVENT_CMD;
+import static com.google.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
 
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import java.util.ArrayList;
 import java.util.List;
 

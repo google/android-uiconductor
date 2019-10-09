@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.xmlparser;
+package com.google.uicd.backend.core.xmlparser;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -28,8 +28,8 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.wireless.qa.uicd.backend.core.constants.UicdConstant;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.core.constants.UicdConstant;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;

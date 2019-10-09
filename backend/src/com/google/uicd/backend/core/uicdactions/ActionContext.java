@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.UUID;

@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.controllers;
+package com.google.uicd.backend.controllers;
 
 import com.google.common.io.ByteStreams;
-import com.google.wireless.qa.uicd.backend.controllers.requests.ProjectDeepCopyRequest;
-import com.google.wireless.qa.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ProjectRecord;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ProjectResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.TestCaseTreeResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.TestHistoryResponse;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.constants.JsonFlag;
-import com.google.wireless.qa.uicd.backend.core.db.ActionStorageManager;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.recorder.services.ProjectManager;
-import com.google.wireless.qa.uicd.backend.recorder.services.TestCaseTreeManager;
-import com.google.wireless.qa.uicd.backend.recorder.services.TestCasesImportExportManager;
-import com.google.wireless.qa.uicd.backend.recorder.services.TestHistoryManager;
-import com.google.wireless.qa.uicd.backend.recorder.workflowmgr.WorkflowManager;
+import com.google.uicd.backend.controllers.requests.ProjectDeepCopyRequest;
+import com.google.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
+import com.google.uicd.backend.controllers.responses.ProjectRecord;
+import com.google.uicd.backend.controllers.responses.ProjectResponse;
+import com.google.uicd.backend.controllers.responses.TestCaseTreeResponse;
+import com.google.uicd.backend.controllers.responses.TestHistoryResponse;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.JsonFlag;
+import com.google.uicd.backend.core.db.ActionStorageManager;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.recorder.services.ProjectManager;
+import com.google.uicd.backend.recorder.services.TestCaseTreeManager;
+import com.google.uicd.backend.recorder.services.TestCasesImportExportManager;
+import com.google.uicd.backend.recorder.services.TestHistoryManager;
+import com.google.uicd.backend.recorder.workflowmgr.WorkflowManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -62,7 +62,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /** TestCaseContoller. */
-@ComponentScan("com.google.wireless.qa.uicd.backend.*")
+@ComponentScan("com.google.uicd.backend.*")
 @RestController
 public class TestCaseController {
   private Logger logger = LogManager.getLogManager().getLogger("uicd");

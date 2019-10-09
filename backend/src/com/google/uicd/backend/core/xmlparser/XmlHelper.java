@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.xmlparser;
+package com.google.uicd.backend.core.xmlparser;
 
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
 import java.io.StringReader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;

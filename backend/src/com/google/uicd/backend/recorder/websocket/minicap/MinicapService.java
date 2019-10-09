@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.websocket.minicap;
+package com.google.uicd.backend.recorder.websocket.minicap;
 
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.DevicesDriverManager;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.AdbForward;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.exceptions.MinicapInstallException;
+import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.utils.AdbForward;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.recorder.websocket.minicap.exceptions.MinicapInstallException;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;

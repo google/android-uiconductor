@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.globalvariables;
+package com.google.uicd.backend.core.globalvariables;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -23,8 +23,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Splitter;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.utils.JsonUtil;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.utils.JsonUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

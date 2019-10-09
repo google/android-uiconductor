@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,19 +20,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.auto.value.AutoValue;
-import com.google.wireless.qa.uicd.backend.core.constants.ActionType;
-import com.google.wireless.qa.uicd.backend.core.constants.ContentMatchType;
-import com.google.wireless.qa.uicd.backend.core.constants.ContextStorageType;
-import com.google.wireless.qa.uicd.backend.core.constants.ElementSelectorType;
-import com.google.wireless.qa.uicd.backend.core.constants.IconImageType;
-import com.google.wireless.qa.uicd.backend.core.constants.ScreenContentSearchType;
-import com.google.wireless.qa.uicd.backend.core.constants.ScrollDirectionType;
-import com.google.wireless.qa.uicd.backend.core.constants.StopType;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsonhelper.UicdDurationToIntSerializer;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsonhelper.UicdIntToDurationDeserializer;
-import com.google.wireless.qa.uicd.backend.core.utils.JsonUtil;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
+import com.google.uicd.backend.core.constants.ActionType;
+import com.google.uicd.backend.core.constants.ContentMatchType;
+import com.google.uicd.backend.core.constants.ContextStorageType;
+import com.google.uicd.backend.core.constants.ElementSelectorType;
+import com.google.uicd.backend.core.constants.IconImageType;
+import com.google.uicd.backend.core.constants.ScreenContentSearchType;
+import com.google.uicd.backend.core.constants.ScrollDirectionType;
+import com.google.uicd.backend.core.constants.StopType;
+import com.google.uicd.backend.core.uicdactions.jsonhelper.UicdDurationToIntSerializer;
+import com.google.uicd.backend.core.uicdactions.jsonhelper.UicdIntToDurationDeserializer;
+import com.google.uicd.backend.core.utils.JsonUtil;
+import com.google.uicd.backend.core.xmlparser.Bounds;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
 import java.time.Duration;
 import java.util.Optional;
 

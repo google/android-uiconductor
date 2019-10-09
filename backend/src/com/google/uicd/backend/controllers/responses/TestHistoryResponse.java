@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.controllers.responses;
+package com.google.uicd.backend.controllers.responses;
 
 import com.google.auto.value.AutoValue;
 import java.util.List;

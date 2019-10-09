@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.utils;
+package com.google.uicd.backend.core.utils;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;

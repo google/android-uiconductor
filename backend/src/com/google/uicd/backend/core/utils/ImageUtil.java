@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.utils;
+package com.google.uicd.backend.core.utils;
 
 import com.google.common.io.BaseEncoding;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;

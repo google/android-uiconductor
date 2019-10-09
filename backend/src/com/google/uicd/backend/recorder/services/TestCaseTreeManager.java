@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.services;
+package com.google.uicd.backend.recorder.services;
 
-import com.google.wireless.qa.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
-import com.google.wireless.qa.uicd.backend.controllers.responses.TestCaseTreeResponse;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.recorder.db.DbTestCaseTreeStorageManager;
-import com.google.wireless.qa.uicd.backend.recorder.db.TestCaseTreeEntity;
+import com.google.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
+import com.google.uicd.backend.controllers.responses.TestCaseTreeResponse;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.recorder.db.DbTestCaseTreeStorageManager;
+import com.google.uicd.backend.recorder.db.TestCaseTreeEntity;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;

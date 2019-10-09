@@ -12,29 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.devicesdriver;
+package com.google.uicd.backend.core.devicesdriver;
 
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.CHANGE_EVENT_FILE_MODE;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.DOUBLE_CLICK_TEMPLATE;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.GET_TOUCH_EVENT_CMD;
-import static com.google.wireless.qa.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
+import static com.google.uicd.backend.core.utils.ADBCommands.CHANGE_EVENT_FILE_MODE;
+import static com.google.uicd.backend.core.utils.ADBCommands.DOUBLE_CLICK_TEMPLATE;
+import static com.google.uicd.backend.core.utils.ADBCommands.EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS;
+import static com.google.uicd.backend.core.utils.ADBCommands.GET_TOUCH_EVENT_CMD;
+import static com.google.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
-import com.google.wireless.qa.uicd.backend.core.constants.StrategyType;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.HttpProxyUtils;
-import com.google.wireless.qa.uicd.backend.core.utils.ImageUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Position;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.uicd.backend.core.constants.DeviceOrientation;
+import com.google.uicd.backend.core.constants.StrategyType;
+import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.utils.HttpProxyUtils;
+import com.google.uicd.backend.core.utils.ImageUtil;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.core.xmlparser.Position;
+import com.google.uicd.backend.core.xmlparser.XmlHelper;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;

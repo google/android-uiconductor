@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores;
+package com.google.uicd.backend.core.uicdactions.jsondbignores;
 
 import com.fasterxml.jackson.databind.util.StdConverter;
-import com.google.wireless.qa.uicd.backend.core.constants.StopType;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ConditionClickAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.LoopScreenContentValidationAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ScreenContentValidationAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ScrollScreenContentValidationAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ValidationAction;
+import com.google.uicd.backend.core.constants.StopType;
+import com.google.uicd.backend.core.uicdactions.ConditionClickAction;
+import com.google.uicd.backend.core.uicdactions.LoopScreenContentValidationAction;
+import com.google.uicd.backend.core.uicdactions.ScreenContentValidationAction;
+import com.google.uicd.backend.core.uicdactions.ScrollScreenContentValidationAction;
+import com.google.uicd.backend.core.uicdactions.ValidationAction;
 
 /**
  * BaseSantinizer for Validation Action

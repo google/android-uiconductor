@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores;
+package com.google.uicd.backend.core.uicdactions.jsondbignores;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
 
 /**
  * ClickActionIgnoreFields Ignore the actionExecution results when we store action the database.

@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.wireless.qa.uicd.backend.core.constants.StopType;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ConditionClickActionSantinizer;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Position;
+import com.google.uicd.backend.core.constants.StopType;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ConditionClickActionSantinizer;
+import com.google.uicd.backend.core.xmlparser.Bounds;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
+import com.google.uicd.backend.core.xmlparser.Position;
 
 /** ConditionClickAction */
 @JsonDeserialize(converter = ConditionClickActionSantinizer.class)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.devicesdriver;
+package com.google.uicd.backend.core.devicesdriver;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.google.auto.value.AutoValue;

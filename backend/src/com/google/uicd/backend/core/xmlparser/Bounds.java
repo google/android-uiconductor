@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.xmlparser;
+package com.google.uicd.backend.core.xmlparser;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
@@ -20,8 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Splitter;
-import com.google.wireless.qa.uicd.backend.core.constants.ScreenContentSearchType;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.uicd.backend.core.constants.ScreenContentSearchType;
+import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
 import java.util.List;
 import java.util.Objects;
 

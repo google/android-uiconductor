@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.repositories;
-import com.google.wireless.qa.uicd.backend.recorder.db.TestCaseTreeEntity;
+package com.google.uicd.backend.recorder.repositories;
+import com.google.uicd.backend.recorder.db.TestCaseTreeEntity;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

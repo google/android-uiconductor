@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.config;
+package com.google.uicd.backend.core.config;
 
 import static com.google.common.base.StandardSystemProperty.USER_DIR;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -20,7 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Ascii;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.exceptions.UicdException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +81,7 @@ public class UicdConfig {
 
   // Default package name, can be override in the config file. In open source version of Uicd, it is
   // using a different package name.
-  private String xmldumperPackagePrefix = "com.google.wireless.qa.uicd.xmldumper";
+  private String xmldumperPackagePrefix = "com.google.uicd.xmldumper";
 
   private String referenceImageStorage = "local";
 

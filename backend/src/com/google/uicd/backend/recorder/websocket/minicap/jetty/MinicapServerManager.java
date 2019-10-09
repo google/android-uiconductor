@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty;
+package com.google.uicd.backend.recorder.websocket.minicap.jetty;
 
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import io.netty.util.internal.ConcurrentSet;
 import java.nio.ByteBuffer;
 import java.time.Duration;

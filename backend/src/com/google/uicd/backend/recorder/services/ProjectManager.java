@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.services;
+package com.google.uicd.backend.recorder.services;
 
-import com.google.wireless.qa.uicd.backend.controllers.responses.ProjectRecord;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ProjectResponse;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.recorder.db.DbProjectStorageManager;
-import com.google.wireless.qa.uicd.backend.recorder.db.ProjectEntity;
+import com.google.uicd.backend.controllers.responses.ProjectRecord;
+import com.google.uicd.backend.controllers.responses.ProjectResponse;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.recorder.db.DbProjectStorageManager;
+import com.google.uicd.backend.recorder.db.ProjectEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

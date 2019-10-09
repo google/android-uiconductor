@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.app;
+package com.google.uicd.backend.app;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.DevicesDriverManager;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -27,12 +27,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@ComponentScan({"com.google.wireless.qa.uicd.backend.*"})
+@ComponentScan({"com.google.uicd.backend.*"})
 @EntityScan({
-  "com.google.wireless.qa.uicd.backend.core.db",
-  "com.google.wireless.qa.uicd.backend.recorder.db"
+  "com.google.uicd.backend.core.db",
+  "com.google.uicd.backend.recorder.db"
 })
-@EnableJpaRepositories("com.google.wireless.qa.uicd.backend.recorder.repositories")
+@EnableJpaRepositories("com.google.uicd.backend.recorder.repositories")
 public class Application {
   private static String[] args;
   private static ConfigurableApplicationContext context;

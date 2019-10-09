@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.utils;
+package com.google.uicd.backend.recorder.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.recorder.db.TestHistoryEntity;
+import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.recorder.db.TestHistoryEntity;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

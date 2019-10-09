@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.repositories;
+package com.google.uicd.backend.recorder.repositories;
 
-import com.google.wireless.qa.uicd.backend.recorder.db.ProjectEntity;
+import com.google.uicd.backend.recorder.db.ProjectEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -36,7 +36,7 @@
           <!-- ... -->
           <archive>
             <manifest>
-              <mainClass>com.google.wireless.qa.uicd.backend.commandline.UicdCLI</mainClass>
+              <mainClass>com.google.uicd.backend.commandline.UicdCLI</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

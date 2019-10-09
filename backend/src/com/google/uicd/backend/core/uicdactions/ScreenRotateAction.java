@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
-import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.constants.DeviceOrientation;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdException;
 
 /** ScreenRotateAction to rotate the device screen */
 public class ScreenRotateAction extends BaseAction {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.db;
+package com.google.uicd.backend.core.db;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;

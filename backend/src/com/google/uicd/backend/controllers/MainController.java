@@ -12,37 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.controllers;
+package com.google.uicd.backend.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.wireless.qa.uicd.backend.app.Application;
-import com.google.wireless.qa.uicd.backend.controllers.requests.PlayActionRequest;
-import com.google.wireless.qa.uicd.backend.controllers.responses.DevicesStatusResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.GetUserPresetGlobalVariableResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ImageResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ImagesResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ProjectResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.ScreenDimensionsResponse;
-import com.google.wireless.qa.uicd.backend.controllers.responses.UuidResponse;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.constants.DeviceOrientation;
-import com.google.wireless.qa.uicd.backend.core.constants.UicdConstant;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.Device;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.DevicesDriverManager;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ValidationReqDetails;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
-import com.google.wireless.qa.uicd.backend.recorder.services.ProjectManager;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.MinicapUtil;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
-import com.google.wireless.qa.uicd.backend.recorder.workflowmgr.WorkflowManager;
+import com.google.uicd.backend.app.Application;
+import com.google.uicd.backend.controllers.requests.PlayActionRequest;
+import com.google.uicd.backend.controllers.responses.DevicesStatusResponse;
+import com.google.uicd.backend.controllers.responses.GetUserPresetGlobalVariableResponse;
+import com.google.uicd.backend.controllers.responses.ImageResponse;
+import com.google.uicd.backend.controllers.responses.ImagesResponse;
+import com.google.uicd.backend.controllers.responses.ProjectResponse;
+import com.google.uicd.backend.controllers.responses.ScreenDimensionsResponse;
+import com.google.uicd.backend.controllers.responses.UuidResponse;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.DeviceOrientation;
+import com.google.uicd.backend.core.constants.UicdConstant;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.devicesdriver.Device;
+import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.uicdactions.ValidationReqDetails;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.core.xmlparser.Bounds;
+import com.google.uicd.backend.recorder.services.ProjectManager;
+import com.google.uicd.backend.recorder.websocket.minicap.MinicapUtil;
+import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
+import com.google.uicd.backend.recorder.workflowmgr.WorkflowManager;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +61,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** MainController. */
-@ComponentScan("com.google.wireless.qa.uicd.backend.*")
+@ComponentScan("com.google.uicd.backend.*")
 @EnableAutoConfiguration
 @RestController
 public class MainController {

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.db;
+package com.google.uicd.backend.recorder.db;
 
-import com.google.wireless.qa.uicd.backend.core.db.ActionEntity;
-import com.google.wireless.qa.uicd.backend.core.db.ActionStorageManager;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.BaseAction;
-import com.google.wireless.qa.uicd.backend.recorder.repositories.ActionRepository;
+import com.google.uicd.backend.core.db.ActionEntity;
+import com.google.uicd.backend.core.db.ActionStorageManager;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
+import com.google.uicd.backend.recorder.repositories.ActionRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;

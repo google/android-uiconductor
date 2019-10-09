@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.commandline;
+package com.google.uicd.backend.commandline;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.db.ActionStorageManager;
-import com.google.wireless.qa.uicd.backend.core.db.FileSystemActionStorageManager;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.DevicesDriverManager;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayMode;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionExecutionResult;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionPlayer;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.BaseAction;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.db.ActionStorageManager;
+import com.google.uicd.backend.core.db.FileSystemActionStorageManager;
+import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.uicdactions.ActionContext;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
+import com.google.uicd.backend.core.uicdactions.ActionExecutionResult;
+import com.google.uicd.backend.core.uicdactions.ActionPlayer;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

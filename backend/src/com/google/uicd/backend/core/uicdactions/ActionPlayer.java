@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import static java.util.stream.Collectors.toList;
 
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayMode;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ActionExecutionResult.OutputType;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdDeviceException;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
+import com.google.uicd.backend.core.uicdactions.ActionExecutionResult.OutputType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

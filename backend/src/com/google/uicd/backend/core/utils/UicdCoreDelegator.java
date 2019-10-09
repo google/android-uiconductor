@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.utils;
+package com.google.uicd.backend.core.utils;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.config.UicdConfig;
 import java.util.HashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

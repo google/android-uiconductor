@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.config;
+package com.google.uicd.backend.core.config;
 
 import java.util.ArrayList;
 import java.util.HashMap;

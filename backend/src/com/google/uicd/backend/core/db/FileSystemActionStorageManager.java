@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.db;
+package com.google.uicd.backend.core.db;
 
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.BaseAction;
+import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
 import java.util.List;
 
 /** Implements the logic to save and load action to/from filesystem */

@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.wireless.qa.uicd.backend.core.constants.ContentMatchType;
-import com.google.wireless.qa.uicd.backend.core.constants.ContextStorageType;
-import com.google.wireless.qa.uicd.backend.core.constants.ElementSelectorType;
-import com.google.wireless.qa.uicd.backend.core.constants.ScreenContentSearchType;
-import com.google.wireless.qa.uicd.backend.core.constants.StopType;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdXMLFormatException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ScreenContentValidationActionSantinizer;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.Bounds;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.NodeContext;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.TextValidator;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlHelper;
-import com.google.wireless.qa.uicd.backend.core.xmlparser.XmlParser;
+import com.google.uicd.backend.core.constants.ContentMatchType;
+import com.google.uicd.backend.core.constants.ContextStorageType;
+import com.google.uicd.backend.core.constants.ElementSelectorType;
+import com.google.uicd.backend.core.constants.ScreenContentSearchType;
+import com.google.uicd.backend.core.constants.StopType;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
+import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ScreenContentValidationActionSantinizer;
+import com.google.uicd.backend.core.xmlparser.Bounds;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
+import com.google.uicd.backend.core.xmlparser.TextValidator;
+import com.google.uicd.backend.core.xmlparser.XmlHelper;
+import com.google.uicd.backend.core.xmlparser.XmlParser;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;

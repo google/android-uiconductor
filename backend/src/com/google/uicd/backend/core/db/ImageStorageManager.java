@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.db;
+package com.google.uicd.backend.core.db;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.config.UicdConfig;
 
 /**
  * ImageStorageManager manages the use of different ImageDAO implementations depending on the

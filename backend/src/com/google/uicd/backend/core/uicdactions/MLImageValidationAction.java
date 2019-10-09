@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.uicdactions;
+package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.constants.IconImageType;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.utils.CommandLineUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.ImageUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.UicdCoreDelegator;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.IconImageType;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.utils.CommandLineUtil;
+import com.google.uicd.backend.core.utils.ImageUtil;
+import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Paths;

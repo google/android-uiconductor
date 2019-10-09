@@ -270,7 +270,7 @@
 
     <build>
         <sourceDirectory>${basedir}</sourceDirectory>
-        <testSourceDirectory>${basedir}/../../../../../../javatests/com/google/wireless/qa/uicd/backend</testSourceDirectory>
+        <testSourceDirectory>${basedir}/../../../../../../javatests/com/google/uicd/backend</testSourceDirectory>
         <resources>
           <resource>
             <directory>${project.basedir}/resources</directory>

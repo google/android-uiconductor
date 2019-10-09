@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.services;
+package com.google.uicd.backend.recorder.services;
 
-import com.google.wireless.qa.uicd.backend.controllers.responses.TestHistoryRecord;
-import com.google.wireless.qa.uicd.backend.controllers.responses.TestHistoryResponse;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.recorder.db.DbTestHistoryStorageManager;
-import com.google.wireless.qa.uicd.backend.recorder.db.TestHistoryEntity;
+import com.google.uicd.backend.controllers.responses.TestHistoryRecord;
+import com.google.uicd.backend.controllers.responses.TestHistoryResponse;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.recorder.db.DbTestHistoryStorageManager;
+import com.google.uicd.backend.recorder.db.TestHistoryEntity;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;

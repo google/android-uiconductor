@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.db;
+package com.google.uicd.backend.recorder.db;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.recorder.repositories.TestHistoryRepository;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.recorder.repositories.TestHistoryRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.core.db;
+package com.google.uicd.backend.core.db;
 
 import com.google.api.client.util.Base64;
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.constants.ActionType;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.BaseAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.CompoundAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.ImageDiffValidationAction;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.ActionType;
+import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
+import com.google.uicd.backend.core.uicdactions.CompoundAction;
+import com.google.uicd.backend.core.uicdactions.ImageDiffValidationAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

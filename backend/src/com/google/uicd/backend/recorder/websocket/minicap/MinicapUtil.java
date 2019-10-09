@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.websocket.minicap;
+package com.google.uicd.backend.recorder.websocket.minicap;
 
 import com.google.common.base.Ascii;
 import com.google.common.primitives.Ints;
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.Device;
-import com.google.wireless.qa.uicd.backend.core.devicesdriver.DeviceDimension;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.wireless.qa.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.wireless.qa.uicd.backend.core.utils.CommandLineUtil;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapJettyServer;
-import com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+import com.google.uicd.backend.core.devicesdriver.Device;
+import com.google.uicd.backend.core.devicesdriver.DeviceDimension;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.utils.CommandLineUtil;
+import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapJettyServer;
+import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;

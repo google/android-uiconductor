@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.websocket.minicap.jetty;
+package com.google.uicd.backend.recorder.websocket.minicap.jetty;
 
 import io.netty.util.internal.ConcurrentSet;
 import org.eclipse.jetty.websocket.api.Session;

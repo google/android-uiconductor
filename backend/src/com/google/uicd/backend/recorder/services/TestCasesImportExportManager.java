@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.backend.recorder.services;
+package com.google.uicd.backend.recorder.services;
 
-import com.google.wireless.qa.uicd.backend.core.config.UicdConfig;
-import com.google.wireless.qa.uicd.backend.core.constants.ActionType;
-import com.google.wireless.qa.uicd.backend.core.constants.LocalStorageConstant;
-import com.google.wireless.qa.uicd.backend.core.db.ActionEntity;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdActionException;
-import com.google.wireless.qa.uicd.backend.core.exceptions.UicdException;
-import com.google.wireless.qa.uicd.backend.core.recorder.utils.ActionEntityFileUtil;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.BaseAction;
-import com.google.wireless.qa.uicd.backend.core.uicdactions.CompoundAction;
-import com.google.wireless.qa.uicd.backend.recorder.db.DbActionStorageManager;
-import com.google.wireless.qa.uicd.backend.recorder.db.DbTestCaseTreeStorageManager;
-import com.google.wireless.qa.uicd.backend.recorder.db.TestCaseTreeEntity;
-import com.google.wireless.qa.uicd.backend.recorder.utils.TestCaseTreeFileUtil;
+import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.ActionType;
+import com.google.uicd.backend.core.constants.LocalStorageConstant;
+import com.google.uicd.backend.core.db.ActionEntity;
+import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.recorder.utils.ActionEntityFileUtil;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
+import com.google.uicd.backend.core.uicdactions.CompoundAction;
+import com.google.uicd.backend.recorder.db.DbActionStorageManager;
+import com.google.uicd.backend.recorder.db.DbTestCaseTreeStorageManager;
+import com.google.uicd.backend.recorder.db.TestCaseTreeEntity;
+import com.google.uicd.backend.recorder.utils.TestCaseTreeFileUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
