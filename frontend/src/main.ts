@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import './polyfills.ts'
-import 'hammerjs';
-import {enableProdMode} from '@angular/core';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import {platformBrowser} from '@angular/platform-browser';
+import {AppModuleNgFactory} from './app/app_module.ngfactory';
 
-import {AppModule} from './app/app.module';
-
-
-
-import {environment} from './environments/environment';
-
-if (environment.production) {
-  enableProdMode();
-}
-
-platformBrowserDynamic().bootstrapModule(AppModule).catch(
-    err => console.log(err));
+platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
