@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {platformBrowser} from '@angular/platform-browser';
-import {AppModuleNgFactory} from './app/app_module.ngfactory';
+import './polyfills.ts';
+import 'hammerjs';
+import {enableProdMode} from '@angular/core';
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import {AppModule} from './app/app_module';
+import {environment} from './environments/environment';
 
-platformBrowser().bootstrapModuleFactory(AppModuleNgFactory);
+if (environment.production) {
+  enableProdMode();
+}
+platformBrowserDynamic().bootstrapModule(AppModule).catch(
+    err => console.log(err));
+    
