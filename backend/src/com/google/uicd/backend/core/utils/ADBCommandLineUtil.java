@@ -122,14 +122,41 @@ public class ADBCommandLineUtil {
     executeAdb(String.format(forwardCmd, hostPort, devicePort), deviceId);
 
     String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
+    String targetXmldumperVersion = UicdConfig.getInstance().getXmlDumperApkVersion();
+    String runnerPrefix = "android.support";
+    if (compareVersion(targetXmldumperVersion, "2.0.0") >= 0) {
+      runnerPrefix = "androidx";
+    }
     String startXmlDumperServerCmd =
         String.format(
             "shell am instrument -w -e debug false -e class "
                 + "'%s.DumperServerInstrumentation#startServer' %s.test/"
-                + "android.support.test.runner.AndroidJUnitRunner",
-            xmldumperPackagePrefix, xmldumperPackagePrefix);
+                + "%s.test.runner.AndroidJUnitRunner",
+            xmldumperPackagePrefix, xmldumperPackagePrefix, runnerPrefix);
     // don't wait for the instrument command
     return executeAdb(startXmlDumperServerCmd, deviceId, false);
+  }
+
+  // Version of xml dumper, version is in the "1.0.1" format
+  private static int compareVersion(String version1, String version2) {
+    return Integer.compare(versionToInt(version1), versionToInt(version2));
+  }
+
+  // To make it simple, the version can only be single digit.
+  private static int versionToInt(String version) {
+    if (version.isEmpty()) {
+      return 0;
+    }
+    if (version.startsWith("v")) {
+      version = version.substring(1);
+    }
+    List<String> strs = Splitter.on('.').splitToList(version);
+    int versionNum = 0;
+    for (String s : strs) {
+      versionNum *= 10;
+      versionNum += Integer.parseInt(s);
+    }
+    return versionNum;
   }
 
   public static Optional<String> getXmlDumperApkVersion(String deviceId) {
@@ -167,7 +194,9 @@ public class ADBCommandLineUtil {
       Optional<String> dumperApkVersion = getXmlDumperApkVersion(deviceId);
       if (!UicdConfig.getInstance().getXmlDumperApkVersion().isEmpty()
           && dumperApkVersion.isPresent()
-          && !dumperApkVersion.get().equals(UicdConfig.getInstance().getXmlDumperApkVersion())) {
+          && compareVersion(
+                  UicdConfig.getInstance().getXmlDumperApkVersion(), dumperApkVersion.get())
+              > 0) {
         logger.info("Found newer version of uicd xmldumper. Updating uicd xmldumper...");
         String uninstallCmd1 = String.format("uninstall %s", xmldumperPackagePrefix);
         String uninstallCmd2 = String.format("uninstall %s.test", xmldumperPackagePrefix);
@@ -321,3 +350,4 @@ public class ADBCommandLineUtil {
     return getDeviceProperty(deviceId, "ro.build.product");
   }
 }
+                                                                                                    
