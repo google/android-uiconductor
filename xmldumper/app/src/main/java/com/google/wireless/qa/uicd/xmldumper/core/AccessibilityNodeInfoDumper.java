@@ -1,27 +1,14 @@
-// Copyright 2018 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+package com.google.wireless.qa.uicd.xmldumper.core;
 
-package com.google.uicd.xmldumper.core;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import android.graphics.Rect;
 import android.os.Build;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
 import android.util.Xml;
 import android.view.accessibility.AccessibilityNodeInfo;
-import com.google.uicd.xmldumper.utils.UicdDevice;
+import androidx.test.uiautomator.UiDevice;
+import com.google.wireless.qa.uicd.xmldumper.utils.UicdDevice;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -64,6 +51,7 @@ public class AccessibilityNodeInfoDumper {
   public static List<String> dumpWindowHierarchy(boolean withClassName) {
     List<String> xmls = new ArrayList<>();
     for (AccessibilityNodeInfo root : UicdDevice.getWindowRoots()) {
+      // TODO(yuchenhe): add drawing order to dump result
       // call requires API 24
       // int order = root.getDrawingOrder();
       xmls.add(getWindowXMLHierarchy(root, withClassName));
@@ -93,7 +81,7 @@ public class AccessibilityNodeInfoDumper {
         int width = -1;
         int height = -1;
 
-        UiDevice mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
         height = mDevice.getDisplayHeight();
         width = mDevice.getDisplayWidth();
 
@@ -116,8 +104,7 @@ public class AccessibilityNodeInfoDumper {
       int height,
       boolean withClassName)
       throws IOException {
-
-    serializer.startTag("", withClassName ? node.getClassName().toString() : "node");
+    serializer.startTag("", withClassName ? safeTagString(node.getClassName()) : "node");
 
     if (!nafExcludedClass(node) && !nafCheck(node)) {
       serializer.attribute("", "NAF", Boolean.toString(true));
@@ -165,7 +152,7 @@ public class AccessibilityNodeInfoDumper {
         Log.i(TAG, String.format("Null child %d/%d, parent: %s", i, count, node.toString()));
       }
     }
-    serializer.endTag("", withClassName ? node.getClassName().toString() : "node");
+    serializer.endTag("", withClassName ? safeTagString(node.getClassName()) : "node");
   }
 
   /**
@@ -234,6 +221,12 @@ public class AccessibilityNodeInfoDumper {
       }
     }
     return false;
+  }
+
+  // DocumentBuilder failed to parse XML tags with special characters
+  //    e.g. android.support.v7.app.ActionBar$Tab
+  private static String safeTagString(CharSequence cs) {
+    return safeCharSeqToString(cs).replaceAll("[!@#$%^&*(),.?\":{}|<>]", "");
   }
 
   private static String safeCharSeqToString(CharSequence cs) {

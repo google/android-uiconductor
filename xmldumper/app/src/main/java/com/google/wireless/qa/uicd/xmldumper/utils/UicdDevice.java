@@ -1,24 +1,10 @@
-// Copyright 2018 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+package com.google.wireless.qa.uicd.xmldumper.utils;
 
-package com.google.uicd.xmldumper.utils;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import android.annotation.TargetApi;
-import android.app.Instrumentation;
 import android.app.UiAutomation;
 import android.os.Build.VERSION_CODES;
-import android.support.test.InstrumentationRegistry;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.accessibility.AccessibilityWindowInfo;
@@ -29,18 +15,22 @@ import java.util.Set;
 public abstract class UicdDevice {
   private static String TAG = UicdDevice.class.getSimpleName();
 
-  public static Instrumentation getInstrumentation() {
-    return InstrumentationRegistry.getInstrumentation();
+  private static UiAutomation uiAutomation = null;
+  private static UiAutomation getUiAutomation() {
+    if (uiAutomation == null) {
+      uiAutomation = getInstrumentation().getUiAutomation();
+    }
+    return uiAutomation;
   }
 
   /** Returns a list containing the root {@link AccessibilityNodeInfo}s for each active window */
   @TargetApi(VERSION_CODES.LOLLIPOP)
   public static Set<AccessibilityNodeInfo> getWindowRoots() {
     Set<AccessibilityNodeInfo> roots = new HashSet();
-
     // Start with the active window, which seems to sometimes be missing from the list returned
     // by the UiAutomation.
-    UiAutomation uiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+    UiAutomation uiAutomation = getUiAutomation();
+
     AccessibilityNodeInfo activeRoot = uiAutomation.getRootInActiveWindow();
     if (activeRoot != null) {
       roots.add(activeRoot);
