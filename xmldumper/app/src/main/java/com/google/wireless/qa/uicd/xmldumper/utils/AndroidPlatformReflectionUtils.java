@@ -1,4 +1,4 @@
-package com.google.wireless.qa.uicd.xmldumper.utils;
+package com.google.uicd.xmldumper.utils;
 
 import android.util.Log;
 import java.lang.reflect.Field;

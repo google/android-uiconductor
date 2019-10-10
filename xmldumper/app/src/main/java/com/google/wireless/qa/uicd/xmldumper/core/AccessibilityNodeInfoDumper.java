@@ -1,4 +1,4 @@
-package com.google.wireless.qa.uicd.xmldumper.core;
+package com.google.uicd.xmldumper.core;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
@@ -8,7 +8,7 @@ import android.util.Log;
 import android.util.Xml;
 import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.test.uiautomator.UiDevice;
-import com.google.wireless.qa.uicd.xmldumper.utils.UicdDevice;
+import com.google.uicd.xmldumper.utils.UicdDevice;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
