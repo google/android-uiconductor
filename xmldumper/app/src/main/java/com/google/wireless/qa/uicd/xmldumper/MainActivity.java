@@ -1,4 +1,4 @@
-package com.google.wireless.qa.uicd.xmldumper;
+package com.google.uicd.xmldumper;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;

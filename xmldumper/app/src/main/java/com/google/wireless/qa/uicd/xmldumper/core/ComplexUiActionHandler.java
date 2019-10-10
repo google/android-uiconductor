@@ -1,4 +1,4 @@
-package com.google.wireless.qa.uicd.xmldumper.core;
+package com.google.uicd.xmldumper.core;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 

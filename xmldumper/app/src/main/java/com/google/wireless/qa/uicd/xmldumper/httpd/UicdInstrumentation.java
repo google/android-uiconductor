@@ -1,4 +1,4 @@
-package com.google.wireless.qa.uicd.xmldumper.httpd;
+package com.google.uicd.xmldumper.httpd;
 
 import android.content.Context;
 import android.os.Looper;

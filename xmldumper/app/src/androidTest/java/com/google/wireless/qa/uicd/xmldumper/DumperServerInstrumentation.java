@@ -1,10 +1,10 @@
-package com.google.wireless.qa.uicd.xmldumper;
+package com.google.uicd.xmldumper;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import android.os.SystemClock;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import com.google.wireless.qa.uicd.xmldumper.httpd.UicdInstrumentation;
+import com.google.uicd.xmldumper.httpd.UicdInstrumentation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
