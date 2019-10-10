@@ -77,7 +77,9 @@ public class UicdConfig {
   private int adbForwardStartPort = 6790;
   private Level logLevel = Level.INFO;
   private String xmlDumperApkVersion = "1.0.2";
-  private boolean localMode = false;
+  // For internal version localMode will be overwrite to false in start.sh when start UICD. Open
+  // sourced version will have run in local mode as default.
+  private boolean localMode = true;
 
   // Default package name, can be override in the config file. In open source version of Uicd, it is
   // using a different package name.

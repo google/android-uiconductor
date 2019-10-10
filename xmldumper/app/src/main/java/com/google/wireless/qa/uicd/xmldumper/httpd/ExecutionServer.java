@@ -1,25 +1,12 @@
-// Copyright 2018 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+package com.google.wireless.qa.uicd.xmldumper.httpd;
 
-package com.google.uicd.xmldumper.httpd;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import android.graphics.Point;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.uiautomator.UiDevice;
 import android.util.Log;
-import com.google.uicd.xmldumper.core.AccessibilityNodeInfoDumper;
-import com.google.uicd.xmldumper.core.ComplexUiActionHandler;
+import androidx.test.uiautomator.UiDevice;
+import com.google.wireless.qa.uicd.xmldumper.core.AccessibilityNodeInfoDumper;
+import com.google.wireless.qa.uicd.xmldumper.core.ComplexUiActionHandler;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;
@@ -45,8 +32,8 @@ public class ExecutionServer extends NanoHTTPD {
   /**
    * get XML UI hierarchy.
    *
-   * <p>Sample: { "width":1440, "height":2621, "xml_count": 4,
-   *              "value": { "xml0": "...", "xml1": "...", ... }  }
+   * <p>Sample: { "width":1440, "height":2621, "xml_count": 4, "value": { "xml0": "...", "xml1":
+   * "...", ... } }
    *
    * @return XML UI hierarchy JSON String.
    */
@@ -54,7 +41,7 @@ public class ExecutionServer extends NanoHTTPD {
     List<String> xmls = null;
     // Get UiDevice before dumpWindowHierarchy, otherwise getWindows will return empty for the first
     // request.
-    UiDevice mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
     xmls =
         AccessibilityNodeInfoDumper.dumpWindowHierarchy(
             queryParamStr != null && queryParamStr.toLowerCase().contains("withclassname"));
@@ -73,42 +60,28 @@ public class ExecutionServer extends NanoHTTPD {
 
   public String touchDownHandler(JSONObject jsonObject) throws RuntimeException, JSONException {
     ComplexUiActionHandler.touchDown(
-        ComplexUiActionHandler.getUiAutomatorBridge(),
-        jsonObject.getInt("x"),
-        jsonObject.getInt("y"));
+        getInstrumentation().getUiAutomation(), jsonObject.getInt("x"), jsonObject.getInt("y"));
     return EXECUTE_SUCCESS_MSG;
   }
 
   public String touchMoveHandler(JSONObject jsonObject) throws RuntimeException, JSONException {
     ComplexUiActionHandler.touchMove(
-        ComplexUiActionHandler.getUiAutomatorBridge(),
-        jsonObject.getInt("x"),
-        jsonObject.getInt("y"));
+        getInstrumentation().getUiAutomation(), jsonObject.getInt("x"), jsonObject.getInt("y"));
     return EXECUTE_SUCCESS_MSG;
   }
 
   public String touchUpHandler(JSONObject jsonObject) throws RuntimeException, JSONException {
     ComplexUiActionHandler.touchUp(
-        ComplexUiActionHandler.getUiAutomatorBridge(),
-        jsonObject.getInt("x"),
-        jsonObject.getInt("y"));
+        getInstrumentation().getUiAutomation(), jsonObject.getInt("x"), jsonObject.getInt("y"));
     return EXECUTE_SUCCESS_MSG;
   }
 
   public String zoomHandler(JSONObject jsonObject) throws RuntimeException, JSONException {
     ComplexUiActionHandler.zoom(
-        new Point(
-            jsonObject.getInt("startX1"),
-            jsonObject.getInt("startY1")),
-        new Point(
-            jsonObject.getInt("startX2"),
-            jsonObject.getInt("startY2")),
-        new Point(
-            jsonObject.getInt("endX1"),
-            jsonObject.getInt("endY1")),
-        new Point(
-            jsonObject.getInt("endX2"),
-            jsonObject.getInt("endY2")));
+        new Point(jsonObject.getInt("startX1"), jsonObject.getInt("startY1")),
+        new Point(jsonObject.getInt("startX2"), jsonObject.getInt("startY2")),
+        new Point(jsonObject.getInt("endX1"), jsonObject.getInt("endY1")),
+        new Point(jsonObject.getInt("endX2"), jsonObject.getInt("endY2")));
     return EXECUTE_SUCCESS_MSG;
   }
 
@@ -132,6 +105,7 @@ public class ExecutionServer extends NanoHTTPD {
     }
     Response response = null;
     try {
+      // TODO(yuchenhe): change if/else to switch after legacy requests no longer exist.
       if (uri.contains("dump")) {
         response = newFixedLengthResponse(getDumpStrHandler(queryParamStr));
       } else if (uri.contains("down")) {
