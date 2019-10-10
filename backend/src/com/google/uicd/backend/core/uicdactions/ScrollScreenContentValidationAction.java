@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
 package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.uicd.backend.core.constants.UicdConstant;
+import com.google.uicd.backend.core.constants.ScrollDirectionType;
 import com.google.uicd.backend.core.constants.StopType;
+import com.google.uicd.backend.core.constants.UicdConstant;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
+import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ScrollScreenContentValidationActionSantinizer;
 import com.google.uicd.backend.core.xmlparser.Bounds;
 import com.google.uicd.backend.core.xmlparser.NodeContext;
@@ -28,8 +29,8 @@ import com.google.uicd.backend.core.xmlparser.NodeContext;
 public class ScrollScreenContentValidationAction extends ScreenContentValidationAction {
 
   private static final int SLEEP_MILLS = 500;
-  /** Default is scroll down */
-  int scrollOrientation = 2;
+  private ScrollDirectionType scrollOrientation = ScrollDirectionType.DOWN;
+  private int scrollMaxNumber = 30;
 
   public ScrollScreenContentValidationAction() {}
 
@@ -43,25 +44,51 @@ public class ScrollScreenContentValidationAction extends ScreenContentValidation
       StopType stopType,
       int scrollOrientation) {
     super(selectedBound, type, value, textMatchType, boundsSearchType, nodeContext, stopType);
-    this.scrollOrientation = scrollOrientation;
+    this.scrollOrientation = ScrollDirectionType.fromInt(scrollOrientation);
+  }
+
+  public ScrollScreenContentValidationAction(ValidationReqDetails validationReqDetails) {
+    super(validationReqDetails);
+    this.scrollOrientation = validationReqDetails.getScrollDirectionType();
+    this.scrollMaxNumber = validationReqDetails.getScrollMaxNumber();
+  }
+
+  @Override
+  public void updateAction(BaseAction baseAction) {
+    super.updateAction(baseAction);
+
+    if (baseAction instanceof ScrollScreenContentValidationAction) {
+      ScrollScreenContentValidationAction action = (ScrollScreenContentValidationAction) baseAction;
+      this.scrollOrientation = action.scrollOrientation;
+      this.scrollMaxNumber = action.scrollMaxNumber;
+    }
   }
 
   @Override
   protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
-      throws UicdExcpetion {
+      throws UicdException {
     this.clear();
 
     try {
-      for (int step = UicdConstant.SCROLL_SEARCH_STEPS; step > 0; step--) {
+      for (int i = 0; i < scrollMaxNumber; i++) {
+        // Stop validation attempts if user has cancelled the test; outer code will take care
+        // of setting test status to CANCELLED.
+        if (actionContext.playbackStopRequested()) {
+          return 0;
+        }
         this.validationResult = validate(actionContext, androidDeviceDriver);
         if (this.validationResult) {
           break;
         }
+        int hostScreenWidth = androidDeviceDriver.getHostScreenWidth();
+        int hostScreenHeight = androidDeviceDriver.getHostScreenHeight();
+        double[] swipeMatrix =
+            UicdConstant.SCROLL_SEARCH_SWIPE_MATRIX[scrollOrientation.ordinal() - 1];
         androidDeviceDriver.swipeDevice(
-            UicdConstant.SCROLL_SEARCH_SWIPE_COORDINATES[scrollOrientation - 1][0],
-            UicdConstant.SCROLL_SEARCH_SWIPE_COORDINATES[scrollOrientation - 1][1],
-            UicdConstant.SCROLL_SEARCH_SWIPE_COORDINATES[scrollOrientation - 1][2],
-            UicdConstant.SCROLL_SEARCH_SWIPE_COORDINATES[scrollOrientation - 1][3]);
+            (int) (swipeMatrix[0] * hostScreenWidth),
+            (int) (swipeMatrix[1] * hostScreenHeight),
+            (int) (swipeMatrix[2] * hostScreenWidth),
+            (int) (swipeMatrix[3] * hostScreenHeight));
 
         // Sometimes validation fails when the screen is still scrolling.
         Thread.sleep(SLEEP_MILLS);
@@ -76,8 +103,13 @@ public class ScrollScreenContentValidationAction extends ScreenContentValidation
         this.playStatus = ActionContext.PlayStatus.SKIPPED;
       }
     } catch (InterruptedException e) {
-      throw new UicdExcpetion(e.getMessage());
+      throw new UicdException(e.getMessage());
     }
     return 0;
+  }
+
+  /** Default is scroll down */
+  public ScrollDirectionType getScrollOrientation() {
+    return scrollOrientation;
   }
 }

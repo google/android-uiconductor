@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package com.google.uicd.backend.core.uicdactions;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
+import static com.google.common.base.Strings.nullToEmpty;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -46,7 +47,7 @@ public class GlobalVariableValidationAction extends ValidationAction {
 
   @Override
   public String getDisplay() {
-    return "Validating: " + displayStr;
+    return "Global Variable Validation Action " + nullToEmpty(this.expression);
   }
 
   @Override
@@ -61,7 +62,7 @@ public class GlobalVariableValidationAction extends ValidationAction {
 
     // To use advanced expression, need a converter to do the trick, the expression will be like
     // "uicdTypeConverter.toInt($uicd_var1) + uicdTypeConverter.toInt($uicd_var2)";
-    // TODO: This is real advanced feature, we might change to another engine in the future.
+    // TODO(tccyp): This is real advanced feature, we might change to another engine in the future.
     if (expression.contains(TYPE_CONVERTER_OBJ_KEYWORD)) {
       jc.set(TYPE_CONVERTER_OBJ_KEYWORD, new UicdTypeConverter());
     }
@@ -98,7 +99,8 @@ public class GlobalVariableValidationAction extends ValidationAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateAction(baseAction);
+
     if (baseAction instanceof GlobalVariableValidationAction) {
       GlobalVariableValidationAction otherAction = (GlobalVariableValidationAction) baseAction;
       this.expression = otherAction.expression;

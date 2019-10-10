@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import com.google.uicd.backend.core.uicdactions.ValidationAction;
 /**
  * BaseSantinizer for Validation Action
  *
+ * @author tccyp@google.com
  */
 public class BaseSantinizer<T extends ValidationAction> extends StdConverter<T, T> {
 
@@ -35,7 +36,9 @@ public class BaseSantinizer<T extends ValidationAction> extends StdConverter<T, 
     }
 
     validationAction.setStopType(
-        validationAction.getStopWhenFalse() ? StopType.StopTestIfFalse : StopType.StopTestIfTrue);
+        validationAction.getStopWhenFalse()
+            ? StopType.STOP_TEST_IF_FALSE
+            : StopType.STOP_TEST_IF_TRUE);
     return validationAction;
   }
 

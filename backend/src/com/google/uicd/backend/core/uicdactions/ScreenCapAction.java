@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,29 +15,25 @@
 package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.utils.ImageUtil;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
-/**
- * ScreenCapAction
- */
+/** ScreenCapAction */
 public class ScreenCapAction extends BaseAction {
+
+  @JsonIgnore private String screenCapPath = "";
 
   public ScreenCapAction() {
     setName("Screenshot");
   }
 
-  @JsonIgnore
-  private String screenCapPath;
+  public void setScreenCapPath(ActionContext actionContext) {
+    screenCapPath = actionContext.getScreenCapFullPath();
+  }
 
   @Override
   public String getDisplay() {
@@ -46,27 +42,14 @@ public class ScreenCapAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
   }
 
   @Override
-  protected int play(
-      AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) throws UicdExcpetion {
-    String command1 = "shell screencap /sdcard/screen.png";
-
-    screenCapPath = actionContext.getExecutionId() + "/" + getActionId() + "/"
-        + actionContext.getCurrentActionSequenceIndex() + "/screenshot/" + "dump.png";
-    String screenCapFullPath = Paths
-        .get(UicdConfig.getInstance().getTestOutputFolder(), screenCapPath).toString();
-
-    File file = new File(screenCapFullPath);
-    file.getParentFile().mkdirs();
-
-    String command2 = "pull /sdcard/screen.png " + screenCapFullPath;
-
-    List<String> output = new ArrayList<>();
-    ADBCommandLineUtil.executeAdb(command1, androidDeviceDriver.getDeviceId(), output);
-    ADBCommandLineUtil.executeAdb(command2, androidDeviceDriver.getDeviceId(), output);
+  protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
+      throws UicdException {
+    setScreenCapPath(actionContext);
+    ImageUtil.saveScreenshotToLocal(androidDeviceDriver.getDeviceId(), screenCapPath);
     return 0;
   }
 
@@ -76,16 +59,12 @@ public class ScreenCapAction extends BaseAction {
     ActionExecutionResult actionExecutionResult =
         super.genActionExecutionResults(androidDeviceDriver, actionContext);
     try {
-      // screenCapPath will be null if play() has not been called yet
-      if (screenCapPath != null) {
-        actionExecutionResult.setScreenCapOutput(
-            URLEncoder.encode(screenCapPath, "UTF-8"), this.getDisplay());
-      }
+      // Save screenshot output to action execution result.
+      actionExecutionResult.setScreenCapOutput(
+          URLEncoder.encode(screenCapPath, "UTF-8"), this.getDisplay());
     } catch (UnsupportedEncodingException e) {
       UicdCoreDelegator.getInstance().logException(e);
     }
-    actionExecutionResult.setPlayStatus(this.playStatus);
     return actionExecutionResult;
   }
-
 }

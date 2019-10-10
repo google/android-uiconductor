@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -220,6 +220,12 @@ public class UicdSnippetClientDriver {
   @SuppressWarnings("unchecked")
   public Optional<String> sendRpcRequest(String method, String arguments) {
     int requestId = idCounter++;
+    /**
+     * Links for reference:
+     *
+     * <p>https://g3doc.corp.google.com/codelab/mobly/g3doc/snippet.md?cl=head
+     * https://cs.corp.google.com/piper///depot/google3/third_party/py/mobly/controllers/android_device_lib/jsonrpc_client_base.py?rcl=212204422&l=298
+     */
     String rpcRequestData = String.format(RPC_REQUEST_TEMPLATE, requestId, method, arguments);
     String sendResult = send(rpcRequestData);
     if (sendResult.equals(SEND_REQUEST_FAILURE)) {

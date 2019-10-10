@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.exceptions.UicdDeviceException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
+import com.google.uicd.backend.core.utils.JsonUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,11 +27,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-/**
- * DevicesDriverManager, for manage devices and start xmldumper service on devices.
- *
- */
+/** DevicesDriverManager, for managing devices and starting xmldumper service on devices. */
 public class DevicesDriverManager {
   private static final Object lock = new Object();
   protected Logger logger = LogManager.getLogManager().getLogger("uicd");
@@ -50,7 +49,7 @@ public class DevicesDriverManager {
     return androidDriverLinkedMap.get(deviceId).getDevice();
   }
 
-  public void stopXmldumperServer(String deviceId) throws UicdExternalCommandException {
+  public void stopXmlDumperServer(String deviceId) throws UicdExternalCommandException {
     if (!androidDriverLinkedMap.containsKey(deviceId)) {
       return;
     }
@@ -58,11 +57,11 @@ public class DevicesDriverManager {
     initXmlDumperDevices.remove(deviceId);
   }
 
-  // used by uicd driver
-  public void stopMultiXmldumperServer(List<String> deviceIds) {
+  // This function is used by Mobileharness driver.
+  public void stopMultiXmlDumperServer(List<String> deviceIds) {
     try {
       for (String deviceId : deviceIds) {
-        stopXmldumperServer(deviceId);
+        stopXmlDumperServer(deviceId);
       }
     } catch (UicdExternalCommandException e) {
       logger.info("Error in stop xmldumper server: " + e.getMessage());
@@ -87,26 +86,28 @@ public class DevicesDriverManager {
     ADBCommandLineUtil.turnOffAutoRotation(deviceId);
   }
 
-  // Used by UicdCLI
-  public void startMultiXmldumperServer(List<String> deviceIds, boolean isUpdateApk)
+  // Used by Mobile Harness Nuwa driver. In MH, we are still using AndroidNuwa as driver.
+  public void startMultiXmlDumperServer(List<String> deviceIds, boolean isUpdateApk)
       throws UicdExternalCommandException {
-    logger.info("Start startMultiXmldumperServer...");
+    logger.info("Start startMultiXmlDumperServer...");
     for (String deviceId : deviceIds) {
       startXmlDumperServer(deviceId, isUpdateApk);
     }
-    logger.info("Finish startMultiXmldumperServer...");
+    logger.info("Finish startMultiXmlDumperServer...");
   }
 
-  public void startMultiXmldumperServer(List<String> deviceIds) throws UicdExternalCommandException {
-    startMultiXmldumperServer(deviceIds, false);
+  // Used by Mobile Harness Nuwa driver. In MH, we are still using AndroidNuwa as driver.
+  public void startMultiXmlDumperServer(List<String> deviceIds)
+      throws UicdExternalCommandException {
+    startMultiXmlDumperServer(deviceIds, false);
   }
 
   public AndroidDeviceDriver getSelectedAndroidDeviceDriver() {
-    return getXmldumperDriverList().get(selectedDeviceIndex);
+    return getXmlDumperDriverList().get(selectedDeviceIndex);
   }
 
   public Device getMasterDevice() {
-    return getXmldumperDriverList().get(selectedDeviceIndex).getDevice();
+    return getXmlDumperDriverList().get(selectedDeviceIndex).getDevice();
   }
 
   public void initDevicesList(List<String> deviceIds) throws UicdExternalCommandException {
@@ -127,7 +128,7 @@ public class DevicesDriverManager {
       logger.warning("Devices list is empty returning.");
       return;
     }
-    // Reset xmldumper Mapping
+    // Reset Xmldumper Mapping
     initXmlDumperDevices.clear();
     androidDriverLinkedMap.clear();
 
@@ -144,7 +145,7 @@ public class DevicesDriverManager {
       String screenSizeStr = ADBCommandLineUtil.getDeviceScreenSize(deviceId);
       String productName = ADBCommandLineUtil.getDeviceProductName(deviceId);
       int apiLevel = ADBCommandLineUtil.getDeviceApiLevel(deviceId);
-      ArrayList<String> adbOutput = new ArrayList<String>();
+      ArrayList<String> adbOutput = new ArrayList<>();
       ADBCommandLineUtil.executeAdb(
           "adb shell dumpsys input | grep 'SurfaceOrientation' | awk '{ print $2 }'",
           deviceId,
@@ -206,7 +207,7 @@ public class DevicesDriverManager {
         this.getAndroidDriverByDeviceId(deviceId).getDevice().getDeviceIndex();
   }
 
-  public List<AndroidDeviceDriver> getXmldumperDriverList() {
+  public List<AndroidDeviceDriver> getXmlDumperDriverList() {
     return new ArrayList<>(this.getAndroidDriverLinkedMap().values());
   }
 
@@ -220,21 +221,39 @@ public class DevicesDriverManager {
 
   public static void reset() {
     for (AndroidDeviceDriver androidDeviceDriver : instance.androidDriverLinkedMap.values()) {
-      killXmldumperServer(androidDeviceDriver);
+      killXmlDumperServer(androidDeviceDriver);
     }
     instance = new DevicesDriverManager();
   }
 
-  public static void killXmldumperServer(AndroidDeviceDriver androidDeviceDriver) {
+  public static void killXmlDumperServer(AndroidDeviceDriver androidDeviceDriver) {
     try {
       Device device = androidDeviceDriver.getDevice();
       String deviceId = device.getDeviceId();
       ADBCommandLineUtil.executeAdb(
           "forward --remove tcp:" + device.getXmlDumperHostPort(), deviceId, true /* waitFor */);
       ADBCommandLineUtil.executeAdb(
-          "shell killall com.google.uicd.xmldumper", deviceId, true /* waitFor */);
+          String.format("shell killall %s", UicdConfig.getInstance().getXmldumperPackagePrefix()),
+          deviceId,
+          true /* waitFor */);
     } catch (UicdExternalCommandException e) {
       DevicesDriverManager.getInstance().logger.info(e.getMessage());
     }
+  }
+
+  /**
+   * Get the devices status
+   * @return Devices status in Json format.
+   * [{"deviceId":"873YXXXXX","minicapPort":1717,"status":""}]
+   */
+  public static String getDevicesStatus() {
+    return JsonUtil.toJson(getDevicesStatusDetails());
+  }
+
+  /** Returns devices status details in the DevicesStatusResponse format */
+  public static List<DeviceStatus> getDevicesStatusDetails() {
+    return instance.androidDriverLinkedMap.values().stream()
+            .map(d -> d.getDevice().getDeviceStatus()).collect(Collectors.toList());
+
   }
 }

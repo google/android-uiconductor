@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ package com.google.uicd.backend.core.uicdactions;
 
 import com.google.uicd.backend.core.constants.DeviceOrientation;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
+import com.google.uicd.backend.core.exceptions.UicdException;
 
 /** ScreenRotateAction to rotate the device screen */
 public class ScreenRotateAction extends BaseAction {
@@ -37,7 +37,7 @@ public class ScreenRotateAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     if (baseAction instanceof ScreenRotateAction) {
       ScreenRotateAction otherAction = (ScreenRotateAction) baseAction;
       this.deviceOrientation = otherAction.deviceOrientation;
@@ -46,7 +46,7 @@ public class ScreenRotateAction extends BaseAction {
 
   @Override
   protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
-      throws UicdExcpetion {
+      throws UicdException {
     androidDeviceDriver.rotateDevice(deviceOrientation);
     return 0;
   }

@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package com.google.uicd.backend.core.uicdactions;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.uicd.backend.core.constants.StopType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
+import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ConditionClickActionSantinizer;
 import com.google.uicd.backend.core.xmlparser.Bounds;
@@ -41,9 +41,13 @@ public class ConditionClickAction extends ScreenContentValidationAction {
     super(selectedBound, type, value, textMatchType, boundsSearchType, nodeContext, stopType);
   }
 
+  public ConditionClickAction(ValidationReqDetails validationReqDetails) {
+    super(validationReqDetails);
+  }
+
   @Override
   public int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
-      throws UicdExcpetion {
+      throws UicdException {
     super.play(androidDeviceDriver, actionContext);
 
     if (this.playStatus != PlayStatus.FAIL) {
