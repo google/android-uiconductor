@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,10 +74,10 @@ public class ADBCommandLineUtil {
   }
 
   public static Process executeAdbLogcatCommand(
-      String commandLine, String deviceId, List<String> output)
+      String commandLine, String deviceId, List<String> output, int timeout)
       throws UicdExternalCommandException {
     String adbLogcatCmd = constructAdbLogcatCommand(commandLine, deviceId);
-    return CommandLineUtil.execute(adbLogcatCmd, output, true);
+    return CommandLineUtil.execute(adbLogcatCmd, output, true, timeout);
   }
 
   public static Process executeAdb(String commandLine, String deviceId, boolean waitFor)
@@ -85,6 +85,13 @@ public class ADBCommandLineUtil {
     String cmd = constructAdbCommand(commandLine, deviceId);
     List<String> output = new ArrayList<>();
     return CommandLineUtil.execute(cmd, output, waitFor);
+  }
+
+  public static Process executeAdb(
+      String commandLine, String deviceId, List<String> output, boolean showDetailsLogging)
+      throws UicdExternalCommandException {
+    String cmd = constructAdbCommand(commandLine, deviceId);
+    return CommandLineUtil.execute(cmd, output, true, showDetailsLogging);
   }
 
   public static Process executeAdb(
@@ -114,18 +121,49 @@ public class ADBCommandLineUtil {
     String forwardCmd = "forward tcp:%d tcp:%d";
     executeAdb(String.format(forwardCmd, hostPort, devicePort), deviceId);
 
+    String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
+    String targetXmldumperVersion = UicdConfig.getInstance().getXmlDumperApkVersion();
+    String runnerPrefix = "android.support";
+    if (compareVersion(targetXmldumperVersion, "2.0.0") >= 0) {
+      runnerPrefix = "androidx";
+    }
     String startXmlDumperServerCmd =
-        "shell am instrument -w -e debug false -e class 'com.google.uicd.xmldumper"
-            + ".DumperServerInstrumentation#startServer' "
-            + "com.google.uicd.xmldumper.test/"
-            + "android.support.test.runner.AndroidJUnitRunner";
+        String.format(
+            "shell am instrument -w -e debug false -e class "
+                + "'%s.DumperServerInstrumentation#startServer' %s.test/"
+                + "%s.test.runner.AndroidJUnitRunner",
+            xmldumperPackagePrefix, xmldumperPackagePrefix, runnerPrefix);
     // don't wait for the instrument command
     return executeAdb(startXmlDumperServerCmd, deviceId, false);
   }
 
+  // Version of xml dumper, version is in the "1.0.1" format
+  private static int compareVersion(String version1, String version2) {
+    return Integer.compare(versionToInt(version1), versionToInt(version2));
+  }
+
+  // To make it simple, the version can only be single digit.
+  private static int versionToInt(String version) {
+    if (version.isEmpty()) {
+      return 0;
+    }
+    if (version.startsWith("v")) {
+      version = version.substring(1);
+    }
+    List<String> strs = Splitter.on('.').splitToList(version);
+    int versionNum = 0;
+    for (String s : strs) {
+      versionNum *= 10;
+      versionNum += Integer.parseInt(s);
+    }
+    return versionNum;
+  }
+
   public static Optional<String> getXmlDumperApkVersion(String deviceId) {
     String getDumperVersionCmd =
-        "shell dumpsys package com.google.uicd.xmldumper | grep versionName";
+        String.format(
+            "shell dumpsys package %s | grep versionName",
+            UicdConfig.getInstance().getXmldumperPackagePrefix());
     List<String> dumperVersionOutputList = new ArrayList<>();
     try {
       executeAdb(getDumperVersionCmd, deviceId, dumperVersionOutputList);
@@ -147,17 +185,21 @@ public class ADBCommandLineUtil {
     // if already installed, skip install apks
     String listPackageAdbCmd = "shell pm list packages";
     List<String> packageList = new ArrayList<>();
-    executeAdb(listPackageAdbCmd, deviceId, packageList);
+    // During the frontend loading, we don't want to see the all the package names on the output
+    // dialog on the frontend.
+    executeAdb(listPackageAdbCmd, deviceId, packageList, false);
 
-    if (packageList.contains("package:com.google.uicd.xmldumper")
-        || packageList.contains("package:com.google.uicd.xmldumper.test")) {
+    String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
+    if (packageList.contains(xmldumperPackagePrefix)) {
       Optional<String> dumperApkVersion = getXmlDumperApkVersion(deviceId);
       if (!UicdConfig.getInstance().getXmlDumperApkVersion().isEmpty()
           && dumperApkVersion.isPresent()
-          && !dumperApkVersion.get().equals(UicdConfig.getInstance().getXmlDumperApkVersion())) {
+          && compareVersion(
+                  UicdConfig.getInstance().getXmlDumperApkVersion(), dumperApkVersion.get())
+              > 0) {
         logger.info("Found newer version of uicd xmldumper. Updating uicd xmldumper...");
-        String uninstallCmd1 = "uninstall com.google.uicd.xmldumper";
-        String uninstallCmd2 = "uninstall com.google.uicd.xmldumper.test";
+        String uninstallCmd1 = String.format("uninstall %s", xmldumperPackagePrefix);
+        String uninstallCmd2 = String.format("uninstall %s.test", xmldumperPackagePrefix);
         executeAdb(uninstallCmd1, deviceId);
         executeAdb(uninstallCmd2, deviceId);
         installXmlDumperApk(deviceId, apiLevel);
@@ -172,7 +214,12 @@ public class ADBCommandLineUtil {
 
   private static void installXmlDumperApk(String deviceId, int apiLevel)
       throws UicdExternalCommandException {
-    String installCmd = "install -r -d ";
+    // parameters for adb install
+    // -r replace existing application
+    // -d allow version code downgrade
+    // -t allow test packages
+    // -g grant permission
+    String installCmd = "install -r -d -t ";
     if (apiLevel >= MINIMUM_API_LEVEL_FOR_PERMISSION_GRANT_FLAG) {
       installCmd += "-g ";
     }
@@ -229,9 +276,10 @@ public class ADBCommandLineUtil {
 
   // If more than one device is connected, some machines will show "error: unknown host service";
   // need to provide a deviceId to prevent this. There will be one pitfall, allocating ports is
-  // not an atomic operation.
-  public static int getFirstAvailablePortSlot(
-      String deviceId, int startIndex, int deviceCount) throws UicdExternalCommandException {
+  // not an atomic operation. There is a small chance of a race condition in MH. However, we
+  // don't have a easy way to solve it for now, it would require changes on the mobileharness side.
+  public static int getFirstAvailablePortSlot(String deviceId, int startIndex, int deviceCount)
+      throws UicdExternalCommandException {
     List<String> output = new ArrayList<>();
     HashSet<Integer> existingPort = new HashSet<>();
     String adbCommand = "forward --list";
@@ -274,8 +322,9 @@ public class ADBCommandLineUtil {
   }
 
   public static void forceStopXmlDumperOnDevice(String deviceId) {
-    String adbCommand1 = "shell am force-stop com.google.uicd.xmldumper";
-    String adbCommand2 = "shell am force-stop com.google.uicd.xmldumper.test";
+    String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
+    String adbCommand1 = String.format("shell am force-stop %s", xmldumperPackagePrefix);
+    String adbCommand2 = String.format("shell am force-stop %s.test", xmldumperPackagePrefix);
     try {
       executeAdb(adbCommand1, deviceId);
       executeAdb(adbCommand2, deviceId);
@@ -301,3 +350,4 @@ public class ADBCommandLineUtil {
     return getDeviceProperty(deviceId, "ro.build.product");
   }
 }
+                                                                                                    

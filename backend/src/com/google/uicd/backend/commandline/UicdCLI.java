@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,15 @@
 
 package com.google.uicd.backend.commandline;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.db.ActionStorageManager;
+import com.google.uicd.backend.core.db.FileSystemActionStorageManager;
 import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
 import com.google.uicd.backend.core.exceptions.UicdActionException;
 import com.google.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
+import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.uicdactions.ActionContext;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
@@ -36,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
@@ -51,7 +55,10 @@ public class UicdCLI {
   private static final String ANSI_GREEN = "\u001B[32m";
   private static final String ANSI_YELLOW = "\u001B[33m";
   private static final String LOG_FOLDER_NAME = "log";
+  private static final String RESULT_FOLDER_NAME = "result";
   private static final String LOG_FILENAME_PREFIX = "UicdCLIlog";
+
+  private static final boolean HAS_CONSOLE = System.console() != null;
 
   public static void main(String[] args) {
     try {
@@ -81,7 +88,10 @@ public class UicdCLI {
       if (Files.notExists(logFolder)) {
         Files.createDirectories(logFolder);
       }
-
+      Path resultFolder = Paths.get(outputFolder, RESULT_FOLDER_NAME);
+      if (Files.notExists(resultFolder)) {
+        Files.createDirectories(resultFolder);
+      }
       int totalCnt = 0;
       int passedCnt = 0;
       for (String fileName : getFilenamesWithFullPathFromPath(inputFilePath)) {
@@ -91,7 +101,11 @@ public class UicdCLI {
         }
 
         ActionExecutionResult actionExecutionResult =
-            playActionFromFile(fileName, argsObj.getDevicesIdList(), argsObj.getPlayMode());
+            playActionFromFile(
+                fileName,
+                argsObj.getDevicesIdList(),
+                argsObj.getPlayMode(),
+                argsObj.getGlobalVariables());
 
         // Valid uicd test case
         if (actionExecutionResult.getPlayStatus() != PlayStatus.SKIPPED) {
@@ -104,11 +118,31 @@ public class UicdCLI {
             String.format(
                 "Test(%s) finished. \n Result: %s",
                 fileName, getColorStatusStr(actionExecutionResult.getPlayStatus())));
+        // We need to maintain the subdir for result json files for each test to avoid conflicts.
+        // example:
+        // input path is "tests/" and containing file structure is:
+        //   tests/sub_dir1/dummytest1
+        //   tests/sub_dir2/dummytest2
+        //   tests/dummytest3
+        // output path "output/result/" file structure should be :
+        //   output/result/sub_dir1/dummytest1/action_execution_result
+        //   output/result/sub_dir2/dummytest2/action_execution_result
+        //   output/result/dummytest3/action_execution_result
+        String subDirPath =
+            getRelativePath(
+                new File(inputFilePath).getAbsolutePath(), new File(fileName).getAbsolutePath());
+        Path testResultDir = Paths.get(resultFolder.toString(), subDirPath);
+        if (Files.notExists(testResultDir)) {
+          Files.createDirectories(testResultDir);
+        }
+        writeContentsToFile(
+            Paths.get(testResultDir.toString(), "action_execution_result").toString(),
+            actionExecutionResult.toJson());
       }
 
       printTestResultSummary(totalCnt, passedCnt);
-    } catch (IOException | UicdExcpetion | ParseException e) {
-      System.out.println("ERROR! Exception encountered: " +  e.getMessage());
+    } catch (IOException | UicdException | ParseException e) {
+      System.out.println("ERROR! Exception encountered: " + e.getMessage());
     }
   }
 
@@ -140,11 +174,14 @@ public class UicdCLI {
   }
 
   private static ActionExecutionResult playActionFromFile(
-      String fullPath, List<String> deviceIdList, String playMode)
+      String fullPath,
+      List<String> deviceIdList,
+      String playMode,
+      Map<String, String> globalVariablesMap)
       throws IOException, UicdExternalCommandException, UicdDeviceException, UicdActionException {
 
-    ActionStorageManager actionStorageManager = new ActionStorageManager(false);
-    String jsonContent = new String(Files.readAllBytes(Paths.get(fullPath)));
+    ActionStorageManager actionStorageManager = new FileSystemActionStorageManager();
+    String jsonContent = new String(Files.readAllBytes(Paths.get(fullPath)), UTF_8);
     BaseAction action = actionStorageManager.loadMapFromString(jsonContent);
 
     if (action == null) {
@@ -155,15 +192,16 @@ public class UicdCLI {
     }
     DevicesDriverManager devicesDriverManager = new DevicesDriverManager();
     devicesDriverManager.initDevicesList(deviceIdList);
-    devicesDriverManager.startMultiXmldumperServer(deviceIdList, true);
+    devicesDriverManager.startMultiXmlDumperServer(deviceIdList, true);
 
     ActionContext actionContext = new ActionContext();
     actionContext.setPlayMode(playMode.isEmpty() ? PlayMode.SINGLE : PlayMode.valueOf(playMode));
+    globalVariablesMap.forEach((k, v) -> actionContext.getGlobalVariableMap().addVariable(k, v));
     ActionPlayer actionPlayer =
-        new ActionPlayer(devicesDriverManager.getXmldumperDriverList(), actionContext);
+        new ActionPlayer(devicesDriverManager.getXmlDumperDriverList(), actionContext);
     actionPlayer.initDevicesDisplayScale();
     ActionExecutionResult actionExecutionResult = actionPlayer.playAction(action);
-    devicesDriverManager.stopMultiXmldumperServer(deviceIdList);
+    devicesDriverManager.stopMultiXmlDumperServer(deviceIdList);
     return actionExecutionResult;
   }
 
@@ -180,15 +218,15 @@ public class UicdCLI {
   }
 
   private static String getRedOutput(String str) {
-    return ANSI_RED + str + ANSI_RESET;
+    return HAS_CONSOLE ? ANSI_RED + str + ANSI_RESET : str;
   }
 
   private static String getGreenOutput(String str) {
-    return ANSI_GREEN + str + ANSI_RESET;
+    return HAS_CONSOLE ? ANSI_GREEN + str + ANSI_RESET : str;
   }
 
   private static String getYellowOutput(String str) {
-    return ANSI_YELLOW + str + ANSI_YELLOW;
+    return HAS_CONSOLE ? ANSI_YELLOW + str + ANSI_YELLOW : str;
   }
 
   private static String getColorStatusStr(PlayStatus playStatus) {
@@ -199,5 +237,18 @@ public class UicdCLI {
     } else {
       return getYellowOutput(playStatus.toString());
     }
+  }
+
+  private static String getRelativePath(String parentPath, String fullPath) {
+    if (fullPath.startsWith(parentPath)) {
+      return fullPath.substring(parentPath.length());
+    }
+    return "";
+  }
+
+  private static void writeContentsToFile(String filepath, String contents) throws IOException {
+    System.out.println("Writing contents to: " + filepath);
+    Files.createDirectories(Paths.get(new File(filepath).getParent()));
+    Files.write(Paths.get(filepath), contents.getBytes(UTF_8));
   }
 }

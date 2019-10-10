@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,28 +14,50 @@
 
 package com.google.uicd.backend.core.db;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.constants.JsonFlag;
 import com.google.uicd.backend.core.uicdactions.BaseAction;
 import java.time.Instant;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-/**
- * ActionEntity Object
- */
+/** Container of Action object for database */
+@Entity
+@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@Table(name = "yui_testcase")
 public class ActionEntity {
 
-  public ActionEntity() {
+  private static final int MAX_NAME_LENGTH = 100;
 
-  }
+  public ActionEntity() {}
+
   public ActionEntity(BaseAction baseAction) {
     this.uuid = baseAction.getActionId().toString();
     this.details = baseAction.toJson(JsonFlag.BACKEND);
     this.type = baseAction.getActionType();
-    this.name = baseAction.getName();
+    // The name field in the db is 100 characters, if user put super long name, it will crash the
+    // save logic
+    this.name =
+        baseAction.getName().substring(0, Math.min(baseAction.getName().length(), MAX_NAME_LENGTH));
     this.createdBy = UicdConfig.getInstance().getCurrentUser();
+    this.createdAt = Instant.now();
     this.tag = "";
     this.description = baseAction.getActionDescription();
+  }
+
+  public ActionEntity(ActionEntity actionEntity) {
+    this.uuid = actionEntity.uuid;
+    this.details = actionEntity.details;
+    this.name = actionEntity.name;
+    this.type = actionEntity.type;
+    this.tag = actionEntity.tag;
+    this.description = actionEntity.description;
+    this.createdBy = UicdConfig.getInstance().getCurrentUser();
+    this.createdAt = Instant.now();
   }
 
   public ActionEntity(String uuid, String details, String name, String type, String description) {
@@ -47,13 +69,19 @@ public class ActionEntity {
     this.description = description;
     this.createdBy = UicdConfig.getInstance().getCurrentUser();
   }
-  private String uuid;
-  @JsonIgnore
+
+  @Id private String uuid;
+
+  @Column(length = 500000)
   private String details;
+
   private String name;
   private String type;
   private String tag;
+
+  @Column(length = 50000)
   private String description;
+
   private String createdBy;
   private Instant createdAt;
 

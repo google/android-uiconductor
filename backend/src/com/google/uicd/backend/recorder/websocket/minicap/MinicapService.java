@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,9 @@ public class MinicapService {
 
   private boolean running = false;
   // thread to start minicap
-  private Thread minicapThread, dataReaderThread, imageParserThread;
+  private Thread minicapThread;
+  private Thread dataReaderThread;
+  private Thread imageParserThread;
   private AdbForward forward;
 
   private BlockingQueue<byte[]> dataQueue = new LinkedBlockingQueue<>();

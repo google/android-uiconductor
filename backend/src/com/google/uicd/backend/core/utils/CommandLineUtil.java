@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-/**
- * Helper functions executing a command
- */
+/** Helper functions executing a command */
 public class CommandLineUtil {
   private static final int EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS = 4;
   private static final int LOGGER_MAX_SIZE = 50;
@@ -40,7 +38,25 @@ public class CommandLineUtil {
   }
 
   public static Process execute(
+      String commandLine, List<String> output, boolean waitFor, boolean showDetailLogging)
+      throws UicdExternalCommandException {
+    return execute(
+        commandLine, output, waitFor, EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS, showDetailLogging);
+  }
+
+  public static Process execute(
       String commandLine, List<String> output, boolean waitFor, int timeout)
+      throws UicdExternalCommandException {
+    timeout = (timeout == 0 ? EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS : timeout);
+    return execute(commandLine, output, waitFor, timeout, true);
+  }
+
+  public static Process execute(
+      String commandLine,
+      List<String> output,
+      boolean waitFor,
+      int timeout,
+      boolean showDetailLogging)
       throws UicdExternalCommandException {
     Process p;
     try {
@@ -71,11 +87,11 @@ public class CommandLineUtil {
       if (waitFor) {
         p.waitFor(timeout, TimeUnit.SECONDS);
 
-        BufferedReader stdInput = new BufferedReader(
-            new InputStreamReader(p.getInputStream(), UTF_8));
+        BufferedReader stdInput =
+            new BufferedReader(new InputStreamReader(p.getInputStream(), UTF_8));
 
-        BufferedReader stdError = new BufferedReader(
-            new InputStreamReader(p.getErrorStream(), UTF_8));
+        BufferedReader stdError =
+            new BufferedReader(new InputStreamReader(p.getErrorStream(), UTF_8));
 
         logger.info("Standard output of command:");
         while (stdInput.ready()) {
@@ -84,15 +100,20 @@ public class CommandLineUtil {
         }
         // If output is too long, then front end will freeze
         int maxLineCount = Math.min(output.size(), LOGGER_MAX_SIZE);
-        for (int i = 0; i < maxLineCount; i++) {
-          logger.info(output.get(i));
+        if (showDetailLogging) {
+          for (int i = 0; i < maxLineCount; i++) {
+            logger.info(output.get(i));
+          }
         }
+
         // We want the backend to print out all of the output
         for (int i = LOGGER_MAX_SIZE; i < output.size(); i++) {
           System.out.println(output.get(i));
         }
 
-        logger.info("Error output of command (if any):");
+        if (stdError.ready()) {
+          logger.info("Error output of command:");
+        }
         while (stdError.ready()) {
           logger.warning(stdError.readLine());
         }
@@ -105,5 +126,4 @@ public class CommandLineUtil {
 
     return p;
   }
-
 }

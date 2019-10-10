@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,9 @@ package com.google.uicd.backend.core.exceptions;
 /**
  * UicdXMLFormatException
  *
+ * @author tccyp@google.com
  */
-public class UicdXMLFormatException extends UicdExcpetion {
+public class UicdXMLFormatException extends UicdException {
 
   public UicdXMLFormatException(String message) {
     super(message);

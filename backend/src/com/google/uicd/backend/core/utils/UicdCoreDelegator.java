@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-/** UicdCoreDelegator The interface layer for uicd's com.google.uicd.backend.core module. */
+/** UicdCoreDelegator The interface layer for uicd's core module. */
 public class UicdCoreDelegator extends Handler {
   private final Logger logger = Logger.getLogger("uicd");
   private final HashMap<Long, Consumer<String>> loggerConsumerMap = new HashMap<>();
@@ -37,7 +37,7 @@ public class UicdCoreDelegator extends Handler {
   @Override
   public synchronized void publish(LogRecord logRecord) {
     Consumer<String> loggerConsumer = loggerConsumerMap.get(Thread.currentThread().getId());
-    // Similar to the usage of uicdBasePathThreadMap in uicd/com.google.uicd.backend.core/config/UicdConfig.java, we should
+    // Similar to the usage of uicdBasePathThreadMap in uicd/core/config/UicdConfig.java, we should
     // get the consumer from the main thread when logging through the local app.
     if (loggerConsumer == null && !loggerConsumerMap.isEmpty()) {
       loggerConsumer = loggerConsumerMap.values().stream().findFirst().get();
@@ -61,6 +61,7 @@ public class UicdCoreDelegator extends Handler {
 
   private static UicdCoreDelegator instance = null;
   private BiConsumer<String, Integer> restartMinicap = null;
+  private Consumer<String> stopMinicap = null;
 
   public static synchronized UicdCoreDelegator getInstance() {
     if (instance == null) {
@@ -81,7 +82,18 @@ public class UicdCoreDelegator extends Handler {
     this.restartMinicap = restartMinicap;
   }
 
-  // This method will be only called in the local mode (when we have frontend and minicap).
+  public void setStopMinicapConsumer(Consumer<String> stopMinicap) {
+    this.stopMinicap = stopMinicap;
+  }
+
+  public void tryStopMinicap(String deviceId) {
+    if (stopMinicap != null) {
+      stopMinicap.accept(deviceId);
+    }
+  }
+
+  // This method will be only called in the local mode (when we have frontend and minicap). On the
+  // mobileharness continuous run, the BiConsumer is null, restartMinicap will be skipped.
   public void tryRestartMinicap(String deviceId, int rotate) {
     if (restartMinicap != null) {
       restartMinicap.accept(deviceId, rotate);

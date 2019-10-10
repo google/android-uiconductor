@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,6 +81,7 @@ public class ActionPlayer {
                     if (result != null) {
                       return result;
                     } else {
+                      // TODO(tccyp): better exception handling.
                       logger.warning(
                           "Play All Mode: Some device failed. Please check devices manually.");
                       return null;
@@ -117,6 +118,7 @@ public class ActionPlayer {
     actionExecutionResult.setPlayStatus(playStatus);
   }
 
+  // used only by mobileharness driver
   public void initDevicesDisplayScale() {
     for (AndroidDeviceDriver driver : androidDeviceDriverList) {
       driver.setScaleByDeviceType();

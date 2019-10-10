@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@ package com.google.uicd.backend.core.uicdactions;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.config.ScriptConfig;
+import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
@@ -73,7 +73,7 @@ public class ScriptExecutionAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
 
     if (baseAction instanceof ScriptExecutionAction) {
       ScriptExecutionAction otherAction = (ScriptExecutionAction) baseAction;
