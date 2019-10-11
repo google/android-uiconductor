@@ -28,7 +28,7 @@ launch_backend() {
 launch_frontend() {
   echo "================================= Launch Frontend ================================================"
   if [[ "$OSTYPE" == "linux-gnu" ]]; then
-    google-chrome --disable-web-security --chrome-frame --user-data-dir="$PWD" --app="file://$PWD/dist/index.html"
+    google-chrome --disable-web-security --chrome-frame --user-data-dir="$PWD" --app="file://$PWD/dist/frontend/index.html"
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     osascript mac_chrome.scpt
   fi;
