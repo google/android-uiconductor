@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,17 +35,15 @@ public class UicdConstant {
           "android.widget.SwitchCompat", "android.widget.ToggleButton"});
 
   /**
-   * startX, startY, endX, endY of scroll up, down, left, right
-   * Only works when in "Portrait" mode with an Android phone
+   * startX, startY, endX, endY of scroll up, down, left, right, it is percentage of the screen
+   * resolution. Need times screen width and height to get the real x,y
    */
-  public static final int[][] SCROLL_SEARCH_SWIPE_COORDINATES = {
-    {180, 100, 180, 300},
-    {180, 500, 180, 300},
-    {100, 300, 300, 300},
-    {300, 300, 100, 300}
+  public static final double[][] SCROLL_SEARCH_SWIPE_MATRIX = {
+    {0.5, 0.4, 0.5, 0.6},
+    {0.5, 0.6, 0.5, 0.4},
+    {0.4, 0.5, 0.6, 0.5},
+    {0.6, 0.5, 0.4, 0.5}
   };
-
-  public static final int SCROLL_SEARCH_STEPS = 10;
 
   // Will be replaced by "<CL number>" or "<CL number> - Beta" by release script
   public static final String UICD_VERSION = "{DEV}";

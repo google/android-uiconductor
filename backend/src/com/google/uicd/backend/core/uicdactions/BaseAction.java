@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import com.google.uicd.backend.core.constants.ActionType;
 import com.google.uicd.backend.core.constants.JsonFlag;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceException;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
+import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseActionDBIgnoreFields;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.ClickActionIgnoreFields;
@@ -53,6 +53,7 @@ import java.util.logging.Logger;
   @JsonSubTypes.Type(value = ClickAction.class, name = "ClickAction"),
   @JsonSubTypes.Type(value = CommandLineAction.class, name = "CommandLineAction"),
   @JsonSubTypes.Type(value = CompoundAction.class, name = "CompoundAction"),
+  @JsonSubTypes.Type(value = ImageDiffValidationAction.class, name = "ImageDiffValidationAction"),
   @JsonSubTypes.Type(value = InputAction.class, name = "InputAction"),
   @JsonSubTypes.Type(value = LogcatValidationAction.class, name = "LogcatValidationAction"),
   @JsonSubTypes.Type(value = ScreenCapAction.class, name = "ScreenCapAction"),
@@ -76,37 +77,33 @@ import java.util.logging.Logger;
       name = "GlobalVariableValidationAction"),
   @JsonSubTypes.Type(value = FetchScreenContentAction.class, name = "FetchScreenContentAction"),
   @JsonSubTypes.Type(value = ScreenRotateAction.class, name = "ScreenRotateAction"),
-  @JsonSubTypes.Type(
-      value = ImageMatchingValidationAction.class,
-      name = "ImageMatchingValidationAction"),
-  @JsonSubTypes.Type(value = ImageValidationClickAction.class, name = "ImageValidationClickAction"),
-  @JsonSubTypes.Type(
-      value = UicdSnippetValidationAction.class,
-      name = "UicdSnippetValidationAction"),
+  @JsonSubTypes.Type(value = SnippetValidationAction.class, name = "SnippetValidationAction"),
   @JsonSubTypes.Type(value = ScriptExecutionAction.class, name = "ScriptExecutionAction"),
+  @JsonSubTypes.Type(value = MLImageValidationAction.class, name = "MLImageValidationAction"),
+  @JsonSubTypes.Type(value = DoubleTapPowerButtonAction.class, name = "DoubleTapPowerButtonAction"),
 })
 /**
  * BaseAction class In uicd every test step is one action. This is the base class for all actions
  *
+ * @author tccyp@google.com
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class BaseAction {
 
   public BaseAction() {
     this.setActionType(ActionType.fromString(this.getClass().getSimpleName()));
-    this.createdBy = UicdConfig.getInstance().getCurrentUser();
   }
 
   protected PlayStatus playStatus = PlayStatus.READY;
   // User specified name for the current action.
-  private String name;
+  protected String name = "";
   // Unique Id for current action
   private UUID actionId = UUID.randomUUID();
   // Action real type
   private ActionType actionType;
   // User defined description for the action, plain text field
   private String actionDescription = "";
-  // Default delay time after the action 1000ms
+  // Default delay time after the action 1500ms
   private int delayAfterActionMs = 1500;
   // Only used in the multi-device mode, to indicate which device should execute the action
   private int deviceIndex = 0;
@@ -116,7 +113,7 @@ public abstract class BaseAction {
 
   private static final Duration SLEEP_TIME_UNIT = Duration.ofMillis(500);
 
-  private String createdBy;
+  private String createdBy = UicdConfig.getInstance().getCurrentUser();
 
   protected boolean runAlways = false;
 
@@ -159,7 +156,7 @@ public abstract class BaseAction {
   }
 
   public String getName() {
-    return name == null ? "Compound Action" : name;
+    return name == null ? "Base Action" : name;
   }
 
   public void setName(String name) {
@@ -295,7 +292,7 @@ public abstract class BaseAction {
     return actionExecutionResult;
   }
 
-  protected void updateBaseAction(BaseAction baseAction) {
+  protected void updateCommonFields(BaseAction baseAction) {
     this.setName(baseAction.getName());
     this.setActionDescription(baseAction.getActionDescription());
     this.setDelayAfterActionMs(baseAction.getDelayAfterActionMs());
@@ -303,7 +300,7 @@ public abstract class BaseAction {
   }
 
   protected abstract int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
-      throws UicdExcpetion;
+      throws UicdException;
 
   protected boolean needSkipAction(
       AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) {
@@ -318,7 +315,8 @@ public abstract class BaseAction {
 
   protected void waitAfter(ActionContext actionContext) {
     try {
-      long remainingWaitTime = (long) getDelayAfterActionMs();
+      long remainingWaitTime =
+          (long) (getDelayAfterActionMs() / actionContext.getPlaySpeedFactor());
       int numSleepsDone = 0;
       while (remainingWaitTime > 0) {
         if ((numSleepsDone++ % SLEEP_LOGGING_ITERATION == 0)

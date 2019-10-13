@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.google.uicd.backend.core.xmlparser.NodeContext;
 /**
  * ClickActionIgnoreFields Ignore the actionExecution results when we store action the database.
  *
+ * @author tccyp@google.com
  */
 public abstract class ClickActionIgnoreFields {
 

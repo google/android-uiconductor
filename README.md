@@ -1,6 +1,6 @@
 # Android UIConductor
 
-Android UIConductor is a platform that allow users to create E2E workflow very easily.
+Android UIConductor is a platform that allow users to create E2E testing workflow very easily.
 
 ## Screen Shot
 ![uicddemo](https://user-images.githubusercontent.com/2557786/52313064-ef029080-2961-11e9-9e69-1e770b85b614.gif)

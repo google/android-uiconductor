@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -125,8 +125,8 @@ public class ScriptConfig {
     pythonConfigMap.put("DOWNLOAD_CACHE", variableValueList);
 
     variableValueList = new ArrayList<>();
-    variableValueList.add("/system/framework/com.google.uicd.backend.core-oj.jar");
-    variableValueList.add("/system/framework/com.google.uicd.backend.core-libart.jar");
+    variableValueList.add("/system/framework/core-oj.jar");
+    variableValueList.add("/system/framework/core-libart.jar");
     variableValueList.add("/system/framework/conscrypt.jar");
     variableValueList.add("/system/framework/okhttp.jar");
     variableValueList.add("/system/framework/bouncycastle.jar");

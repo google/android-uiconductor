@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
 
 package com.google.uicd.backend.app;
 
-import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import com.google.uicd.backend.recorder.websocket.log.LogUtil;
 import com.google.uicd.backend.recorder.websocket.log.LogWebSocketHandler;
@@ -37,23 +35,10 @@ public class StartUpInit {
   @PostConstruct
   public void init() {
 
-    try {
-      UicdConfig.getInstance().loadFromConfigFile("./uicd.cfg");
-    } catch (UicdExcpetion e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
     UicdCoreDelegator.getInstance().setLoggerConsumer(LogUtil::writeToLog);
     UicdCoreDelegator.getInstance().setRestartMinicapConsumer(MinicapUtil::restartMinicap);
-    initDBConnection();
+    UicdCoreDelegator.getInstance().setStopMinicapConsumer(MinicapUtil::stopMinicap);
     initLogServer();
-  }
-
-  private void initDBConnection() {
-    try {
-      UicdConfig.getInstance().initDefaultLocalDBConnection();
-    } catch (UicdExcpetion e) {
-      logger.severe(e.getMessage());
-    }
   }
 
   private void initLogServer() {

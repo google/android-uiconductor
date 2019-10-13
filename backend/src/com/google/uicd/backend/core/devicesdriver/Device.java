@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,13 +104,13 @@ public class Device {
 
   private int deviceIndex;
 
-  // TODO: change to deviceDimension
+  // TODO(tccyp), change to deviceDimension
   private int width;
   private int height;
   private String product;
   private String model;
   private String device;
-  private DeviceOrientation orientation;
+  private DeviceOrientation orientation = DeviceOrientation.PORTRAIT;
 
   private final Map<String, String> properties = new HashMap<>();
 
@@ -261,6 +261,12 @@ public class Device {
     node.put("device", this.device);
 
     return node.toString();
+  }
+
+  // Information need for frontend to connect backend service.
+  public DeviceStatus getDeviceStatus() {
+    return DeviceStatus.create(
+        this.deviceId, this.minicapWebServerPort, this.deviceIndex, "", this.width, this.height);
   }
 
   public static List<Device> getDevicesListFromString(List<String> commandLineOut) {

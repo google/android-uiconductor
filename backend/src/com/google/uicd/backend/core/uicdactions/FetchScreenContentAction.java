@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public class FetchScreenContentAction extends BaseAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     if (baseAction instanceof FetchScreenContentAction) {
       FetchScreenContentAction otherAction = (FetchScreenContentAction) baseAction;
       this.strategy = otherAction.strategy;
@@ -98,11 +98,11 @@ public class FetchScreenContentAction extends BaseAction {
       }
     }
     if (globalVariableName.isEmpty()
-        || !globalVariableName.contains(UicdGlobalVariableMap.UICD_PARAM_KEYWORD)) {
+        || !UicdGlobalVariableMap.containsGlobalVariableKeyWord(globalVariableName)) {
       logger.warning(
           String.format(
               "Variable name should be not empty and start with %s",
-              UicdGlobalVariableMap.UICD_PARAM_KEYWORD));
+              String.join(" or ", UicdGlobalVariableMap.PARAM_KEYWORD_LIST)));
     } else if (screenContent.isEmpty()) {
       logger.warning("screenContent is empty!");
     } else {

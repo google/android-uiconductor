@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,12 +58,13 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
     CommandLineAction commandLineAction = (CommandLineAction) baseAction;
     this.commandLine = commandLineAction.commandLine;
     this.expectedReturnCode = commandLineAction.expectedReturnCode;
     this.commandlineExecutionTimeoutSec = commandLineAction.commandlineExecutionTimeoutSec;
     this.needShellOutput = commandLineAction.needShellOutput;
+    this.isAdbCommand = commandLineAction.isAdbCommand;  
   }
 
   @Override
@@ -91,10 +92,14 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
     StringBuilder sb = new StringBuilder();
     for (String s : output) {
       logger.info(s);
-      if (needShellOutput && s.contains(UicdGlobalVariableMap.UICD_SHELL_OUTPUT_KEYWORD)) {
-        String jsonContent = s.replace(UicdGlobalVariableMap.UICD_SHELL_OUTPUT_KEYWORD, "");
+      if (needShellOutput && UicdGlobalVariableMap.containsShellOutputKeyWord(s)) {
+
+        String jsonContent = s;
+        for (String keyWord :  UicdGlobalVariableMap.SHELL_OUTPUT_KEYWORD_LIST) {
+          jsonContent = s.replace(keyWord, "");
+        }
         // only allow keys that start with "$uicd" in the map.
-        if (jsonContent.contains(UicdGlobalVariableMap.UICD_PARAM_KEYWORD)) {
+        if (UicdGlobalVariableMap.containsGlobalVariableKeyWord(jsonContent)) {
           sb.append(jsonContent);
         } else {
           logger.warning(
@@ -103,7 +108,7 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
       }
     }
     if (sb.length() > 0) {
-      actionContext.getGlobalVariableMap().fillRawMapByJson(sb.toString());
+      actionContext.getGlobalVariableMap().fillRawMapByJsonOrPlainStr(sb.toString());
     }
     return 0;
   }

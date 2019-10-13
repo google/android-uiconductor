@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.uicd.backend.core.constants.StopType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
-import com.google.uicd.backend.core.exceptions.UicdExcpetion;
+import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.xmlparser.TextValidator;
 
-/** ValidationAction */
+/** Base class of all the validation related actions */
 public abstract class ValidationAction extends BaseAction implements IValidatorAction {
 
   protected TextValidator textValidator;
@@ -31,7 +31,9 @@ public abstract class ValidationAction extends BaseAction implements IValidatorA
 
   @JsonIgnore protected boolean validationResult = false;
 
-  protected void clear() {}
+  protected void clear() {
+    this.validationResult = false;
+  }
 
   @Override
   public String getDisplay() {
@@ -40,7 +42,7 @@ public abstract class ValidationAction extends BaseAction implements IValidatorA
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    super.updateBaseAction(baseAction);
+    super.updateCommonFields(baseAction);
 
     if (baseAction instanceof ValidationAction) {
       ValidationAction otherAction = (ValidationAction) baseAction;
@@ -59,7 +61,8 @@ public abstract class ValidationAction extends BaseAction implements IValidatorA
   }
 
   public boolean isStopWhenFalse() {
-    return stopType == StopType.StopTestIfFalse || stopType == StopType.StopCurrentCompoundIfFalse;
+    return stopType == StopType.STOP_TEST_IF_FALSE
+        || stopType == StopType.STOP_CURRENT_COMPOUND_IF_FALSE;
   }
 
   public void setStopWhenFalse(boolean stopWhenFalse) {
@@ -85,8 +88,8 @@ public abstract class ValidationAction extends BaseAction implements IValidatorA
   }
 
   public boolean isStopCurrentLevel() {
-    return stopType == StopType.StopCurrentCompoundIfFalse
-        || stopType == StopType.StopCurrentCompoundIfTrue;
+    return stopType == StopType.STOP_CURRENT_COMPOUND_IF_FALSE
+        || stopType == StopType.STOP_CURRENT_COMPOUND_IF_TRUE;
   }
 
   @Override
@@ -97,13 +100,12 @@ public abstract class ValidationAction extends BaseAction implements IValidatorA
         : !validateRaw(actionContext, androidDeviceDriver);
   }
 
-  abstract boolean validateRaw(
-      ActionContext actionContext, AndroidDeviceDriver androidDeviceDriver)
+  abstract boolean validateRaw(ActionContext actionContext, AndroidDeviceDriver androidDeviceDriver)
       throws UicdDeviceHttpConnectionResetException;
 
   @Override
   protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
-      throws UicdExcpetion {
+      throws UicdException {
     this.clear();
     this.validationResult = validate(actionContext, androidDeviceDriver);
     if (!this.validationResult) {

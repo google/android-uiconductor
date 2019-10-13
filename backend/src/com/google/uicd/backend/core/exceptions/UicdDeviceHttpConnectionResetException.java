@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.google.uicd.backend.core.exceptions;
  * UicdDeviceHttpConnectionResetException
  * Exception that indicates host cannot connect to the device through http.
  */
-public class UicdDeviceHttpConnectionResetException extends UicdExcpetion {
+public class UicdDeviceHttpConnectionResetException extends UicdException {
 
   public UicdDeviceHttpConnectionResetException(String message) {
     super(message);
