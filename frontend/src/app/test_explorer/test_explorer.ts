@@ -365,7 +365,7 @@ export class TestExplorer implements OnInit, OnDestroy {
   }
 
   createFolder(parentId: string, name: string) {
-    const newNode = new JsTreeNode(name, uuid.uuidFast() as string);
+    const newNode = new JsTreeNode(name, uuid.uuid() as string);
     this.jsTree.jstree('create_node', parentId, newNode);
   }
 

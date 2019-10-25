@@ -239,7 +239,7 @@ export class UiTreeViewer implements OnInit, OnDestroy {
       text = xmlNode.tagName;
     }
     text = text.replace(/.+\..+\./, '');
-    const id = uuid.uuidFast();
+    const id = uuid.uuid();
     const node = new JsTreeNode(text, id);
     if (ICON_CLASSES.hasOwnProperty(text)) {
       node.icon = ICON_CLASSES[text];
