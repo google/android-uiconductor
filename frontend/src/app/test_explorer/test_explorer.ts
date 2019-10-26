@@ -36,6 +36,8 @@ import {ImportDialog} from './import_dialog';
 import {ImportProjectDialog} from './import_project_dialog';
 import {NewProjectDialog} from './new_project_dialog';
 
+declare var $: any;
+
 /**
  * Test case explorer component responsible for drawing test case tree.
  */
@@ -365,7 +367,7 @@ export class TestExplorer implements OnInit, OnDestroy {
   }
 
   createFolder(parentId: string, name: string) {
-    const newNode = new JsTreeNode(name, uuid.uuid() as string);
+    const newNode = new JsTreeNode(name, uuid() as string);
     this.jsTree.jstree('create_node', parentId, newNode);
   }
 
