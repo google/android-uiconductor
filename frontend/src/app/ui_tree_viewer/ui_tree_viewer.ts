@@ -31,7 +31,8 @@ import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessage, ControlMessageService} from '../services/control_message_service';
 
 import {CopyXmlDialog} from './copy_xml_dialog';
-import * as $ from 'jquery';
+
+declare var $: any;
 
 const ICON_CLASSES: {[key: string]: string} = {
   'hierarchy': 'fa fa-sitemap',
@@ -239,7 +240,7 @@ export class UiTreeViewer implements OnInit, OnDestroy {
       text = xmlNode.tagName;
     }
     text = text.replace(/.+\..+\./, '');
-    const id = uuid.uuidFast();
+    const id = uuid();
     const node = new JsTreeNode(text, id);
     if (ICON_CLASSES.hasOwnProperty(text)) {
       node.icon = ICON_CLASSES[text];
