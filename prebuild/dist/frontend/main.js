@@ -10670,7 +10670,7 @@ var TestExplorer = /** @class */ (function () {
         this.createFolder(currentNode.id, 'New Folder');
     };
     TestExplorer.prototype.createFolder = function (parentId, name) {
-        var newNode = new _constants_jstree__WEBPACK_IMPORTED_MODULE_8__["JsTreeNode"](name, uuid__WEBPACK_IMPORTED_MODULE_4__["v4"].uuidFast());
+        var newNode = new _constants_jstree__WEBPACK_IMPORTED_MODULE_8__["JsTreeNode"](name, Object(uuid__WEBPACK_IMPORTED_MODULE_4__["v4"])());
         this.jsTree.jstree('create_node', parentId, newNode);
     };
     TestExplorer.prototype.playAll = function (nodeRef) {
@@ -11191,8 +11191,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../services/backend_manager_service */ "./src/app/services/backend_manager_service.ts");
 /* harmony import */ var _services_control_message_service__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../services/control_message_service */ "./src/app/services/control_message_service.ts");
 /* harmony import */ var _copy_xml_dialog__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./copy_xml_dialog */ "./src/app/ui_tree_viewer/copy_xml_dialog.ts");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_13__);
 // Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11213,7 +11211,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // to backend.
-
 
 
 
@@ -11281,7 +11278,7 @@ var UiTreeViewer = /** @class */ (function () {
         this.fetchXML();
     };
     UiTreeViewer.prototype.setupDataTree = function () {
-        var jsTreeObj = jquery__WEBPACK_IMPORTED_MODULE_13__(this.jsTreeEl.nativeElement);
+        var jsTreeObj = $(this.jsTreeEl.nativeElement);
         this.jsTree = jsTreeObj.jstree({
             'core': {
                 'themes': {
@@ -11400,7 +11397,7 @@ var UiTreeViewer = /** @class */ (function () {
             text = xmlNode.tagName;
         }
         text = text.replace(/.+\..+\./, '');
-        var id = uuid__WEBPACK_IMPORTED_MODULE_4__["v4"].uuidFast();
+        var id = Object(uuid__WEBPACK_IMPORTED_MODULE_4__["v4"])();
         var node = new _constants_jstree__WEBPACK_IMPORTED_MODULE_8__["JsTreeNode"](text, id);
         if (ICON_CLASSES.hasOwnProperty(text)) {
             node.icon = ICON_CLASSES[text];
@@ -12198,7 +12195,7 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /usr/local/google/home/sophiez/testOpenSource/android-uiconductor/frontend/src/main.ts */"./src/main.ts");
+module.exports = __webpack_require__(/*! /usr/local/google/home/sophiez/forkUicd/android-uiconductor/frontend/src/main.ts */"./src/main.ts");
 
 
 /***/ })

@@ -14172,9 +14172,9 @@ __webpack_require__.r(__webpack_exports__);
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(/*! /usr/local/google/home/sophiez/testOpenSource/android-uiconductor/frontend/node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-polyfills.js */"./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-polyfills.js");
-__webpack_require__(/*! /usr/local/google/home/sophiez/testOpenSource/android-uiconductor/frontend/node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-jit-polyfills.js */"./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-jit-polyfills.js");
-module.exports = __webpack_require__(/*! /usr/local/google/home/sophiez/testOpenSource/android-uiconductor/frontend/src/polyfills.ts */"./src/polyfills.ts");
+__webpack_require__(/*! /usr/local/google/home/sophiez/forkUicd/android-uiconductor/frontend/node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-polyfills.js */"./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-polyfills.js");
+__webpack_require__(/*! /usr/local/google/home/sophiez/forkUicd/android-uiconductor/frontend/node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-jit-polyfills.js */"./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-jit-polyfills.js");
+module.exports = __webpack_require__(/*! /usr/local/google/home/sophiez/forkUicd/android-uiconductor/frontend/src/polyfills.ts */"./src/polyfills.ts");
 
 
 /***/ })
