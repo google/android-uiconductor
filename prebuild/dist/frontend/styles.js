@@ -338,7 +338,7 @@ if (content.locals) {
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(/*! /usr/local/google/home/sophiez/forkUicd/android-uiconductor/frontend/src/styles.css */"./src/styles.css");
+module.exports = __webpack_require__(/*! /usr/local/google/home/tccyp/uicd-opensource-11162019101846/frontend/src/styles.css */"./src/styles.css");
 
 
 /***/ })
