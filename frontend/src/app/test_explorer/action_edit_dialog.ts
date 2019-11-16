@@ -58,6 +58,7 @@ export class ActionEditDialog implements OnInit, OnDestroy {
   currentUser!: string;
   folderList: Folder[] = [];
   saveToFolderId: string = '';
+  playMode!: string;
   isNewWorkflow = false;
   showEditDetails = false;
   static SNACKBAR_DURATION_MS = 2000;
@@ -120,6 +121,12 @@ export class ActionEditDialog implements OnInit, OnDestroy {
                 this.folderList[this.folderList.length - 1].id;
           }
         });
+
+    this.backendManagerService.getPlayMode()
+        .pipe(take(1), takeUntil(this.destroyed))
+        .subscribe(data => {
+          this.playMode = data;
+        });
   }
 
   hasEditDetails(): boolean {
@@ -149,6 +156,10 @@ export class ActionEditDialog implements OnInit, OnDestroy {
   isMLImageValidation() {
     return this.actionData.actionType ===
         ACTIONS.ML_IMAGE_VALIDATION_ACTION.actionType;
+  }
+
+  isMultiPlayMode() {
+    return this.playMode === 'MULTIDEVICE';
   }
 
   editAction() {
@@ -257,6 +268,9 @@ interface Folder {
 function retrieveFolders(node: TreeNode): Folder[] {
   let folders: Folder[] = [];
   if (node.children && node.children.length > 0) {
+    for (const n of node.children) {
+      folders = folders.concat(retrieveFolders(n));
+    }
   }
   if (node.id !== '#' && !node.hasOwnProperty('additionalData')) {
     // only add the folder, use unshift to make the order similar to the order

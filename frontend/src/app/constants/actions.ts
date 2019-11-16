@@ -52,6 +52,7 @@ export interface ActionTypeInfo {
   SCROLL_SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
   SNIPPET_VALIDATION_ACTION: ActionTypeItem;
   SWIPE_ACTION: ActionTypeItem;
+  WAIT_ACTION: ActionTypeItem;
   ZOOM_ACTION: ActionTypeItem;
   // go/keep-sorted end
 }
@@ -190,6 +191,12 @@ export const ACTIONS: ActionTypeInfo = {
     shortName: 'SWIPE',
     color: 'deepskyblue'
   },
+  WAIT_ACTION: {
+    actionType: 'WAIT_ACTION',
+    type: 'WaitAction',
+    shortName: 'WAIT',
+    color: 'limegreen',
+  },
   ZOOM_ACTION: {
     actionType: 'ZOOM_ACTION',
     type: 'ZoomAction',
@@ -214,6 +221,8 @@ export interface ActionSummaryMetaData {
   playStatus?: string;
   createdBy?: string;
   delayAfterActionMs?: number;
+  deviceIndex?: number;
+  forceDeviceOnChildren?: boolean;
   actionType?: string;
   isRawXY?: boolean;
   actionDescription?: string;
@@ -228,11 +237,14 @@ export declare interface ActionModel {
   actionId: string;
   actionType: string;
   name: string;
+  actionIndex: number;
 }
 
 /** Function to generate ActionModel from JSON data which backend returns. */
-export function actionModelFromJson(jsonData: string): ActionModel {
+export function actionModelFromJson(
+    jsonData: string, index: number): ActionModel {
   const actionModel: ActionModel = JSON.parse(jsonData);
+  actionModel.actionIndex = index;
   return actionModel;
 }
 
@@ -248,6 +260,7 @@ export class WorkflowModel {
     this.actionId = obj['actionId'];
     this.name = obj['name'];
     this.childrenActions = obj['childrenActions'].map(
-        (item: object) => actionModelFromJson(JSON.stringify(item)));
+        (item: object, index: number) =>
+            actionModelFromJson(JSON.stringify(item), index));
   }
 }

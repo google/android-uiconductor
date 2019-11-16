@@ -15,13 +15,13 @@
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-
 import {ActionSummaryMetaData} from '../constants/actions';
 import {BACKEND_BASE_URL, KeyCodes, RotateDirection, SwipeDirection} from '../constants/constants';
 import {CurrentUserResponse, ExportImportProjectRequest, GetUserPresetGlobalVariableResponse, ImageResponse, ImagesResponse, InitDevicesResponse, PlayActionRequest, PlayActionResponse, ProjectDeepCopyRequest, ProjectListResponse, ScaledScreenDimensionsResponse, ScreenContentSummary, UuidResponse, VersionInfoResponse} from '../constants/interfaces';
 import {Bounds, Point} from '../constants/rect';
 import {ValidationRequestDetails} from '../constants/screen_validation_constants';
 import {Shape} from '../constants/shape';
+
 
 /** Communicates to the UIConductor Java backend */
 @Injectable()
@@ -232,6 +232,11 @@ export class BackendManagerService {
   getInitedDevices(): Observable<InitDevicesResponse> {
     return this.http.get<InitDevicesResponse>(
         BACKEND_BASE_URL + '/getInitializedDevicesDetails');
+  }
+
+  /** Gets current play mode */
+  getPlayMode(): Observable<string> {
+    return this.http.get<string>(BACKEND_BASE_URL + '/getPlayMode');
   }
 
   /** Gets xmldumper version and uicd backend version */

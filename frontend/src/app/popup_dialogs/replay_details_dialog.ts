@@ -17,6 +17,7 @@
 
 import {Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {v4 as uuid} from 'uuid';
 
 import {BACKEND_BASE_URL} from '../constants/constants';
 import {PlayActionResponse} from '../constants/interfaces';
@@ -94,7 +95,7 @@ export class ReplayDetailsDialog implements OnInit {
 
   constructTreeData(node: PlayActionResponse): JsTreeNode {
     const jsNode = new JsTreeNode(
-        this.getNodeTitle(node.playStatus, node.content), node.actionId);
+        this.getNodeTitle(node.playStatus, node.content), uuid());
     jsNode.icon = 'fa fa-mouse-pointer';
     if (node.childrenResult && node.childrenResult.length > 0) {
       jsNode.children =

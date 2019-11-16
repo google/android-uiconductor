@@ -748,8 +748,10 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     this.validationRequestDetails.contentData = action.selectedText;
     this.validationRequestDetails.contextStorageType =
         action.contextStorageType;
-    this.validationRequestDetails.contentMatchType =
-        action.textValidator.contentMatchType;
+    if (action.textValidator) {
+      this.validationRequestDetails.contentMatchType =
+          action.textValidator.contentMatchType;
+    }
 
     // LoopScreenContentValidation
     if ((action as LoopScreenContentValidationActionDetails).timeout !==

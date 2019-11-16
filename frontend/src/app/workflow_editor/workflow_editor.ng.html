@@ -38,6 +38,10 @@
       <i class="fa fa-camera center-icon-img"></i>
       Add Screenshot
     </button>
+    <button mat-raised-button (click)="addWait()" [disabled]="isReplaying">
+      <i class="fa fa-clock-o center-icon-img"></i>
+      Add Wait
+    </button>
     <button mat-raised-button (click)="openHistoryDialog()" [disabled]="isReplaying">
       <i class="fa fa-history center-icon-img"></i>
       Test History
