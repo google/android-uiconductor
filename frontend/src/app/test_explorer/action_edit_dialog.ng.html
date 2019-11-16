@@ -28,6 +28,12 @@
     <mat-error *ngIf="!actionData.name">You must input a name.</mat-error>
   </mat-form-field>
 
+  <mat-checkbox *ngIf="isMultiPlayMode() && isCompoundAction()" placeholder="Force device index on all children actions" [(ngModel)]="actionData.forceDeviceOnChildren">Force device index on all children actions</mat-checkbox>
+
+  <mat-form-field *ngIf="isMultiPlayMode()">
+    <input matInput placeholder="Device index" type="number" min="0" [(ngModel)]="actionData.deviceIndex" [disabled]="currentUser !== actionData.createdBy">
+  </mat-form-field>
+
   <mat-form-field *ngIf="!isMLImageValidation()">
     <input matInput placeholder="Delay After (ms)" type="number" [(ngModel)]="actionData.delayAfterActionMs" [disabled]="currentUser !== actionData.createdBy">
   </mat-form-field>
@@ -37,7 +43,7 @@
   </mat-form-field>
 
   <mat-form-field *ngIf="isCompoundAction()">
-    <input matInput placeholder="Repeat Time" [(ngModel)]="actionData.repeatTime" [disabled]="!isCompoundAction()">
+    <input matInput placeholder="Repeat Time" type="number" [(ngModel)]="actionData.repeatTime" [disabled]="!isCompoundAction()">
   </mat-form-field>
 
   <mat-form-field>

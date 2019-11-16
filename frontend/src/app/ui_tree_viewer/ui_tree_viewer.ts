@@ -19,7 +19,6 @@ import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core
 import {MatDialog} from '@angular/material/dialog';
 import {MatSlideToggleChange} from '@angular/material/slide-toggle';
 import {MatSnackBar} from '@angular/material/snack-bar';
-// to backend.
 import {v4 as uuid} from 'uuid';
 import {ReplaySubject} from 'rxjs';
 import {filter, take, takeUntil} from 'rxjs/operators';
@@ -31,8 +30,6 @@ import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessage, ControlMessageService} from '../services/control_message_service';
 
 import {CopyXmlDialog} from './copy_xml_dialog';
-
-declare var $: any;
 
 const ICON_CLASSES: {[key: string]: string} = {
   'hierarchy': 'fa fa-sitemap',
@@ -52,6 +49,8 @@ interface BoundElement {
   bound: Rect;
 }
 
+
+declare var $: any;
 /**
  * Component responsible for drawing and interacting with UI tree XML of device
  * screen.
