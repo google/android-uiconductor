@@ -82,11 +82,9 @@ public class WorkflowManager {
   private ActionContext actionContext = null;
   private DevicesDriverManager devicesDriverManager;
 
-  @Autowired
-  private DbActionStorageManager actionStorageManager;
+  @Autowired private DbActionStorageManager actionStorageManager;
 
-  @Autowired
-  private ApplicationContext applicationContext;
+  @Autowired private ApplicationContext applicationContext;
 
   private ImageStorageManager imageStorageManager;
   @Autowired TestHistoryManager testHistoryManager;
@@ -348,29 +346,37 @@ public class WorkflowManager {
       logger.warning("Error running workflow: " + e.getMessage());
       return new ActionExecutionResult().toJson();
     }
+    int offset = 0;
     while (!temp.childrenIdList.get(0).equals(actionId)) {
+      offset++;
       temp.childrenIdList.remove(0);
       temp.childrenActions.remove(0);
     }
-    return playAction(temp, speedFactor);
+    return playAction(temp, speedFactor, offset);
   }
 
   public String playAction(String actionId, double playSpeedFactor)
+      throws UicdActionException, UicdDeviceException {
+    return playAction(actionId, playSpeedFactor, 0);
+  }
+
+  public String playAction(String actionId, double playSpeedFactor, int offset)
       throws UicdActionException, UicdDeviceException {
     // If actionId is not provided by frontend, backend will play the current workspace.
     if (actionId.isEmpty()) {
       actionId = this.workspaceCompoundAction.getActionId().toString();
     }
-    return playAction(actionStorageManager.getActionByUUID(actionId), playSpeedFactor);
+    return playAction(actionStorageManager.getActionByUUID(actionId), playSpeedFactor, offset);
   }
 
-  private String playAction(BaseAction currentAction, double playSpeedFactor)
+  private String playAction(BaseAction currentAction, double playSpeedFactor, int offset)
       throws UicdDeviceException {
 
     actionContext = new ActionContext();
     actionContext.setPlayMode(playMode);
     actionContext.setCurrentDeviceIndex(devicesDriverManager.getSelectedDeviceIndex());
     actionContext.getGlobalVariableMap().fillRawMapByJsonOrPlainStr(globalVariableMapStr);
+    actionContext.setCurrentPlayActionIndex(offset);
     resetPlaybackState();
     actionContext.setPlaySpeedFactor(playSpeedFactor);
     ActionPlayer actionPlayer =

@@ -19,6 +19,7 @@ import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core
 import {MatDialog} from '@angular/material/dialog';
 import {MatSlideToggleChange} from '@angular/material/slide-toggle';
 import {MatSnackBar} from '@angular/material/snack-bar';
+// to backend.
 import {v4 as uuid} from 'uuid';
 import {ReplaySubject} from 'rxjs';
 import {filter, take, takeUntil} from 'rxjs/operators';
@@ -48,7 +49,6 @@ interface BoundElement {
   id: string;
   bound: Rect;
 }
-
 
 declare var $: any;
 /**

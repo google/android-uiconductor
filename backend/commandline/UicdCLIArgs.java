@@ -90,7 +90,7 @@ public class UicdCLIArgs {
   }
 
   public boolean isScreenOutputMode() {
-    return !commandLine.getOptionValue(SCREEN_OPTION_SHORT_NAME, "").isEmpty();
+    return !commandLine.hasOption(SCREEN_OPTION_SHORT_NAME);
   }
 
   public Map<String, String> getGlobalVariables() {

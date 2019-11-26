@@ -36,7 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import org.dom4j.Element;
+import org.w3c.dom.Element;
 
 /**
  * The context of a clickable Node on which a user performs a action It is not the smallest
@@ -76,6 +76,7 @@ public class NodeContext {
   private boolean checked;
   private boolean isCheckableNode;
   private boolean isClickableNode;
+  private boolean enabled;
   private Bounds bounds;
   private Position clickedPos;
   private Position relativePos;
@@ -127,30 +128,34 @@ public class NodeContext {
   }
 
   public void fromXmlNode(Element node, Bounds bounds, Position clickedPos, Position relativePos) {
-    if (node.attribute(UicdConstant.PROPERTY_NAME_RESOURCE_ID) != null) {
-      setResourceId(node.attribute(UicdConstant.PROPERTY_NAME_RESOURCE_ID).getValue());
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_RESOURCE_ID)) {
+      setResourceId(node.getAttribute(UicdConstant.PROPERTY_NAME_RESOURCE_ID));
     }
 
-    if (node.attribute(UicdConstant.PROPERTY_NAME_TEXT) != null) {
-      setText(node.attribute(UicdConstant.PROPERTY_NAME_TEXT).getValue());
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_TEXT)) {
+      setText(node.getAttribute(UicdConstant.PROPERTY_NAME_TEXT));
     }
 
-    if (node.attribute(UicdConstant.PROPERTY_NAME_CLASS) != null) {
-      setClassName(node.attribute(UicdConstant.PROPERTY_NAME_CLASS).getValue());
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_CLASS)) {
+      setClassName(node.getAttribute(UicdConstant.PROPERTY_NAME_CLASS));
     }
 
-    if (node.attribute(UicdConstant.PROPERTY_NAME_CONTENT_DESCRIPTION) != null) {
-      setContentDesc(node.attribute(UicdConstant.PROPERTY_NAME_CONTENT_DESCRIPTION).getValue());
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_CONTENT_DESCRIPTION)) {
+      setContentDesc(node.getAttribute(UicdConstant.PROPERTY_NAME_CONTENT_DESCRIPTION));
     }
 
-    if (node.attribute(UicdConstant.PROPERTY_NAME_CHECKED) != null) {
-      setChecked(
-          Boolean.parseBoolean(node.attribute(UicdConstant.PROPERTY_NAME_CHECKED).getValue()));
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_CHECKED)) {
+      setChecked(Boolean.parseBoolean(node.getAttribute(UicdConstant.PROPERTY_NAME_CHECKED)));
       setCheckableNode(true);
     }
-    if (node.attribute(UicdConstant.PROPERTY_NAME_CLICKABLE) != null) {
+
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_CLICKABLE)) {
       setClickableNode(
-          Boolean.parseBoolean(node.attribute(UicdConstant.PROPERTY_NAME_CLICKABLE).getValue()));
+          Boolean.parseBoolean(node.getAttribute(UicdConstant.PROPERTY_NAME_CLICKABLE)));
+    }
+
+    if (node.hasAttribute(UicdConstant.PROPERTY_NAME_ENABLED)) {
+      setEnabled(Boolean.parseBoolean(node.getAttribute(UicdConstant.PROPERTY_NAME_ENABLED)));
     }
 
     this.setBounds(bounds);
@@ -395,6 +400,14 @@ public class NodeContext {
 
   public void setChecked(boolean checked) {
     this.checked = checked;
+  }
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 
   public String toJsonStr() {

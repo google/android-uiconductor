@@ -306,7 +306,12 @@ export class WorkflowEditorComponent implements OnDestroy {
 
     pathList.push(actionIndex);
     const pathStr = pathList.join(this.PLAYACTION_STATUS_SPLITTER);
-    if (this.currentPlayActionPath.startsWith(pathStr)) {
+    // Current path could be 1->6  or 1->6->4, both cases we want to hight light
+    // 7th element. Can not just do startsWith, since we could something like
+    // 1->61->2 in the path. It will highlight both 6th and 61th.
+    if (this.currentPlayActionPath === pathStr ||
+        this.currentPlayActionPath.startsWith(
+            pathStr + this.PLAYACTION_STATUS_SPLITTER)) {
       return true;
     }
     return false;

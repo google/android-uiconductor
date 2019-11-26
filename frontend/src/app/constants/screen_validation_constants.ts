@@ -142,8 +142,14 @@ export enum StopType {
 
 /** Stop Type for user to choose */
 export const STOP_TYPES: StopModel[] = [
-  {value: StopType.STOP_TEST_IF_FALSE, displayText: 'Stop Test If False'},
-  {value: StopType.STOP_TEST_IF_TRUE, displayText: 'Stop Test If True'},
+  {
+    value: StopType.STOP_TEST_IF_FALSE,
+    displayText: 'Stop Test If Validation False'
+  },
+  {
+    value: StopType.STOP_TEST_IF_TRUE,
+    displayText: 'Stop Test If Validation True'
+  },
   {
     value: StopType.STOP_CURRENT_COMPOUND_IF_FALSE,
     displayText: 'Stop Current Compound If False',

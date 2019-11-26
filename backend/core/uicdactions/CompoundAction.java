@@ -79,8 +79,14 @@ public class CompoundAction extends BaseAction implements Cloneable {
     playStatus = ActionContext.PlayStatus.READY;
     boolean stopCurrentLevel = false;
 
-    actionContext.getCurrentPlayingPath().add(actionContext.getCurrentPlayActionIndex());
-    actionContext.setCurrentPlayActionIndex(0);
+    // If user is doing "play from here", we pass in the offset index.
+    if (actionContext.getCurrentPlayingPath().isEmpty()
+        && actionContext.getCurrentPlayActionIndex() > 0) {
+      actionContext.getCurrentPlayingPath().add(0);
+    } else {
+      actionContext.getCurrentPlayingPath().add(actionContext.getCurrentPlayActionIndex());
+      actionContext.setCurrentPlayActionIndex(0);
+    }
     for (int i = 0; i < repeatTime; i++) {
       for (BaseAction action : childrenActions) {
         // Update currently playing action ID.

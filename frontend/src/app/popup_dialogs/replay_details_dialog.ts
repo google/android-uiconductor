@@ -24,7 +24,6 @@ import {PlayActionResponse} from '../constants/interfaces';
 import {JsTreeNode} from '../constants/jstree';
 
 declare var $: any;
-
 /** Pop-up dialog showing test result information. */
 @Component({
   selector: 'app-replay-details-dialog',

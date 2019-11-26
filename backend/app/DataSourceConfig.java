@@ -29,7 +29,7 @@ public class DataSourceConfig {
     if (isLocalMode) {
       String h2ConnectionStr =
           String.format(
-              "jdbc:h2:file:%s;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE",
+              "jdbc:h2:file:%s;DB_CLOSE_ON_EXIT=TRUE;AUTO_RECONNECT=TRUE",
               Paths.get(UicdConfig.getInstance().getBaseFolder(), DB_FOLDER_NAME, DB_NAME)
                   .toString());
 

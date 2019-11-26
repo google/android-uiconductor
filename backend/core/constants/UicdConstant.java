@@ -29,6 +29,7 @@ public class UicdConstant {
   public static final String PROPERTY_NAME_CHECKED = "checked";
   public static final String PROPERTY_NAME_BOUNDS = "bounds";
   public static final String PROPERTY_NAME_CLICKABLE = "clickable";
+  public static final String PROPERTY_NAME_ENABLED = "enabled";
 
   public static final List<String> TOGGLE_BUTTONS = Arrays.asList(
       new String[]{"android.widget.CheckBox", "android.widget.Switch",

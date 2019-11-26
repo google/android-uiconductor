@@ -42,7 +42,7 @@ public class QueryField implements IPredicate {
       case NOT_EQUALS:
         return !value.equals(realValue);
       case CONTAINS:
-        return value.contains(realValue);
+        return realValue.contains(value);
       default:
         return false;
     }
@@ -69,6 +69,8 @@ public class QueryField implements IPredicate {
         return evalBoolean(nodeContext.isChecked());
       case "clickable":
         return evalBoolean(nodeContext.isClickableNode());
+      case "enabled":
+        return evalBoolean(nodeContext.isEnabled());
       default:
         return false;
     }

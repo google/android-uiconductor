@@ -18,6 +18,8 @@ import com.google.common.collect.HashBiMap;
 import com.google.uicd.backend.core.constants.UicdConstant;
 import com.google.uicd.backend.core.exceptions.UicdXMLFormatException;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -25,9 +27,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.dom4j.Document;
-import org.dom4j.DocumentHelper;
-import org.dom4j.Element;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /** Parses UI XML string and get NodeContext of a Node */
 public class XmlParser {
@@ -49,18 +57,24 @@ public class XmlParser {
   private final HashMap<String, Integer> resourceIdCntMap = new HashMap<>();
 
   public XmlParser(List<String> xmls, double xRatio, double yRatio) {
-    Document doc;
+
     List<Element> xmlElementList = new ArrayList<>();
+    this.xRatio = xRatio;
+    this.yRatio = yRatio;
+
     try {
+      DocumentBuilder builder;
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      Document doc = null;
       for (String xml : xmls) {
-        doc = DocumentHelper.parseText(xml);
-        xmlElementList.add(doc.getRootElement());
+        builder = factory.newDocumentBuilder();
+        doc = builder.parse(new InputSource(new StringReader(xml)));
+        xmlElementList.add(doc.getDocumentElement());
       }
-      this.xRatio = xRatio;
-      this.yRatio = yRatio;
+
       initBounds(xmlElementList);
       updateAdditionNodeContextTreeInfo();
-    } catch (Exception e) {
+    } catch (UicdXMLFormatException | SAXException | IOException | ParserConfigurationException e) {
       UicdCoreDelegator.getInstance().logException(e);
     }
   }
@@ -144,14 +158,6 @@ public class XmlParser {
       }
     }
     return filteredNodeContextList;
-  }
-
-  public boolean hasAttrValue(Element node, String attrName) {
-    return node.attribute(attrName) != null && !node.attribute(attrName).getValue().isEmpty();
-  }
-
-  public boolean nodeAttributeValueEquals(Element node, String attrName, String attrVal) {
-    return hasAttrValue(node, attrName) && node.attribute(attrName).getValue().equals(attrVal);
   }
 
   public boolean isTextNode(Element node) {
@@ -257,11 +263,12 @@ public class XmlParser {
 
   private Optional<NodeContext> initBoundsFromRoot(Element xmlNode, int xmlLayerIndex)
       throws UicdXMLFormatException {
-    @SuppressWarnings("unchecked") // safe covariant cast
-    List<Element> elements = xmlNode.elements();
     List<NodeContext> childrenList = new ArrayList<>();
-    for (Element elem : elements) {
-      Optional<NodeContext> childNodeContext = initBoundsFromRoot(elem, xmlLayerIndex);
+    NodeList elements = xmlNode.getChildNodes();
+    for (int i = 0; i < elements.getLength(); i++) {
+      Node currentElement = elements.item(i);
+      Optional<NodeContext> childNodeContext =
+          initBoundsFromRoot((Element) currentElement, xmlLayerIndex);
       childNodeContext.ifPresent(child -> childrenList.add(child));
     }
 
@@ -280,7 +287,7 @@ public class XmlParser {
     }
     getNodeContextsList().add(nodeContext);
     // update the resId count map.
-    if (xmlNode == null || xmlNode.attribute(UicdConstant.PROPERTY_NAME_RESOURCE_ID) == null) {
+    if (xmlNode == null || !xmlNode.hasAttribute(UicdConstant.PROPERTY_NAME_RESOURCE_ID)) {
       return Optional.empty();
     }
 
@@ -296,10 +303,10 @@ public class XmlParser {
   }
 
   private static String getNodeAttrAsString(Element node, String attrName) {
-    if (node.attribute(attrName) == null) {
+    if (!node.hasAttribute(attrName)) {
       return "";
     }
-    return node.attribute(attrName).getValue();
+    return node.getAttribute(attrName);
   }
 
   private boolean updateResourceIdCntMap(String resId) {
