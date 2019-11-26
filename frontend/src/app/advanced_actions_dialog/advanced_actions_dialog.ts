@@ -239,25 +239,30 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
       text: {
         name: 'Display Text',
         type: 'string',
+        defaultValue: '',
         operators: ['=', '!=', 'contains'],
       },
       class: {
         name: 'Class',
         type: 'string',
+        defaultValue: '',
         operators: ['=', '!=', 'contains'],
       },
       contentDesc: {
         name: 'Content Description',
         type: 'string',
+        defaultValue: '',
         operators: ['=', '!=', 'contains'],
       },
-      checkable: {name: 'Checkable', type: 'boolean'},
-      checked: {name: 'Checked', type: 'boolean'},
-      clickable: {name: 'Clickable', type: 'boolean'},
+      checkable: {name: 'Checkable', type: 'boolean', defaultValue: false},
+      checked: {name: 'Checked', type: 'boolean', defaultValue: false},
+      clickable: {name: 'Clickable', type: 'boolean', defaultValue: false},
+      enabled: {name: 'Enabled', type: 'boolean', defaultValue: false},
       resourceId: {
         name: 'Resource ID',
         type: 'string',
         operators: ['=', '!=', 'contains'],
+        defaultValue: '',
       },
     }
   };
@@ -588,6 +593,10 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
         case ACTIONS.CONDITION_VALIDATION_ACTION.actionType:
           this.conditionValidationAction =
               this.data as ConditionValidationActionDetails;
+          this.conditionValidationAction.query = JSON.parse(
+              JSON.stringify(this.conditionValidationAction.query),
+              (k, v: string) =>
+                  v === 'true' ? true : v === 'false' ? false : v);
           this.selectedActionType = ACTIONS.CONDITION_VALIDATION_ACTION.type;
           break;
         case ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.actionType:
@@ -748,8 +757,10 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     this.validationRequestDetails.contentData = action.selectedText;
     this.validationRequestDetails.contextStorageType =
         action.contextStorageType;
-    this.validationRequestDetails.contentMatchType =
-        action.textValidator.contentMatchType;
+    if (action.textValidator) {
+      this.validationRequestDetails.contentMatchType =
+          action.textValidator.contentMatchType;
+    }
 
     // LoopScreenContentValidation
     if ((action as LoopScreenContentValidationActionDetails).timeout !==

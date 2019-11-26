@@ -32,8 +32,6 @@ import {ControlMessage, ControlMessageService} from '../services/control_message
 
 import {CopyXmlDialog} from './copy_xml_dialog';
 
-declare var $: any;
-
 const ICON_CLASSES: {[key: string]: string} = {
   'hierarchy': 'fa fa-sitemap',
   'FrameLayout': 'fa fa-object-group',
@@ -52,6 +50,7 @@ interface BoundElement {
   bound: Rect;
 }
 
+declare var $: any;
 /**
  * Component responsible for drawing and interacting with UI tree XML of device
  * screen.

@@ -17,7 +17,6 @@ import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {ReplaySubject} from 'rxjs';
 import {concatMap, filter, take, takeUntil} from 'rxjs/operators';
-
 import {AdvancedActionDialogComponent} from '../advanced_actions_dialog/advanced_actions_dialog';
 import {ActionModel, actionModelFromJson, ACTIONS, ActionSummaryMetaData, WorkflowModel} from '../constants/actions';
 import {ActionColor, DEFAULT_WORKFLOW_NAME, MessageTypes, POPUP_DIALOG_DEFAULT_DIMENSION, TestStatusMsg} from '../constants/constants';
@@ -29,6 +28,7 @@ import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessage, ControlMessageService} from '../services/control_message_service';
 import {LogService, Message} from '../services/log_service';
 import {ActionEditDialog} from '../test_explorer/action_edit_dialog';
+
 
 /** Container of slider change event */
 export interface SliderChangeEvent {
@@ -42,13 +42,15 @@ export interface SliderChangeEvent {
   styleUrls: ['./workflow_editor.css'],
 })
 export class WorkflowEditorComponent implements OnDestroy {
-  readonly START_ACTION_STATUS_KEYWORD = 'Start Action, UUID:';
-  readonly END_ACTION_STATUS_KEYWORD = 'End Action, UUID:';
+  readonly START_ACTION_STATUS_KEYWORD = 'Start Action Path:';
+  readonly END_ACTION_STATUS_KEYWORD = 'End Action Path:';
+  readonly PLAYACTION_STATUS_SPLITTER = '->';
   isReplaying = false;
   workflowModel: WorkflowModel = {actionId: '', name: '', childrenActions: []};
   /** Handle on-destroy Subject, used to unsubscribe. */
   private readonly destroyed = new ReplaySubject<void>(1);
   pathStack: ActionModel[] = [];
+  pathIndexStack: number[] = [];
 
   playSpeedFactor = 1.0;
   static SNACKBAR_DURATION_MS = 2000;
@@ -57,7 +59,7 @@ export class WorkflowEditorComponent implements OnDestroy {
    * Indicates the actions which is currently playing. Stack stores all parent
    * compound actions
    */
-  playingActionUUIDStack: string[] = [];
+  currentPlayActionPath: string = '';
 
   constructor(
       private readonly controlMessageService: ControlMessageService,
@@ -75,7 +77,10 @@ export class WorkflowEditorComponent implements OnDestroy {
             concatMap(() => this.backendManagerService.getCurrentWorkflow()))
         .subscribe(data => {
           this.workflowModel = new WorkflowModel(JSON.stringify(data));
-          this.pathStack = [actionModelFromJson(JSON.stringify(data))];
+          if (this.pathStack.length <= 1) {
+            this.pathStack = [actionModelFromJson(JSON.stringify(data), 0)];
+            this.pathIndexStack = [0];
+          }
         });
 
     // Highlight the playing action by check the action id in log messages
@@ -91,15 +96,30 @@ export class WorkflowEditorComponent implements OnDestroy {
     this.controlMessageService.sendRefreshWorkflowMsg();
   }
 
-  getUUIDFromMsg(msg: string) {
-    return msg.substring(msg.indexOf('UUID') + 6);
-  }
-
+  /*
+   * Currently the highlight logic is based on the log information, originally,
+   * it searches the actionId in the log, and highlight, it works for most
+   * cases, however it won't work when we have multiple compound action in same
+   * workflow(will highlight both). We are using index path to track the
+   * progress. for example in the log, it will show 1->0->2, which indicates the
+   * index of child in compound action at each level.
+   */
   highlightAction(logContent: string) {
     if (logContent.includes(this.START_ACTION_STATUS_KEYWORD)) {
-      this.playingActionUUIDStack.push(this.getUUIDFromMsg(logContent));
+      this.currentPlayActionPath =
+          logContent.replace(this.START_ACTION_STATUS_KEYWORD, '').trim();
     } else if (logContent.includes(this.END_ACTION_STATUS_KEYWORD)) {
-      this.playingActionUUIDStack.pop();
+      // remove the last level trace, i.e. in the log we see <END> 1->2->3
+      // we want to backtrace remove the last section.
+      const indexArr =
+          this.currentPlayActionPath.split(this.PLAYACTION_STATUS_SPLITTER);
+      if (indexArr.length > 1) {
+        indexArr.pop();
+        this.currentPlayActionPath =
+            indexArr.join(this.PLAYACTION_STATUS_SPLITTER);
+      } else {
+        this.currentPlayActionPath = '';
+      }
     }
   }
 
@@ -121,9 +141,23 @@ export class WorkflowEditorComponent implements OnDestroy {
         });
   }
 
+  addWait() {
+    const action: ActionSummaryMetaData = {
+      type: ACTIONS.WAIT_ACTION.type,
+      name: ACTIONS.WAIT_ACTION.shortName,
+    };
+    this.backendManagerService.addActionToWorkflow(action)
+        .pipe(take(1))
+        .subscribe(() => {
+          this.controlMessageService.sendRefreshWorkflowMsg();
+        });
+  }
+
   clearRecord() {
     this.backendManagerService.createNewWorkSpace().pipe(take(1)).subscribe(
         () => {
+          this.pathStack = [];
+          this.pathIndexStack = [];
           this.controlMessageService.sendRefreshWorkflowMsg();
         });
   }
@@ -261,15 +295,32 @@ export class WorkflowEditorComponent implements OnDestroy {
     if (!this.isReplaying) {
       return this.getColorByType(actionModel);
     }
-    if (this.playingActionUUIDStack.includes(actionModel.actionId)) {
+    if (this.needHighLightCurrentAction(actionModel.actionIndex)) {
       return ActionColor.BLUE;
     }
     return ActionColor.GRAY;
   }
 
+  needHighLightCurrentAction(actionIndex: number) {
+    const pathList = this.pathIndexStack.slice(0);
+
+    pathList.push(actionIndex);
+    const pathStr = pathList.join(this.PLAYACTION_STATUS_SPLITTER);
+    // Current path could be 1->6  or 1->6->4, both cases we want to hight light
+    // 7th element. Can not just do startsWith, since we could something like
+    // 1->61->2 in the path. It will highlight both 6th and 61th.
+    if (this.currentPlayActionPath === pathStr ||
+        this.currentPlayActionPath.startsWith(
+            pathStr + this.PLAYACTION_STATUS_SPLITTER)) {
+      return true;
+    }
+    return false;
+  }
+
   expandCompoundAction(action: ActionModel, event: MouseEvent) {
     this.logService.log('Expand Compound Action: ' + action.name);
     this.pathStack = [...this.pathStack, action];
+    this.pathIndexStack = [...this.pathIndexStack, action.actionIndex];
     event.stopPropagation();
     this.backendManagerService.loadWorkflow(action.actionId).subscribe(data => {
       this.workflowModel = new WorkflowModel(JSON.stringify(data));
@@ -280,6 +331,7 @@ export class WorkflowEditorComponent implements OnDestroy {
     this.logService.log('Go back to:' + action.name);
     const index = this.pathStack.findIndex(x => x.actionId === action.actionId);
     this.pathStack = this.pathStack.slice(0, index + 1);
+    this.pathIndexStack = this.pathIndexStack.slice(0, index + 1);
     this.backendManagerService.loadWorkflow(action.actionId).subscribe(data => {
       this.workflowModel = new WorkflowModel(JSON.stringify(data));
     });

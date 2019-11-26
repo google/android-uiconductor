@@ -23,21 +23,21 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {v4 as uuid} from 'uuid';
 import {ReplaySubject} from 'rxjs';
 import {filter, switchMap, take, takeUntil} from 'rxjs/operators';
-
 import {DEFAULT_PROJECT_ID_PREFIX, DEFAULT_PROJECT_NAME_PREFIX, MessageTypes, POPUP_DIALOG_DEFAULT_DIMENSION, SNACKBAR_DURATION_MS} from '../constants/constants';
 import {ExportImportProjectRequest, ProjectListResponse, ProjectRecord, UuidToBase64ImgResponse} from '../constants/interfaces';
-import {JsTreeAction, JsTreeInternalNode, JsTreeNode, NodeParentPair, TreeNode} from '../constants/jstree';
+import {JsTreeAction, JsTreeInternalNode, JsTreeNode, NodeParentPair} from '../constants/jstree';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessageService} from '../services/control_message_service';
 import {convertToJsonTreeFormat, convertToJsTreeFormat, emptyTreeExample, reconstructJsTreeData, TestCaseManagerService} from '../services/test_case_manager_service';
-
 import {ActionEditDialog} from './action_edit_dialog';
 import {ImportDialog} from './import_dialog';
 import {ImportProjectDialog} from './import_project_dialog';
 import {NewProjectDialog} from './new_project_dialog';
 
-declare var $: any;
 
+
+declare var $: any;
+declare var saveAs: any;
 /**
  * Test case explorer component responsible for drawing test case tree.
  */
@@ -150,7 +150,7 @@ export class TestExplorer implements OnInit, OnDestroy {
             const newNode: NodeParentPair = JSON.parse(data.extra);
             this.jsTree.jstree('create_node', newNode.parentId, newNode.node);
           } else {
-            this.refreshTree();
+            this.refreshTree(false);
           }
         });
   }
@@ -172,7 +172,7 @@ export class TestExplorer implements OnInit, OnDestroy {
       'plugins': ['wholerow', 'dnd', 'contextmenu', 'sort', 'search'],
       'contextmenu': {items: this.menuItems},
     });
-    this.refreshTree();
+    this.refreshTree(false);
     this.addEventHooks();
   }
 
@@ -180,7 +180,7 @@ export class TestExplorer implements OnInit, OnDestroy {
    * Before call {@code refreshTree}, {@code this.selectedProject.projectId}
    * need to be the correct one.
    */
-  refreshTree() {
+  refreshTree(isNewWorkspace: boolean) {
     this.testCaseManagerService
         .getTestCasesListByProjectId(this.selectedProject.projectId)
         .pipe(take(1), takeUntil(this.destroyed))
@@ -190,7 +190,8 @@ export class TestExplorer implements OnInit, OnDestroy {
           }
           if (data.treeDetails) {
             this.updateDataTree(
-                convertToJsTreeFormat(JSON.parse(data.treeDetails)));
+                convertToJsTreeFormat(JSON.parse(data.treeDetails)),
+                isNewWorkspace);
           } else {
             this.saveEmptyTreeToBackend();
           }
@@ -226,8 +227,8 @@ export class TestExplorer implements OnInit, OnDestroy {
             this.selectedProject.projectId)
         .pipe(take(1), takeUntil(this.destroyed))
         .subscribe(() => {
-          this.updateDataTree(convertToJsTreeFormat(emptyTreeExample()));
-          this.refreshTree();
+          this.updateDataTree(convertToJsTreeFormat(emptyTreeExample()), false);
+          this.refreshTree(false);
         });
   }
 
@@ -270,17 +271,19 @@ export class TestExplorer implements OnInit, OnDestroy {
     return true;
   }
 
-  updateDataTree(jsTreeNode: JsTreeNode) {
+  updateDataTree(jsTreeNode: JsTreeNode, isNewWorkspace: boolean) {
     // 'settings' is an internal field that contains some desired jstree
     // properties.
     this.getJsTreeInstance()['settings'].core.data = jsTreeNode;
     this.getJsTreeInstance().refresh(
         /* skip_loading */ false, /* forget_state */ true);
-    this.backendManagerService.createNewWorkSpace()
-        .pipe(take(1), takeUntil(this.destroyed))
-        .subscribe(() => {
-          this.controlMessageService.sendRefreshWorkflowMsg();
-        });
+    if (isNewWorkspace) {
+      this.backendManagerService.createNewWorkSpace()
+          .pipe(take(1), takeUntil(this.destroyed))
+          .subscribe(() => {
+            this.controlMessageService.sendRefreshWorkflowMsg();
+          });
+    }
   }
 
   getUUIDFromNode(node: JsTreeInternalNode) {
@@ -622,7 +625,7 @@ export class TestExplorer implements OnInit, OnDestroy {
         .subscribe((data: ProjectListResponse) => {
           if (data.success) {
             this.selectedProject = data.projectList[0];
-            this.refreshTree();
+            this.refreshTree(true);
           }
         });
   }
@@ -689,6 +692,3 @@ interface CheckMore {
   dnd?: boolean;
   ref?: {original?: {isFolder?: boolean}};
 }
-
-
-declare var saveAs: any;
