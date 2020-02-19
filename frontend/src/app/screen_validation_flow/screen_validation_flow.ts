@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -128,6 +128,16 @@ export class ScreenValidationFlowComponent {
         observable = this.backendManagerService.zoom(
             this.selectedBounds.x1, this.selectedBounds.y1,
             this.selectedBounds.x2, this.selectedBounds.y2, false);
+        break;
+      case SpecialClickType.DRAG_WITH_CONTEXT:
+        observable = this.backendManagerService.dragWithStartEndContext(
+            this.selectedBounds.x1, this.selectedBounds.y1,
+            this.selectedBounds.x2, this.selectedBounds.y2);
+        break;
+      case SpecialClickType.SWIPE_WITH_CONTEXT:
+        observable = this.backendManagerService.swipeWithStartEndContext(
+            this.selectedBounds.x1, this.selectedBounds.y1,
+            this.selectedBounds.x2, this.selectedBounds.y2);
         break;
       default:
         break;

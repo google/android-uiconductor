@@ -1,5 +1,5 @@
 <!--
-  Copyright 2019 Google LLC
+  Copyright 2020 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@
     <input matInput placeholder="Action Type" [(ngModel)]="actionData.actionType" [disabled]="true">
   </mat-form-field>
 
-  <mat-checkbox *ngIf="isClickAction()" placeholder="Is Raw xy" [disabled]="true" [(ngModel)]="actionData.isRawXY">is raw XY</mat-checkbox>
+  <mat-checkbox *ngIf="isClickAction()" placeholder="Is Raw xy" [disabled]="false" [(ngModel)]="actionData.isRawXY">is raw XY</mat-checkbox>
 
   <mat-form-field *ngIf="!isMLImageValidation()">
     <textarea matInput placeholder="Description" [(ngModel)]="actionData.actionDescription" [disabled]="currentUser !== actionData.createdBy"></textarea>
