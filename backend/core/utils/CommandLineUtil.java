@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,30 +28,30 @@ import java.util.logging.Logger;
 
 /** Helper functions executing a command */
 public class CommandLineUtil {
-  private static final int EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS = 10;
+  private static final int EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS = 4;
   private static final int LOGGER_MAX_SIZE = 50;
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
 
-  public Process execute(String commandLine, List<String> output, boolean waitFor)
+  public static Process execute(String commandLine, List<String> output, boolean waitFor)
       throws UicdExternalCommandException {
     return execute(commandLine, output, waitFor, EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS);
   }
 
-  public Process execute(
+  public static Process execute(
       String commandLine, List<String> output, boolean waitFor, boolean showDetailLogging)
       throws UicdExternalCommandException {
     return execute(
         commandLine, output, waitFor, EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS, showDetailLogging);
   }
 
-  public Process execute(
+  public static Process execute(
       String commandLine, List<String> output, boolean waitFor, int timeout)
       throws UicdExternalCommandException {
     timeout = (timeout == 0 ? EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS : timeout);
     return execute(commandLine, output, waitFor, timeout, /* showDetailLogging= */ false);
   }
 
-  public Process execute(
+  public static Process execute(
       String commandLine,
       List<String> output,
       boolean waitFor,

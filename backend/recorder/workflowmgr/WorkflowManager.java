@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -150,15 +150,14 @@ public class WorkflowManager {
   public void recordAndClick(int x, int y, boolean isDoubleClick) {
     AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
     try {
-      Position pos = new Position(x, y);
       NodeContext nodeContext =
           XmlHelper.getContextFromPos(
               androidDeviceDriver.fetchCurrentXML(),
-              pos,
+              new Position(x, y),
               androidDeviceDriver.getWidthRatio(),
               androidDeviceDriver.getHeightRatio());
       addAction(new ClickAction(nodeContext, isDoubleClick));
-      androidDeviceDriver.clickDevice(pos, isDoubleClick);
+      androidDeviceDriver.clickDevice(x, y, isDoubleClick);
     } catch (UicdDeviceHttpConnectionResetException e) {
       logger.severe(e.getMessage());
     }
@@ -179,11 +178,6 @@ public class WorkflowManager {
     AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
     addAction(new SwipeAction(startX, startY, endX, endY));
     androidDeviceDriver.swipeDevice(startX, startY, endX, endY);
-  }
-
-  public void recordSwipeWithStartEndContext(Position startPos, Position endPos) {
-    AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
-    addAction(SwipeAction.createNodeContextBasedSwipeAction(androidDeviceDriver, startPos, endPos));
   }
 
   public void recordAndInput(int keyCode) {
@@ -211,11 +205,6 @@ public class WorkflowManager {
   public void recordDrag(List<Point> dragPoints) {
     addAction(new DragAction(dragNodeContext, dragPoints));
     dragNodeContext = null;
-  }
-
-  public void recordDragWithStartEndContext(Position startPos, Position endPos) {
-    AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
-    addAction(DragAction.createNodeContextBasedDragAction(androidDeviceDriver, startPos, endPos));
   }
 
   public List<String> getAllAvailableSnippetMethods(String packageName) {
@@ -445,7 +434,7 @@ public class WorkflowManager {
     testCaseHistoryEntity.setTestcaseUuid(currentAction.getActionId().toString());
     testCaseHistoryEntity.setTestDetails(actionExecutionResult.toJson());
     testCaseHistoryEntity.setTestMsg(
-        currentAction.getActionTypeString() + ": " + currentAction.getDisplay());
+        currentAction.getActionType() + ": " + currentAction.getDisplay());
     testCaseHistoryEntity.setTestResult(actionExecutionResult.getPlayStatus().toString());
     testHistoryManager.save(testCaseHistoryEntity);
   }
@@ -458,18 +447,18 @@ public class WorkflowManager {
             new Position(x, y),
             androidDeviceDriver.getWidthRatio(),
             androidDeviceDriver.getHeightRatio());
-    androidDeviceDriver.dragStart(new Position(x, y));
+    androidDeviceDriver.dragStart(x, y);
   }
 
   public void dragMove(Integer x, Integer y) {
     if (dragNodeContext == null) {
       return;
     }
-    devicesDriverManager.getSelectedAndroidDeviceDriver().dragMove(new Position(x, y));
+    devicesDriverManager.getSelectedAndroidDeviceDriver().dragMove(x, y);
   }
 
   public void dragStop(Integer x, Integer y) {
-    devicesDriverManager.getSelectedAndroidDeviceDriver().dragStop(new Position(x, y));
+    devicesDriverManager.getSelectedAndroidDeviceDriver().dragStop(x, y);
   }
 
   public CompoundAction getCurrentWorkflow() {

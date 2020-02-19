@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -122,9 +122,6 @@ public class ActionContext {
   }
 
   public String expandUicdGlobalVariable(String target, String deviceId) {
-    if (target == null) {
-      return "";
-    }
     // target could have multiple $uicd, we need replace all of them
     for (String keyWord : UicdGlobalVariableMap.PARAM_KEYWORD_LIST) {
       String devicdIdKeyword = UicdGlobalVariableMap.getUicdDeviceidParamKeyword(keyWord);
@@ -157,25 +154,15 @@ public class ActionContext {
 
   /**
    * Gets a descriptive path from this action context instance.
-   * @param prefix filename Prefix
    *
    * @return Full path of the screenshot specific to the currently playing action..
    */
-  public String getScreenCapFullPath(String prefix) {
+  public String getScreenCapFullPath() {
     return Paths.get(
             UicdConfig.getInstance().getTestOutputFolder(),
             this.getExecutionId().toString(),
             this.getCurrentPlayingActionId() + PNG_EXTENSION)
         .toString();
-  }
-
-  /**
-   * Gets a descriptive path from this action context instance.
-   *
-   * @return Full path of the screenshot specific to the currently playing action..
-   */
-  public String getScreenCapFullPath() {
-    return getScreenCapFullPath("");
   }
 
   public int getCurrentPlayActionIndex() {

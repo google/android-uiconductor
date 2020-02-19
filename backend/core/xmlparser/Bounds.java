@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.Objects;
  */
 @JsonAutoDetect(fieldVisibility = ANY, getterVisibility = NONE, setterVisibility = NONE,
     isGetterVisibility = NONE)
-public class Bounds implements Cloneable {
+public class Bounds {
 
   private static final double AREA_EPSILON = 0.01;
   private static final double SIMILAR_SIZE_THRESHOLD = 0.3;
@@ -42,14 +42,12 @@ public class Bounds implements Cloneable {
 
   public Bounds() {
   }
-
   public Bounds(double x1, double y1, double x2, double y2) {
     this.x1 = x1;
     this.y1 = y1;
     this.x2 = x2;
     this.y2 = y2;
   }
-
   private static final int PC_SCREEN_WIDTH_PX = 360;
   private static final int PC_SCREEN_HEIGHT_PX = 640;
   @JsonIgnore public int totalTextChildrenCnt;

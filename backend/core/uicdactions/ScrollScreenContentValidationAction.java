@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,10 +16,13 @@ package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.uicd.backend.core.constants.ScrollDirectionType;
+import com.google.uicd.backend.core.constants.StopType;
 import com.google.uicd.backend.core.constants.UicdConstant;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ScrollScreenContentValidationActionSantinizer;
+import com.google.uicd.backend.core.xmlparser.Bounds;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
 
 /** ScrollScreenContentValidationAction */
 @JsonDeserialize(converter = ScrollScreenContentValidationActionSantinizer.class)
@@ -30,6 +33,19 @@ public class ScrollScreenContentValidationAction extends ScreenContentValidation
   private int scrollMaxNumber = 30;
 
   public ScrollScreenContentValidationAction() {}
+
+  public ScrollScreenContentValidationAction(
+      Bounds selectedBound,
+      String type,
+      String value,
+      String textMatchType,
+      String boundsSearchType,
+      NodeContext nodeContext,
+      StopType stopType,
+      int scrollOrientation) {
+    super(selectedBound, type, value, textMatchType, boundsSearchType, nodeContext, stopType);
+    this.scrollOrientation = ScrollDirectionType.fromInt(scrollOrientation);
+  }
 
   public ScrollScreenContentValidationAction(ValidationReqDetails validationReqDetails) {
     super(validationReqDetails);

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
 package com.google.uicd.backend.core.db;
 
 import com.google.api.client.util.Base64;
+import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.constants.ActionType;
 import com.google.uicd.backend.core.exceptions.UicdActionException;
 import com.google.uicd.backend.core.uicdactions.BaseAction;
@@ -26,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -66,11 +69,9 @@ public abstract class ActionStorageManager {
       List<BaseAction> currentActionList = getBaseActionsFromStorage(parentLayerActionIds);
       List<String> nextLayerActionIds = new ArrayList<>();
       for (BaseAction curAction : currentActionList) {
-        if (curAction.getActionType() == ActionType.COMPOUND_ACTION) {
+        if (Ascii.equalsIgnoreCase(
+            curAction.getActionType(), ActionType.COMPOUND_ACTION.getActionName())) {
           CompoundAction compoundAction = (CompoundAction) curAction;
-          for (BaseAction childAction : compoundAction.childrenActions) {
-            cachedMap.putIfAbsent(childAction.getActionId().toString(), childAction);
-          }
           nextLayerActionIds.addAll(
               compoundAction.childrenIdList.stream()
                   .filter(actionId -> !cachedMap.containsKey(actionId))
@@ -131,7 +132,8 @@ public abstract class ActionStorageManager {
     // Updates cacheMap, for each compound action in the cachedMap, once we have all the action in
     // cachedMap we need construct the real object reference.
     for (BaseAction action : cachedMap.values()) {
-      if (action.getActionType() == ActionType.COMPOUND_ACTION) {
+      if (Ascii.equalsIgnoreCase(
+          action.getActionType(), ActionType.COMPOUND_ACTION.getActionName())) {
         CompoundAction compoundAction = (CompoundAction) action;
         if (compoundAction.childrenIdList.size() != compoundAction.childrenActions.size()) {
           compoundAction.childrenActions =
@@ -185,5 +187,18 @@ public abstract class ActionStorageManager {
       }
     }
     return uuidToBase64RefImgs;
+  }
+
+  public void deepCopyActions(List<String> actionIdList, Map<String, String> uuidMapping)
+      throws UicdActionException {
+    List<BaseAction> actionList = this.getBaseActionsFromStorage(actionIdList);
+    for (BaseAction action : actionList) {
+      action.setActionId(
+          UUID.fromString(
+              uuidMapping.getOrDefault(
+                  action.getActionId().toString(), action.getActionId().toString())));
+      action.setCreatedBy(UicdConfig.getInstance().getCurrentUser());
+    }
+    saveActions(actionList);
   }
 }

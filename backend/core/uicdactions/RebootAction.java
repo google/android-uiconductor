@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.google.uicd.backend.core.uicdactions;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.devicesdriver.DeviceCallbackHandler;
 import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +51,7 @@ public class RebootAction extends BaseAction {
       AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) throws UicdException {
     List<String> output = new ArrayList<>();
     if (!onlyReconnectToDevice) {
-      adbCommandLineUtil.executeReboot(androidDeviceDriver.getDeviceId(), output);
+      ADBCommandLineUtil.executeReboot(androidDeviceDriver.getDeviceId(), output);
     }
     if (androidDeviceDriver.xmlDumperProcess != null) {
       androidDeviceDriver.xmlDumperProcess.destroy();

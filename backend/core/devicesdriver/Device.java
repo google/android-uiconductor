@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -88,30 +88,6 @@ public class Device {
         orientation);
   }
 
-  public Device(
-      String deviceId,
-      String screenDimension,
-      String productName,
-      int deviceIndex,
-      int apiLevel,
-      String orientation) {
-    List<String> strs = Splitter.on('x').splitToList(screenDimension);
-    int width = Integer.parseInt(strs.get(0).trim());
-    int height = Integer.parseInt(strs.get(1).trim());
-    this.init(
-        deviceId,
-        width,
-        height,
-        productName,
-        this.xmlDumperHostPort,
-        this.minicapHostPort,
-        this.minicapWebServerPort,
-        this.snippetClientHostPort,
-        deviceIndex,
-        apiLevel,
-        orientation);
-  }
-
   private static final String BUILD_VERSION_RELEASE_KEY = "ro.build.version.release";
   private static final String BUILD_VERSION_SDK_KEY = "ro.build.version.sdk";
   private static final String PRODUCT_CPU_ABI_KEY = "ro.product.cpu.abi";
@@ -136,12 +112,11 @@ public class Device {
   private DeviceOrientation orientation = DeviceOrientation.PORTRAIT;
 
   private final Map<String, String> properties = new HashMap<>();
-  private ADBCommandLineUtil adbCommandLineUtil;
 
   public void initProperties() {
     List<String> output = new ArrayList<>();
     try {
-      adbCommandLineUtil.executeAdb("adb shell getprop ", this.deviceId, output);
+      ADBCommandLineUtil.executeAdb("adb shell getprop ", this.deviceId, output);
     } catch (UicdExternalCommandException e) {
       logger.warning("Failed to run adb shell getprop. " + e.getMessage());
     }
@@ -206,16 +181,8 @@ public class Device {
     return minicapHostPort;
   }
 
-  public void setMinicapHostPort(int port) {
-    this.minicapHostPort = port;
-  }
-
   public int getMinicapWebServerPort() {
     return minicapWebServerPort;
-  }
-
-  public void setMinicapWebServerPort(int port) {
-    this.minicapWebServerPort = port;
   }
 
   public int getXmlDumperDevicePort() {
@@ -226,16 +193,8 @@ public class Device {
     return xmlDumperHostPort;
   }
 
-  public void setXmlDumperHostPort(int port) {
-    this.xmlDumperHostPort = port;
-  }
-
   public int getSnippetClientHostPort() {
     return snippetClientHostPort;
-  }
-
-  public void setSnippetClientHostPort(int port) {
-    this.snippetClientHostPort = port;
   }
 
   public String getDeviceId() {
@@ -279,7 +238,6 @@ public class Device {
       int apiLevel,
       String orientation) {
 
-    this.adbCommandLineUtil = new ADBCommandLineUtil();
     this.deviceId = deviceId;
     this.width = width;
     this.height = height;

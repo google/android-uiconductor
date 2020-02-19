@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,9 +15,12 @@
 package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.uicd.backend.core.constants.StopType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.LoopScreenContentValidationActionSantinizer;
+import com.google.uicd.backend.core.xmlparser.Bounds;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
 
 /** ScreenContentValidationAction */
 @JsonDeserialize(converter = LoopScreenContentValidationActionSantinizer.class)
@@ -31,6 +34,21 @@ public class LoopScreenContentValidationAction extends ScreenContentValidationAc
   public boolean waitUntilDisappear;
 
   public LoopScreenContentValidationAction() {}
+
+  public LoopScreenContentValidationAction(
+      Bounds selectedBound,
+      String type,
+      String value,
+      String textMatchType,
+      String boundsSearchType,
+      NodeContext nodeContext,
+      StopType stopType,
+      int timeout,
+      boolean waitUntilDisappear) {
+    super(selectedBound, type, value, textMatchType, boundsSearchType, nodeContext, stopType);
+    this.timeout = timeout;
+    this.waitUntilDisappear = waitUntilDisappear;
+  }
 
   public LoopScreenContentValidationAction(ValidationReqDetails validationReqDetails) {
     super(validationReqDetails);

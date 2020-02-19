@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,11 +39,11 @@ public class UicdConstant {
    * startX, startY, endX, endY of scroll up, down, left, right, it is percentage of the screen
    * resolution. Need times screen width and height to get the real x,y
    */
-   public static final double[][] SCROLL_SEARCH_SWIPE_MATRIX = {
+  public static final double[][] SCROLL_SEARCH_SWIPE_MATRIX = {
     {0.5, 0.4, 0.5, 0.6},
     {0.5, 0.6, 0.5, 0.4},
-    {0.2, 0.5, 0.8, 0.5},
-    {0.8, 0.5, 0.2, 0.5}
+    {0.4, 0.5, 0.6, 0.5},
+    {0.6, 0.5, 0.4, 0.5}
   };
 
   // Will be replaced by "<CL number>" or "<CL number> - Beta" by release script

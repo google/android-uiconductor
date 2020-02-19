@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,64 +14,34 @@
 
 package com.google.uicd.backend.core.uicdactions;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
-import com.google.uicd.backend.core.xmlparser.NodeContext;
-import com.google.uicd.backend.core.xmlparser.Position;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
-import java.util.List;
 
-/** SwipeAction has two modes, straight x,y or context based one. */
+import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
+
+/**
+ * SwipeAction
+ */
 public class SwipeAction extends BaseAction {
 
-  private int startX;
-  private int startY;
-  private int endX;
-  private int endY;
-
-  private NodeContext startPointNodeContext;
-  private NodeContext endPointNodeContext;
-  @JsonIgnore private final PositionHelper positionHelper;
-
   public SwipeAction() {
-    this.positionHelper = new PositionHelper();
   }
 
   public SwipeAction(int startX, int startY, int endX, int endY) {
-    this();
     this.startX = startX;
     this.startY = startY;
     this.endX = endX;
     this.endY = endY;
-    this.setName(SwipeAction.getDirection(new Position(startX, startY), new Position(endX, endY)));
+    this.setName(this.getDisplay());
     this.setDelayAfterActionMs(2000);
   }
 
-  public static SwipeAction createNodeContextBasedSwipeAction(
-      AndroidDeviceDriver androidDeviceDriver, Position startPos, Position endPos) {
-    SwipeAction swipeAction = new SwipeAction();
-    List<String> xmlLists = androidDeviceDriver.fetchCurrentXML();
-    NodeContext startPointNodeContext =
-        XmlHelper.getContextFromPos(
-            xmlLists,
-            startPos,
-            androidDeviceDriver.getWidthRatio(),
-            androidDeviceDriver.getHeightRatio());
-    NodeContext endNodeContext =
-        XmlHelper.getContextFromPos(
-            xmlLists,
-            endPos,
-            androidDeviceDriver.getWidthRatio(),
-            androidDeviceDriver.getHeightRatio());
-    swipeAction.startPointNodeContext = startPointNodeContext;
-    swipeAction.endPointNodeContext = endNodeContext;
-    swipeAction.name = SwipeAction.getDirection(startPos, endPos);
-    return swipeAction;
-  }
+  public int startX;
+  public int startY;
+  public int endX;
+  public int endY;
 
   @Override
   public String getDisplay() {
-    return name;
+    return getDirection();
   }
 
   @Override
@@ -81,28 +51,19 @@ public class SwipeAction extends BaseAction {
 
   @Override
   protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) {
-    Position startPos = new Position(this.startX, this.startY);
-    Position endPos = new Position(this.endX, this.endY);
-
-    startPos.updateIfValidPos(
-        positionHelper.getPositionFromScreen(
-            androidDeviceDriver, startPointNodeContext, actionContext));
-    endPos.updateIfValidPos(
-        positionHelper.getPositionFromScreen(
-            androidDeviceDriver, endPointNodeContext, actionContext));
-    androidDeviceDriver.swipeDevice(startPos, endPos);
+    androidDeviceDriver.swipeDevice(this.startX, this.startY, this.endX, this.endY);
     return 0;
   }
 
-  private static String getDirection(Position startPos, Position endPos) {
-    if (Math.abs(startPos.x - endPos.x) > Math.abs(startPos.y - endPos.y)) {
-      if (startPos.x > endPos.x) {
+  private String getDirection() {
+    if (Math.abs(startX - endX) > Math.abs(startY - endY)) {
+      if (startX > endX) {
         return "left";
       } else {
         return "right";
       }
     } else {
-      if (startPos.y > endPos.y) {
+      if (startY > endY) {
         return "up";
       } else {
         return "down";

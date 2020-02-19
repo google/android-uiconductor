@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,52 +21,46 @@ import java.util.List;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import org.apache.http.Consts;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 
 /**
  * Helper class for Http request
  */
 public class HttpProxyUtils {
   public static final int DEFAULT_HTTP_REQUEST_TIMEOUT = 5000;
-  private static final int DEFAULT_REQUEST_RETRIES = 3;
 
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
   private static final List<String> CONNECTION_RESET_KEYWORDS_LIST =
-      Arrays.asList(
-          "Connection refused", "Connection reset", "Internal Server Error", "failed to respond");
+      Arrays.asList("Connection refused", "Connection reset", "Internal Server Error");
 
   public static String getRequestAsString(String url)
       throws UicdDeviceHttpConnectionResetException {
-    logger.info("get request to xmldumper:" + url);
+    return getRequestAsString(url, DEFAULT_HTTP_REQUEST_TIMEOUT);
+  }
+
+  private static String getRequestAsString(String url, int timeoutMs)
+      throws UicdDeviceHttpConnectionResetException {
+    logger.config("get request to xmldumper:" + url);
     String ret = "";
-    HttpClient client = HttpClientBuilder.create()
-        .setRetryHandler(new DefaultHttpRequestRetryHandler(DEFAULT_REQUEST_RETRIES, true)).build();
-    HttpGet method = new HttpGet(url);
     try {
-      HttpResponse response = client.execute(method);
-      ret = EntityUtils.toString(response.getEntity());
+      ret = Request.Get(url)
+          .connectTimeout(timeoutMs)
+          .socketTimeout(timeoutMs)
+          .execute().returnContent().asString(Consts.UTF_8);
     } catch (IOException e) {
       logger.warning(e.getMessage());
       if (CONNECTION_RESET_KEYWORDS_LIST.stream().parallel().anyMatch(e.getMessage()::contains)) {
         throw new UicdDeviceHttpConnectionResetException(e.getMessage());
       }
-    } finally {
-      method.releaseConnection();
     }
     return ret;
   }
 
   public static String postRequestAsString(String url, String request)
       throws UicdDeviceHttpConnectionResetException {
-    logger.info("post request to xmldumper:" + url);
+    logger.config("post request to xmldumper:" + url);
     String ret = "";
     Response response = null;
     try {
@@ -81,7 +75,7 @@ public class HttpProxyUtils {
         throw new UicdDeviceHttpConnectionResetException(e.getMessage());
       }
     }
-    logger.info("return from xmldumper:" + ret);
+    logger.config("return from xmldumper:" + ret);
     return ret;
   }
 }

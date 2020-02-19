@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,8 +83,7 @@ public class ImageUtil {
     }
     String commandLine = String.join(REDIRECT, "adb exec-out screencap -p", imagePath);
     try {
-      ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
-      adbCommandLineUtil.executeAdb(commandLine, deviceId, /* waitfor */ true);
+      ADBCommandLineUtil.executeAdb(commandLine, deviceId);
     } catch (UicdExternalCommandException e) {
       logger.warning("Error while saving screenshot to file: " + e.getMessage());
     }

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,9 +77,6 @@ public abstract class ValidationReqDetails {
   @JsonProperty("stopType")
   public abstract StopType getStopType();
 
-  @JsonProperty("ocrMode")
-  public abstract boolean isOcrMode();
-
   @JsonProperty("waitUntilDisappear")
   public abstract boolean isWaitUntilDisappear();
 
@@ -111,7 +108,6 @@ public abstract class ValidationReqDetails {
           .contextStorageType(ContextStorageType.UNKNOWN)
           .elementSelectorType(ElementSelectorType.UNKNOWN)
           .iconImageType(IconImageType.UNKNOWN)
-          .ocrMode(false)
           .screenContentSearchType(ScreenContentSearchType.UNKNOWN)
           .scrollDirectionType(ScrollDirectionType.UNKNOWN)
           .scrollMaxNumber(30)
@@ -159,9 +155,6 @@ public abstract class ValidationReqDetails {
 
     @JsonProperty("waitUntilDisappear")
     public abstract Builder waitUntilDisappear(boolean value);
-
-    @JsonProperty("ocrMode")
-    public abstract Builder ocrMode(boolean value);
 
     @JsonDeserialize(using = UicdIntToDurationDeserializer.class)
     @JsonProperty("timeout")

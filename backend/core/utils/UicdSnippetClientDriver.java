@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,7 +65,6 @@ public class UicdSnippetClientDriver {
   private Process serverApkProcess;
   private final long timeout;
   private int uid = -1;
-  private final ADBCommandLineUtil adbCommandLineUtil;
 
   /**
    * @param packageName: package name in full
@@ -77,7 +76,6 @@ public class UicdSnippetClientDriver {
     this.deviceId = deviceId;
     this.hostPort = hostPort;
     this.timeout = timeout;
-    this.adbCommandLineUtil = new ADBCommandLineUtil();
   }
 
   public UicdSnippetClientDriver(String packageName, String deviceId, int hostPort) {
@@ -95,7 +93,7 @@ public class UicdSnippetClientDriver {
     String launchServerCommand = String.format(START_SERVER_COMMAND, packageName);
     List<String> launchOutput = new ArrayList<>();
     logger.info(String.format("Launch snippet apk %s.", packageName));
-    serverApkProcess = adbCommandLineUtil.executeAdb(launchServerCommand, deviceId, launchOutput);
+    serverApkProcess = ADBCommandLineUtil.executeAdb(launchServerCommand, deviceId, launchOutput);
 
     // check the main version of snippet protocol. It should be '1'.
     if (launchOutput.size() != 2
@@ -111,7 +109,7 @@ public class UicdSnippetClientDriver {
 
     // set up forwarding path from localhost to Android device through ADB
     try {
-      adbCommandLineUtil.executeAdb(
+      ADBCommandLineUtil.executeAdb(
           String.format("adb forward tcp:%s tcp:%s", hostPort, devicePort), deviceId);
     } catch (Exception e) {
       logger.warning("Failed to set up port forwarding for snippet server: \n" + e.getMessage());
@@ -294,7 +292,7 @@ public class UicdSnippetClientDriver {
 
     // stop the RPC server remotely
     List<String> stopCommandOutput = new ArrayList<>();
-    adbCommandLineUtil.executeAdb(
+    ADBCommandLineUtil.executeAdb(
         String.format(STOP_SERVER_COMMAND, packageName), deviceId, stopCommandOutput);
     boolean isStop = false;
     for (String line : stopCommandOutput) {
@@ -311,6 +309,6 @@ public class UicdSnippetClientDriver {
     }
 
     // remove the ADB forwarding path
-    adbCommandLineUtil.removePortForwarding(deviceId, hostPort);
+    ADBCommandLineUtil.removePortForwarding(deviceId, hostPort);
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,8 +35,7 @@ import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseActionDBIgnoreFields;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.ClickActionIgnoreFields;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.core.utils.CommandLineUtil;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.CompoundActionDBIgnoreFields;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,7 +84,6 @@ import java.util.logging.Logger;
   @JsonSubTypes.Type(value = DoubleTapPowerButtonAction.class, name = "DoubleTapPowerButtonAction"),
   @JsonSubTypes.Type(value = WaitAction.class, name = "WaitAction"),
   @JsonSubTypes.Type(value = ConditionValidationAction.class, name = "ConditionValidationAction"),
-  @JsonSubTypes.Type(value = PythonScriptAction.class, name = "PythonScriptAction"),
 })
 /**
  * BaseAction class In uicd every test step is one action. This is the base class for all actions
@@ -97,8 +95,6 @@ public abstract class BaseAction {
 
   public BaseAction() {
     this.setActionType(ActionType.fromString(this.getClass().getSimpleName()));
-    this.adbCommandLineUtil = new ADBCommandLineUtil();
-    this.commandLineUtil = new CommandLineUtil();
   }
 
   protected PlayStatus playStatus = PlayStatus.READY;
@@ -125,10 +121,6 @@ public abstract class BaseAction {
   protected boolean runAlways = false;
 
   @JsonIgnore protected Logger logger = LogManager.getLogManager().getLogger("uicd");
-
-  @JsonIgnore protected ADBCommandLineUtil adbCommandLineUtil;
-
-  @JsonIgnore protected CommandLineUtil commandLineUtil;
 
   // Print a log statement after this many sleeps of SLEEP_TIME_UNIT, as long as the remaining
   // sleep time is more than MIN_SLEEP_TIME_TO_LOG.
@@ -162,11 +154,7 @@ public abstract class BaseAction {
 
   public abstract String getDisplay();
 
-  public ActionType getActionType() {
-    return actionType;
-  }
-
-  public String getActionTypeString() {
+  public String getActionType() {
     return actionType.getActionName();
   }
 
@@ -266,10 +254,13 @@ public abstract class BaseAction {
     String jsonDataString = "";
     ObjectMapper mapper = new ObjectMapper();
     switch (whoNeedsJson) {
+      case BACKEND:
+        mapper.addMixIn(BaseAction.class, BaseActionDBIgnoreFields.class);
+        mapper.addMixIn(CompoundAction.class, CompoundActionDBIgnoreFields.class);
+        break;
       case FRONTEND:
         mapper.addMixIn(ClickAction.class, ClickActionIgnoreFields.class);
         break;
-      case BACKEND:
       case EXPORT:
         mapper.addMixIn(BaseAction.class, BaseActionDBIgnoreFields.class);
         break;
@@ -287,7 +278,7 @@ public abstract class BaseAction {
 
   void logActionStart(ActionContext actionContext) {
     logger.info("Start Action, UUID: " + this.getActionId());
-    logger.info(this.getActionTypeString() + ": " + this.getDisplay());
+    logger.info(this.getActionType() + ": " + this.getDisplay());
     actionContext.getCurrentPlayingPath().add(actionContext.getCurrentPlayActionIndex());
     logger.info(
         "Start Action Path: " + Joiner.on("->").join(actionContext.getCurrentPlayingPath()));
@@ -305,7 +296,7 @@ public abstract class BaseAction {
   protected ActionExecutionResult genActionExecutionResults(
       AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) {
     ActionExecutionResult actionExecutionResult = new ActionExecutionResult();
-    actionExecutionResult.setRegularOutput(this.getActionTypeString() + ": " + this.getDisplay());
+    actionExecutionResult.setRegularOutput(this.getActionType() + ": " + this.getDisplay());
     actionExecutionResult.setSequenceIndex(actionContext.getNextActionSequenceIndex());
     actionExecutionResult.setActionId(this.actionId.toString());
     actionExecutionResult.setPlayStatus(this.playStatus);

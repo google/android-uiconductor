@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,12 +17,9 @@ package com.google.uicd.backend.core.db;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.google.uicd.backend.core.config.UicdConfig;
-import com.google.uicd.backend.core.constants.ActionType;
 import com.google.uicd.backend.core.constants.JsonFlag;
 import com.google.uicd.backend.core.uicdactions.BaseAction;
-import com.google.uicd.backend.core.uicdactions.CompoundAction;
 import java.time.Instant;
-import java.util.logging.Logger;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -35,22 +32,13 @@ import javax.persistence.Table;
 public class ActionEntity {
 
   private static final int MAX_NAME_LENGTH = 100;
-  private static final Logger logger = Logger.getLogger("uicd");
 
   public ActionEntity() {}
 
   public ActionEntity(BaseAction baseAction) {
     this.uuid = baseAction.getActionId().toString();
-    try {
-      if (baseAction.getActionType() == ActionType.COMPOUND_ACTION) {
-        CompoundAction compoundAction = (CompoundAction) baseAction;
-        baseAction = (BaseAction) compoundAction.cloneWithoutCompoundChildrenChildren();
-      }
-    } catch (CloneNotSupportedException e) {
-      logger.warning(e.getMessage());
-    }
     this.details = baseAction.toJson(JsonFlag.BACKEND);
-    this.type = baseAction.getActionTypeString();
+    this.type = baseAction.getActionType();
     // The name field in the db is 100 characters, if user put super long name, it will crash the
     // save logic
     this.name =

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.exceptions.UicdHostException;
+import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import com.google.uicd.backend.core.xmlparser.TextValidator;
 import java.io.File;
 import java.io.IOException;
@@ -150,7 +151,7 @@ public class LogcatValidationAction extends ValidationAction {
 
     String targetCommandLine =
         actionContext.expandUicdGlobalVariable(this.commandLine, androidDeviceDriver.getDeviceId());
-    adbCommandLineUtil.executeAdbLogcatCommand(
+    ADBCommandLineUtil.executeAdbLogcatCommand(
         targetCommandLine,
         androidDeviceDriver.getDeviceId(),
         logcatOutput,

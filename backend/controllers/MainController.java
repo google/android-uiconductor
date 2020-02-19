@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import com.google.uicd.backend.core.utils.JsonUtil;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import com.google.uicd.backend.core.xmlparser.Bounds;
-import com.google.uicd.backend.core.xmlparser.Position;
 import com.google.uicd.backend.recorder.services.ProjectManager;
 import com.google.uicd.backend.recorder.websocket.minicap.MinicapUtil;
 import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
@@ -67,19 +66,19 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableAutoConfiguration
 @RestController
 public class MainController {
+
   private static final String DONE = "{\"status\":\"done\"}";
   private static final String FAILED = "{\"status\":\"failed\"}";
   private static final boolean DOUBLE_CLICK = true;
+  private DevicesDriverManager devicesDriverManager;
   @Autowired WorkflowManager workflowManager;
   @Autowired ProjectManager projectManager;
-  private DevicesDriverManager devicesDriverManager;
-  private ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
 
   @CrossOrigin(origins = "*")
   @RequestMapping("/getDevicesList")
   public Callable<List<String>> getDevicesList() {
     return () -> {
-      List<String> adbOutput = adbCommandLineUtil.getDevicesList();
+      List<String> adbOutput = ADBCommandLineUtil.getDevicesList();
       List<String> ret = new ArrayList<>();
       for (Device device : Device.getDevicesListFromString(adbOutput)) {
         ret.add(device.toJson());
@@ -203,20 +202,6 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping("/dragWithStartEndContext")
-  public Callable<String> dragWithStartEndContext(
-      @RequestParam(value = "startX") int startX,
-      @RequestParam(value = "startY") int startY,
-      @RequestParam(value = "endX") int endX,
-      @RequestParam(value = "endY") int endY) {
-    return () -> {
-      workflowManager.recordDragWithStartEndContext(
-          new Position(startX, startY), new Position(endX, endY));
-      return DONE;
-    };
-  }
-
-  @CrossOrigin(origins = "*")
   @RequestMapping("/doubleclick")
   public Callable<String> doubleClick(
       @RequestParam(value = "x") Integer x, @RequestParam(value = "y") Integer y) {
@@ -281,20 +266,6 @@ public class MainController {
       @RequestParam(value = "endY") int endY) {
     return () -> {
       workflowManager.recordAndSwipe(startX, startY, endX, endY);
-      return DONE;
-    };
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping("/swipeWithStartEndContext")
-  public Callable<String> swipeWithStartEndContext(
-      @RequestParam(value = "startX") int startX,
-      @RequestParam(value = "startY") int startY,
-      @RequestParam(value = "endX") int endX,
-      @RequestParam(value = "endY") int endY) {
-    return () -> {
-      workflowManager.recordSwipeWithStartEndContext(
-          new Position(startX, startY), new Position(endX, endY));
       return DONE;
     };
   }
@@ -481,8 +452,7 @@ public class MainController {
 
   @CrossOrigin(origins = "*")
   @RequestMapping(value = "/updateValidationAction", method = RequestMethod.POST)
-  public Callable<String> updateValidationAction(
-      @RequestBody String validationReqDetailsJson,
+  public Callable<String> updateValidationAction(@RequestBody String validationReqDetailsJson,
       @RequestParam(value = "uuidStr") String uuidStr) {
     return () -> {
       ValidationReqDetails validationReqDetails =
@@ -731,6 +701,7 @@ public class MainController {
   public Callable<String> getVersionInfo() {
     return () -> {
       HashMap<String, String> versionInfo = new HashMap<>();
+      versionInfo.put("Uicd", UicdConstant.UICD_VERSION);
       versionInfo.put("backendVersion", UicdConstant.UICD_VERSION);
       String xmlDumperApkVersion = "";
       for (String deviceId : devicesDriverManager.initXmlDumperDevices) {
@@ -744,6 +715,8 @@ public class MainController {
         xmlDumperApkVersion =
             UicdConfig.getInstance().getXmlDumperApkVersion() + " (not loaded yet)";
       }
+
+      versionInfo.put("xmlDumper", xmlDumperApkVersion);
       versionInfo.put("xmlDumperVersion", xmlDumperApkVersion);
       return new ObjectMapper().writeValueAsString(versionInfo);
     };

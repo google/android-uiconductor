@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,7 +43,6 @@ public class Position {
   public int confidentLevel = 2;
   public double x;
   public double y;
-  public boolean isPhysicalPos = false;
 
   public double getDistance(Position pos) {
     double xDiff = this.x - pos.x;
@@ -55,25 +54,8 @@ public class Position {
     return new Position(this.x - pos.x, this.y - pos.y);
   }
 
-  public void setPhysicalPos(boolean isPhysicalPos){
-    this.isPhysicalPos = isPhysicalPos;
-  }
-
   public boolean isValidPos() {
     return x > 0 && y > 0;
-  }
-
-  public void update(Position pos) {
-    this.x = pos.x;
-    this.y = pos.y;
-    this.confidentLevel = pos.confidentLevel;
-  }
-
-  public void updateIfValidPos(Position pos) {
-    if (!pos.isValidPos()) {
-      return;
-    }
-    update(pos);
   }
 
   @Override
