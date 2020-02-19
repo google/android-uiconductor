@@ -1,26 +1,12 @@
-// Copyright 2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
-package com.google.wireless.qa.uicd.xmldumper.httpd;
+package com.google.uicd.xmldumper.httpd;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import android.graphics.Point;
 import android.util.Log;
 import androidx.test.uiautomator.UiDevice;
-import com.google.wireless.qa.uicd.xmldumper.core.AccessibilityNodeInfoDumper;
-import com.google.wireless.qa.uicd.xmldumper.core.ComplexUiActionHandler;
+import com.google.uicd.xmldumper.core.AccessibilityNodeInfoDumper;
+import com.google.uicd.xmldumper.core.ComplexUiActionHandler;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;
@@ -64,9 +50,9 @@ public class ExecutionServer extends NanoHTTPD {
     for (int i = 0; i < xmls.size(); i++) {
       valueObj.put(XML_KEYWORD + i, xmls.get(i));
     }
-    Point devicePhysicalSize = AccessibilityNodeInfoDumper.getDevicePhysicalSize();
-    jsonRootObj.put(WIDTH_KEYWORD, devicePhysicalSize.x);
-    jsonRootObj.put(HEIGHT_KEYWORD, devicePhysicalSize.y);
+
+    jsonRootObj.put(WIDTH_KEYWORD, mDevice.getDisplayWidth());
+    jsonRootObj.put(HEIGHT_KEYWORD, mDevice.getDisplayHeight());
     jsonRootObj.put(XML_COUNT_KEYWORD, xmls.size());
     jsonRootObj.put(VALUE_KEYWORD, valueObj);
     return jsonRootObj.toString();
@@ -119,6 +105,7 @@ public class ExecutionServer extends NanoHTTPD {
     }
     Response response = null;
     try {
+      // TODO(yuchenhe): change if/else to switch after legacy requests no longer exist.
       if (uri.contains("dump")) {
         response = newFixedLengthResponse(getDumpStrHandler(queryParamStr));
       } else if (uri.contains("down")) {
