@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ public class MinicapService {
   public MinicapService(String deviceId, BlockingQueue<byte[]> imgQueue) {
     this.deviceId = deviceId;
     this.imgQueue = imgQueue;
+    this.adbCommandLineUtil = new ADBCommandLineUtil();
     try {
       installMinicap(deviceId);
     } catch (MinicapInstallException e) {
@@ -59,6 +60,7 @@ public class MinicapService {
   private BlockingQueue<byte[]> imgQueue;
   private Banner banner;
   private Socket minicapSocket;
+  private final ADBCommandLineUtil adbCommandLineUtil;
 
   private static void installMinicap(String minicapDevice) throws MinicapInstallException {
     if (minicapDevice == null) {
@@ -94,13 +96,14 @@ public class MinicapService {
         commands.add(s);
       }
     }
+    logger.info("rotate: " + rotate);
     return String.join(" ", commands);
   }
 
   private AdbForward createForward() {
     forward = generateForwardInfo();
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format(
               "adb forward tcp:%s localabstract:%s", forward.port(), forward.localAbstract()),
           forward.serialNumber());
@@ -199,7 +202,7 @@ public class MinicapService {
       return;
     }
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("adb forward --remove tcp:%s", forward.port()), forward.serialNumber());
       forward = null;
     } catch (Exception e) {
@@ -217,7 +220,7 @@ public class MinicapService {
         new Thread(
             () -> {
               try {
-                ADBCommandLineUtil.executeAdb(
+                adbCommandLineUtil.executeAdb(
                     "adb shell " + shellCommand, deviceId, false /* waitFor*/);
               } catch (Exception e) {
                 UicdCoreDelegator.getInstance().logException(e);
@@ -274,7 +277,7 @@ public class MinicapService {
   private AdbForward generateForwardInfo() {
     List<String> adbOutput = new ArrayList<>();
     try {
-      ADBCommandLineUtil.executeAdb("forward --list", deviceId, adbOutput);
+      adbCommandLineUtil.executeAdb("forward --list", deviceId, adbOutput);
     } catch (Exception e) {
       logger.warning("Error while getting forward list: " + e.getMessage());
     }

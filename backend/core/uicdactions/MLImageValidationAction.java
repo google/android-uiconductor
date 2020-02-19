@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import com.google.uicd.backend.core.constants.IconImageType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.utils.CommandLineUtil;
 import com.google.uicd.backend.core.utils.ImageUtil;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
 import java.io.UnsupportedEncodingException;
@@ -117,7 +116,7 @@ public class MLImageValidationAction extends ScreenContentValidationAction {
               getWeightsFileName(iconImageTypeString),
               screenCapPath,
               getCloudCredentialsPath());
-      CommandLineUtil.execute(commandLine, output, true);
+      commandLineUtil.execute(commandLine, output, true);
     } catch (UicdExternalCommandException e) {
       logger.warning(e.getMessage());
     }

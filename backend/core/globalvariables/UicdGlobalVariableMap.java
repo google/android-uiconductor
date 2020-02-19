@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,6 +53,8 @@ public class UicdGlobalVariableMap {
   public static final List<String> SHELL_OUTPUT_KEYWORD_LIST =
       new ArrayList<>(Arrays.asList("nuwa_shell_output", "uicd_shell_output"));
 
+  public static final String OCR_ENABLE_KEYWORD = "OCR_ENABLED";
+
   private static final String DEVICEID_PARAM_KEYWORD = "deviceid";
   private static final String ADB_PATH_PARAM_KEYWORD = "adb_path";
   private static final String OUTPUT_PATH_KEYWORD = "output_path";
@@ -84,6 +86,9 @@ public class UicdGlobalVariableMap {
     varMap.put(
         prefix + INPUT_PATH_KEYWORD,
         UicdGlobalVariableValue.create(UicdConfig.getInstance().getTestInputFolder(), true));
+
+    // By default enable OCR, user can turn off by set the global variable later.
+    varMap.put(OCR_ENABLE_KEYWORD, UicdGlobalVariableValue.create("true", true));
   }
 
   public void addVariable(String key, String value) {

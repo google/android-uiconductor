@@ -3,16 +3,16 @@
 import argparse
 import os
 import time
-from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.layers import MaxPooling2D
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.compat.v1.keras import backend as K
+from tensorflow.compat.v1.keras.callbacks import ModelCheckpoint
+from tensorflow.compat.v1.keras.layers import Activation
+from tensorflow.compat.v1.keras.layers import Conv2D
+from tensorflow.compat.v1.keras.layers import Dense
+from tensorflow.compat.v1.keras.layers import Dropout
+from tensorflow.compat.v1.keras.layers import Flatten
+from tensorflow.compat.v1.keras.layers import MaxPooling2D
+from tensorflow.compat.v1.keras.models import Sequential
+from tensorflow.compat.v1.keras.preprocessing.image import ImageDataGenerator
 import util
 
 # Choose the parameters to be used for the model.
