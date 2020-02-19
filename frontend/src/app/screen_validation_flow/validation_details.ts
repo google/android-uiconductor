@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@ import {Component, EventEmitter, Input, OnDestroy, Output} from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {ReplaySubject} from 'rxjs';
 import {delay, take, takeUntil} from 'rxjs/operators';
+
 import {POPUP_DIALOG_DEFAULT_DIMENSION} from '../constants/constants';
 import {ScreenContentSummary} from '../constants/interfaces';
 import {Bounds} from '../constants/rect';
 import * as ScreenValidationConstants from '../constants/screen_validation_constants';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ValidationInfoDialogComponent} from './validation_info';
-
 
 /** Fetch the screen content */
 @Component({
@@ -61,7 +61,6 @@ export class ValidationDetailsComponent implements OnDestroy {
     timeout: 60,
     waitUntilDisappear: false,
     scrollMaxNumber: 30,
-    ocrMode: false,
   };
   @Output()
   validationActionDetailsChange =

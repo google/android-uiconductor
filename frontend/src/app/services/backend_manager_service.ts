@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -122,31 +122,6 @@ export class BackendManagerService {
                   .set('y', Math.floor(y).toString())
     });
   }
-
-  /** Performs Drag with context action on current devices */
-  dragWithStartEndContext(
-      startX: number, startY: number, endX: number, endY: number) {
-    return this.http.get(BACKEND_BASE_URL + '/dragWithStartEndContext', {
-      params: new HttpParams()
-                  .set('startX', Math.floor(startX).toString())
-                  .set('startY', Math.floor(startY).toString())
-                  .set('endX', Math.floor(endX).toString())
-                  .set('endY', Math.floor(endY).toString())
-    });
-  }
-
-  /** Performs Swipe with context action on current devices */
-  swipeWithStartEndContext(
-      startX: number, startY: number, endX: number, endY: number) {
-    return this.http.get(BACKEND_BASE_URL + '/swipeWithStartEndContext', {
-      params: new HttpParams()
-                  .set('startX', Math.floor(startX).toString())
-                  .set('startY', Math.floor(startY).toString())
-                  .set('endX', Math.floor(endX).toString())
-                  .set('endY', Math.floor(endY).toString())
-    });
-  }
-
 
   /** Returns raw json test information for given test */
   exportTestCase(uuid: string): Observable<unknown> {

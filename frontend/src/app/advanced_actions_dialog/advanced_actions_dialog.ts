@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,8 +31,6 @@ import {ControlMessageService} from '../services/control_message_service';
 
 import {ScriptActionInfoDialogComponent} from './script_action_info_dialog';
 import {SnippetActionInfoDialogComponent} from './snippet_action_info_dialog';
-
-
 
 /** Advanced Action model */
 export interface CommandLineActionDetails extends ActionSummaryMetaData {
@@ -69,7 +67,6 @@ export interface ClickActionDetails extends ActionSummaryMetaData {
   strategy: StrategyType;
   selector: string;
   isByElement: boolean;
-  isOcrMode?: boolean;
 }
 
 /** Advanced Action model */
@@ -182,13 +179,6 @@ export interface MLImageValidationActionDetails extends
 /** Advanced Action model */
 export interface DoubleTapPowerButtonDetails extends ActionSummaryMetaData {}
 
-/** Advanced Action model */
-export interface PythonScriptActionDetails extends ActionSummaryMetaData {
-  script: string;
-  dependency: string;
-  expectedReturnCode?: number;
-}
-
 enum ShapeType {
   RECTANGULAR = 'RECTANGULAR',
   CIRCULAR = 'CIRCULAR',
@@ -235,7 +225,6 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     ACTIONS.ML_IMAGE_VALIDATION_ACTION,
     ACTIONS.CONDITION_VALIDATION_ACTION,
     ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION,
-    ACTIONS.PYTHON_SCRIPT_ACTION,
   ];
 
   validationActionTypeList = [
@@ -310,7 +299,6 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
                // backend will generate details name
     type: ACTIONS.CLICK_ACTION.type,
     isByElement: true,
-    isOcrMode: false,
     strategy: StrategyType.TEXT,
     selector: '',
   };
@@ -506,14 +494,6 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     actionType: ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.type,
     type: ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.type,
   };
-
-  pythonScriptActionDetails: PythonScriptActionDetails = {
-    name: ACTIONS.PYTHON_SCRIPT_ACTION.shortName,
-    type: ACTIONS.PYTHON_SCRIPT_ACTION.type,
-    script: '',
-    dependency: '',
-    expectedReturnCode: 0,
-  };
   /** Handle on-destroy Subject, used to unsubscribe. */
   private readonly destroyed = new ReplaySubject<void>(1);
 
@@ -624,11 +604,6 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
               this.data as DoubleTapPowerButtonDetails;
           this.selectedActionType = ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.type;
           break;
-        case ACTIONS.PYTHON_SCRIPT_ACTION.actionType:
-          this.pythonScriptActionDetails =
-              this.data as PythonScriptActionDetails;
-          this.selectedActionType = ACTIONS.PYTHON_SCRIPT_ACTION.type;
-          break;
         default:
           break;
       }
@@ -707,9 +682,6 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
         break;
       case ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.type:
         actionData = this.doubleTapPowerButtonDetails;
-        break;
-      case ACTIONS.PYTHON_SCRIPT_ACTION.type:
-        actionData = this.pythonScriptActionDetails;
         break;
       default:
         break;

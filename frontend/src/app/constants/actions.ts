@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ export interface ActionTypeInfo {
   LONG_CLICK_ACTION: ActionTypeItem;
   LOOP_SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
   ML_IMAGE_VALIDATION_ACTION: ActionTypeItem;
-  PYTHON_SCRIPT_ACTION: ActionTypeItem;
   REBOOT_ACTION: ActionTypeItem;
   SCREEN_CAP_ACTION: ActionTypeItem;
   SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
@@ -208,12 +207,6 @@ export const ACTIONS: ActionTypeInfo = {
     actionType: 'DOUBLE_TAP_POWER_BUTTON_ACTION',
     type: 'DoubleTapPowerButtonAction',
     shortName: 'DPOWER',
-    color: 'tomato'
-  },
-  PYTHON_SCRIPT_ACTION: {
-    actionType: 'PYTHON_SCRIPT_ACTION',
-    type: 'PythonScriptAction',
-    shortName: 'PYSCRIPT',
     color: 'tomato'
   },
 };

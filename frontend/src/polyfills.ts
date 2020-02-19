@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@
 // the open source version.
 
 
- import 'zone.js/dist/zone'; // Included with Angular CLI.
+ import 'zone.js/dist/zone';  //Included with Angular CLI.
 
 
 /***************************************************************************************************
