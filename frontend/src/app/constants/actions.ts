@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ export interface ActionTypeInfo {
   LONG_CLICK_ACTION: ActionTypeItem;
   LOOP_SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
   ML_IMAGE_VALIDATION_ACTION: ActionTypeItem;
+  PYTHON_SCRIPT_ACTION: ActionTypeItem;
   REBOOT_ACTION: ActionTypeItem;
   SCREEN_CAP_ACTION: ActionTypeItem;
   SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
@@ -209,6 +210,12 @@ export const ACTIONS: ActionTypeInfo = {
     shortName: 'DPOWER',
     color: 'tomato'
   },
+  PYTHON_SCRIPT_ACTION: {
+    actionType: 'PYTHON_SCRIPT_ACTION',
+    type: 'PythonScriptAction',
+    shortName: 'PYSCRIPT',
+    color: 'tomato'
+  },
 };
 
 /** Metadata of action */
@@ -243,7 +250,9 @@ export declare interface ActionModel {
 /** Function to generate ActionModel from JSON data which backend returns. */
 export function actionModelFromJson(
     jsonData: string, index: number): ActionModel {
-  const actionModel: ActionModel = JSON.parse(jsonData);
+  // tslint:disable:no-any no-unnecessary-type-assertion
+  const actionModel: ActionModel = JSON.parse(jsonData) as any;
+  // tslint:enable:no-any no-unnecessary-type-assertion
   actionModel.actionIndex = index;
   return actionModel;
 }
@@ -255,7 +264,9 @@ export class WorkflowModel {
   childrenActions: ActionModel[];
 
   constructor(jsonData: string) {
-    const obj = JSON.parse(jsonData);
+    // tslint:disable:no-any no-unnecessary-type-assertion
+    const obj = JSON.parse(jsonData) as any;
+    // tslint:enable:no-any no-unnecessary-type-assertion
 
     this.actionId = obj['actionId'];
     this.name = obj['name'];

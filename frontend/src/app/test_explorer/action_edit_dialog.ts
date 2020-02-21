@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,6 +79,7 @@ export class ActionEditDialog implements OnInit, OnDestroy {
     ACTIONS.LOOP_SCREEN_CONTENT_VALIDATION_ACTION.actionType,
     ACTIONS.CONDITION_CLICK_ACTION.actionType,
     ACTIONS.CONDITION_VALIDATION_ACTION.actionType,
+    ACTIONS.PYTHON_SCRIPT_ACTION.actionType,
   ];
 
   constructor(
@@ -114,7 +115,10 @@ export class ActionEditDialog implements OnInit, OnDestroy {
     this.testCaseManagerService.getTestCasesList()
         .pipe(take(1), takeUntil(this.destroyed))
         .subscribe(data => {
-          const root: TreeNode = JSON.parse(data.treeDetails);
+          // `unknown`.
+          // tslint:disable:no-any no-unnecessary-type-assertion
+          const root: TreeNode = JSON.parse(data.treeDetails) as any;
+          // tslint:enable:no-any no-unnecessary-type-assertion
           this.folderList = retrieveFolders(root);
           if (this.folderList.length > 0) {
             this.saveToFolderId =

@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -147,7 +147,10 @@ export class TestExplorer implements OnInit, OnDestroy {
             takeUntil(this.destroyed))
         .subscribe(data => {
           if (data.messageType === MessageTypes.ADD_NODE_TO_TREE) {
-            const newNode: NodeParentPair = JSON.parse(data.extra);
+            // `unknown`.
+            // tslint:disable:no-any no-unnecessary-type-assertion
+            const newNode: NodeParentPair = JSON.parse(data.extra) as any;
+            // tslint:enable:no-any no-unnecessary-type-assertion
             this.jsTree.jstree('create_node', newNode.parentId, newNode.node);
           } else {
             this.refreshTree(false);
@@ -189,9 +192,12 @@ export class TestExplorer implements OnInit, OnDestroy {
             this.treeUUID = data.uuid;
           }
           if (data.treeDetails) {
+            // `unknown`.
+            // tslint:disable:no-any no-unnecessary-type-assertion
             this.updateDataTree(
-                convertToJsTreeFormat(JSON.parse(data.treeDetails)),
+                convertToJsTreeFormat(JSON.parse(data.treeDetails) as any),
                 isNewWorkspace);
+            // tslint:enable:no-any no-unnecessary-type-assertion
           } else {
             this.saveEmptyTreeToBackend();
           }
