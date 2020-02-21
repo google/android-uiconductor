@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import static com.google.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,15 +45,15 @@ public class DoubleTapPowerButtonAction extends BaseAction {
     try {
       List<String> output = new ArrayList<>();
       String deviceId = androidDeviceDriver.getDeviceId();
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           GET_POWER_BUTTON_EVENT_CMD,
           deviceId,
           output,
           (int) EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS.getSeconds());
       String event = output.get(0);
-      ADBCommandLineUtil.executeAdb(ROOT_ACCESS_CMD, deviceId);
-      ADBCommandLineUtil.executeAdb(String.format(CHANGE_EVENT_FILE_MODE, event), deviceId);
-      ADBCommandLineUtil.executeAdb(DOUBLE_TAP_POWER_BUTTON_CMD.replace("%s", event), deviceId);
+      adbCommandLineUtil.executeAdb(ROOT_ACCESS_CMD, deviceId);
+      adbCommandLineUtil.executeAdb(String.format(CHANGE_EVENT_FILE_MODE, event), deviceId);
+      adbCommandLineUtil.executeAdb(DOUBLE_TAP_POWER_BUTTON_CMD.replace("%s", event), deviceId);
     } catch (UicdExternalCommandException | IndexOutOfBoundsException e) {
       logger.info("Fail to execute adb input." + e.getMessage());
     }

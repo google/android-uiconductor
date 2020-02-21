@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapJettyServ
 import com.google.uicd.backend.recorder.websocket.minicap.jetty.MinicapServerManager;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -61,21 +62,21 @@ public class MinicapUtil {
   private static void pushMinicapFiles(Device device) {
     String minicapBasePath =
         Paths.get(UicdConfig.getInstance().getDepsFolder(), "minicap").toString();
-
+    ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("adb shell \"mkdir %s 2>/dev/null || true\"", MINICAP_TMP_DIR_ON_DEVICE),
           device.getDeviceId());
       String minicapStaticFilePath =
           Paths.get(minicapBasePath, "libs", device.getAbi(), "minicap").toString();
 
       // Push static file
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("adb push %s %s", minicapStaticFilePath, MINICAP_TMP_DIR_ON_DEVICE),
           device.getDeviceId());
 
       // Push minicap.so
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format(
               "adb push %s %s",
               getMinicapFilePath(device, minicapBasePath), MINICAP_TMP_DIR_ON_DEVICE),
@@ -86,8 +87,9 @@ public class MinicapUtil {
   }
 
   private static void grantMinicapPermission(Device device) {
+    ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("shell chmod -R 777 %s", MINICAP_TMP_DIR_ON_DEVICE), device.getDeviceId());
     } catch (UicdExternalCommandException e) {
       logger.warning("Failed to grant permission for minicap files." + e.getMessage());
@@ -107,10 +109,16 @@ public class MinicapUtil {
       minicapVersionSuffix = "28-ppr1";
     }
 
+    List<String> androidRBuildIdKeyWordList = Arrays.asList("MASTER", "RP1A");
+    boolean isAndroidRBranch =
+        androidRBuildIdKeyWordList.stream()
+            .parallel()
+            .anyMatch(x -> Ascii.toUpperCase(buildId).contains(x));
     // 29 (Android Q) is the max version minicap currently supports.
     if (sdkIntVersion == null
-        || sdkIntVersion > 28
-        || Ascii.toUpperCase(device.getReleaseVersion()).equals("R")) {
+        || sdkIntVersion > 29
+        || isAndroidRBranch
+        || Ascii.equalsIgnoreCase(device.getReleaseVersion(), "11")) {
       minicapVersionSuffix = "master";
     }
 
@@ -196,13 +204,14 @@ public class MinicapUtil {
   }
 
   public static void stopMinicap(String deviceId) {
+    CommandLineUtil commandLineUtil = new CommandLineUtil();
     String stopMinicapCmd =
         String.format(
             "adb -s %s shell ps | grep minicap | awk '{print $2}' | xargs adb -s %s shell kill",
             deviceId, deviceId);
 
     try {
-      CommandLineUtil.execute(stopMinicapCmd, new ArrayList<>(), true);
+      commandLineUtil.execute(stopMinicapCmd, new ArrayList<>(), true);
     } catch (UicdExternalCommandException e) {
       logger.warning("Can not stop minicap.");
     }

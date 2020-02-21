@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,16 @@
 package com.google.uicd.backend.core.uicdactions;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.stream.Collectors.toList;
 
+import com.google.uicd.backend.core.constants.ActionType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.utils.AdditionalData;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +32,9 @@ import java.util.UUID;
 /** CompoundAction is a collection of actions, a DAG with single entry point */
 public class CompoundAction extends BaseAction implements Cloneable {
 
+  // childrenActions will only contain children that are not
+  // compound action themselves or are of the type
+  // image diff validation
   public List<BaseAction> childrenActions = new ArrayList<>();
   public List<String> childrenIdList = new ArrayList<>();
   private int repeatTime = 1;
@@ -267,6 +273,25 @@ public class CompoundAction extends BaseAction implements Cloneable {
     CompoundAction newAction = (CompoundAction) super.clone();
     newAction.setActionId(UUID.randomUUID());
     newAction.childrenActions = new ArrayList<>(this.childrenActions);
+    newAction.childrenIdList = new ArrayList<>(this.childrenIdList);
+    return newAction;
+  }
+
+  /**
+   * Returns a clone of the Compound Action instance with all children present in childrenActions<>
+   * field except those that are either Compound Action themselves or an instance of
+   * ImageDiffValidationAction
+   */
+  public Object cloneWithoutCompoundChildrenChildren() throws CloneNotSupportedException {
+    CompoundAction newAction = (CompoundAction) super.clone();
+    List<ActionType> deepcopyFilterList =
+        Arrays.asList(ActionType.COMPOUND_ACTION, ActionType.IMAGE_DIFF_VALIDATION_ACTION);
+    List<BaseAction> filteredActionChildren =
+        this.childrenActions.stream()
+            .filter(x -> x != null)
+            .filter(childAction -> !deepcopyFilterList.contains(childAction.getActionType()))
+            .collect(toList());
+    newAction.childrenActions = filteredActionChildren;
     newAction.childrenIdList = new ArrayList<>(this.childrenIdList);
     return newAction;
   }

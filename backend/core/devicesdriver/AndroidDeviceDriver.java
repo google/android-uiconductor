@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,8 +59,11 @@ public class AndroidDeviceDriver {
 
   protected Logger logger = LogManager.getLogManager().getLogger("uicd");
 
+  private final ADBCommandLineUtil adbCommandLineUtil;
+
   public AndroidDeviceDriver(Device device) {
-    this.setDevice(device);
+    this.device = device;
+    this.adbCommandLineUtil = new ADBCommandLineUtil();
   }
 
   public void setHostScreenWidth(int hostScreenWidth) {
@@ -83,7 +86,6 @@ public class AndroidDeviceDriver {
   private static final Set<String> AUTO_DEVICE_TYPES =
       new HashSet<>(Arrays.asList("bat_land", "bat", "hawk"));
   private static final Set<String> WEARABLE_DEVICE_TYPES = new HashSet<>(Arrays.asList());
-  private static final boolean DOUBLE_CLICK = true;
 
   public boolean isMinicapStarted = false;
   public boolean isXmlDumperStarted = false;
@@ -96,61 +98,63 @@ public class AndroidDeviceDriver {
     return device.getDeviceId();
   }
 
-  public String clickDevice(int hostScreenX, int hostScreenY)
-      throws UicdDeviceHttpConnectionResetException {
-    return clickDevice(hostScreenX, hostScreenY, !DOUBLE_CLICK);
+  public String clickDevice(Position pos) throws UicdDeviceHttpConnectionResetException {
+    return clickDevice(pos, false);
   }
 
-  public String clickDevice(int hostScreenX, int hostScreenY, boolean isDoubleClick)
+  public String clickDevice(Position pos, boolean isDoubleClick)
       throws UicdDeviceHttpConnectionResetException {
     // If click step is optional but user didn't use conditional click, the XML engine will return
     // (0,0). "adb shell input tap 0 0" will click something in certain screen and could break the
     // workflow.
-    if (hostScreenX == 0 && hostScreenY == 0) {
+    if (!pos.isValidPos()) {
       logger.info("Skip click at (0,0)");
       return "";
     }
-    int deviceX = ImageUtil.scaleToTargetPx(hostScreenX, hostScreenWidth, device.getWidth());
-    int deviceY = ImageUtil.scaleToTargetPx(hostScreenY, hostScreenHeight, device.getHeight());
+    Position physicalPos = pos;
+    if (!pos.isPhysicalPos) {
+      physicalPos.x = ImageUtil.scaleToTargetPx((int) pos.x, hostScreenWidth, device.getWidth());
+      physicalPos.y = ImageUtil.scaleToTargetPx((int) pos.y, hostScreenHeight, device.getHeight());
+    }
 
-    logger.info("Click real device: " + deviceX + ", " + deviceY);
+    logger.info("Click device at: " + physicalPos.x + ", " + physicalPos.y);
     if (isDoubleClick) {
-      doubleClickWithAdb(deviceX, deviceY);
+      doubleClickWithAdb(physicalPos);
     } else {
-      clickDeviceWithAdb(deviceX, deviceY);
+      clickDeviceWithAdb(physicalPos);
     }
     return "";
   }
 
-  private void doubleClickWithAdb(int hostScreenX, int hostScreenY) {
+  private void doubleClickWithAdb(Position pos) {
     try {
       List<String> output = new ArrayList<>();
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           GET_TOUCH_EVENT_CMD,
           this.getDeviceId(),
           output,
           (int) EXECUTE_COMMAND_LINE_TIME_OUT_IN_SECONDS.getSeconds());
       String event = output.get(0);
-      ADBCommandLineUtil.executeAdb(ROOT_ACCESS_CMD, this.getDeviceId());
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(ROOT_ACCESS_CMD, this.getDeviceId());
+      adbCommandLineUtil.executeAdb(
           String.format(CHANGE_EVENT_FILE_MODE, event), this.getDeviceId());
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format(
               DOUBLE_CLICK_TEMPLATE.replace("%s", event),
-              hostScreenX,
-              hostScreenY,
-              hostScreenX,
-              hostScreenY),
+              (int) pos.x,
+              (int) pos.y,
+              (int) pos.x,
+              (int) pos.y),
           this.getDeviceId());
     } catch (UicdExternalCommandException | IndexOutOfBoundsException e) {
       logger.info("Fail to execute adb input." + e.getMessage());
     }
   }
 
-  private void clickDeviceWithAdb(int hostScreenX, int hostScreenY) {
+  private void clickDeviceWithAdb(Position pos) {
     try {
-      ADBCommandLineUtil.executeAdb(
-          String.format("adb shell input tap %d %d", hostScreenX, hostScreenY), this.getDeviceId());
+      adbCommandLineUtil.executeAdb(
+          String.format("adb shell input tap %d %d", (int) pos.x, (int) pos.y), this.getDeviceId());
     } catch (UicdExternalCommandException e) {
       logger.info("Fail to execute adb input." + e.getMessage());
     }
@@ -162,22 +166,11 @@ public class AndroidDeviceDriver {
     return XmlHelper.getAttrByXpath(xmls, xpath, attributeName);
   }
 
-  public void clickByElement(
-      List<String> xmls,
-      StrategyType strategy,
-      String selector,
-      double xRatio,
-      double yRatio,
-      boolean isDoubleClick)
+  public Position getPosByElment(
+      List<String> xmls, StrategyType strategy, String selector, double xRatio, double yRatio)
       throws UicdDeviceHttpConnectionResetException {
     String xpath = getXpathBySelector(strategy, selector);
-
-    Position pos = XmlHelper.getPosByXpath(xmls, xpath, xRatio, yRatio);
-
-    if (isDoubleClick) {
-      clickDevice((int) pos.x, (int) pos.y);
-    }
-    clickDevice((int) pos.x, (int) pos.y);
+    return XmlHelper.getPosByXpath(xmls, xpath, xRatio, yRatio);
   }
 
   private String getXpathBySelector(StrategyType strategy, String selector) {
@@ -191,17 +184,20 @@ public class AndroidDeviceDriver {
     return selector;
   }
 
-  public void longClickDevice(int hostScreenX, int hostScreenY, int duration) {
-    if (hostScreenX == 0 && hostScreenY == 0) {
+  public void longClickDevice(Position pos, int duration) {
+    if (!pos.isValidPos()) {
       logger.info("Skip click at (0,0)");
       return;
     }
-    int deviceX = ImageUtil.scaleToTargetPx(hostScreenX, hostScreenWidth, device.getWidth());
-    int deviceY = ImageUtil.scaleToTargetPx(hostScreenY, hostScreenHeight, device.getHeight());
-
+    int deviceX = (int) pos.x;
+    int deviceY = (int) pos.y;
+    if (!pos.isPhysicalPos) {
+      deviceX = ImageUtil.scaleToTargetPx((int) pos.x, hostScreenWidth, device.getWidth());
+      deviceY = ImageUtil.scaleToTargetPx((int) pos.y, hostScreenHeight, device.getHeight());
+    }
     logger.info("Long click real device: " + deviceX + ", " + deviceY + " " + duration + " ms.");
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format(
               "adb shell input swipe %d %d %d %d %d", deviceX, deviceY, deviceX, deviceY, duration),
           this.getDeviceId());
@@ -210,10 +206,14 @@ public class AndroidDeviceDriver {
     }
   }
 
-  public String dragStart(int x, int y) {
+  public String dragStart(Position pos) {
     dragInProgress = true;
-    int deviceX = ImageUtil.scaleToTargetPx(x, hostScreenWidth, device.getWidth());
-    int deviceY = ImageUtil.scaleToTargetPx(y, hostScreenHeight, device.getHeight());
+    int deviceX = (int) pos.x;
+    int deviceY = (int) pos.y;
+    if (!pos.isPhysicalPos) {
+      deviceX = ImageUtil.scaleToTargetPx((int) pos.x, hostScreenWidth, device.getWidth());
+      deviceY = ImageUtil.scaleToTargetPx((int) pos.y, hostScreenHeight, device.getHeight());
+    }
     HashMap<String, String> coordinationMap = new HashMap<>();
     coordinationMap.put("x", String.valueOf(deviceX));
     coordinationMap.put("y", String.valueOf(deviceY));
@@ -226,12 +226,16 @@ public class AndroidDeviceDriver {
     return sendPostRequestWithRetries(TOUCH_DOWN_ENDPOINT, clickArgsMap);
   }
 
-  public String dragMove(int x, int y) {
+  public String dragMove(Position pos) {
     if (!dragInProgress) {
       return "";
     }
-    int deviceX = ImageUtil.scaleToTargetPx(x, hostScreenWidth, device.getWidth());
-    int deviceY = ImageUtil.scaleToTargetPx(y, hostScreenHeight, device.getHeight());
+    int deviceX = (int) pos.x;
+    int deviceY = (int) pos.y;
+    if (!pos.isPhysicalPos) {
+      deviceX = ImageUtil.scaleToTargetPx((int) pos.x, hostScreenWidth, device.getWidth());
+      deviceY = ImageUtil.scaleToTargetPx((int) pos.y, hostScreenHeight, device.getHeight());
+    }
     HashMap<String, String> coordinationMap = new HashMap<>();
     coordinationMap.put("x", String.valueOf(deviceX));
     coordinationMap.put("y", String.valueOf(deviceY));
@@ -244,10 +248,14 @@ public class AndroidDeviceDriver {
     return sendPostRequestWithRetries(TOUCH_MOVE_ENDPOINT, clickArgsMap);
   }
 
-  public String dragStop(int x, int y) {
+  public String dragStop(Position pos) {
     dragInProgress = false;
-    int deviceX = ImageUtil.scaleToTargetPx(x, hostScreenWidth, device.getWidth());
-    int deviceY = ImageUtil.scaleToTargetPx(y, hostScreenHeight, device.getHeight());
+    int deviceX = (int) pos.x;
+    int deviceY = (int) pos.y;
+    if (!pos.isPhysicalPos) {
+      deviceX = ImageUtil.scaleToTargetPx((int) pos.x, hostScreenWidth, device.getWidth());
+      deviceY = ImageUtil.scaleToTargetPx((int) pos.y, hostScreenHeight, device.getHeight());
+    }
     HashMap<String, String> coordinationMap = new HashMap<>();
     coordinationMap.put("x", String.valueOf(deviceX));
     coordinationMap.put("y", String.valueOf(deviceY));
@@ -302,6 +310,10 @@ public class AndroidDeviceDriver {
     return sendPostRequestWithRetries(ZOOM_ENDPOINT, clickArgsMap);
   }
 
+  public void swipeDevice(Position startPos, Position endPos) {
+    swipeDevice((int) startPos.x, (int) startPos.y, (int) endPos.x, (int) endPos.y);
+  }
+
   public void swipeDevice(
       int hostScreenStartX, int hostScreenStartY, int hostScreenEndX, int hostScreenEndY) {
     int deviceStartX =
@@ -316,7 +328,7 @@ public class AndroidDeviceDriver {
     deviceStartY = Math.min(device.getHeight() - 5, deviceStartY);
 
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format(
               "adb shell input swipe %d %d %d %d",
               deviceStartX, deviceStartY, deviceEndX, deviceEndY),
@@ -331,6 +343,7 @@ public class AndroidDeviceDriver {
   }
 
   public List<String> fetchCurrentXML(boolean withClassName) {
+    logger.info("fetchCurrentXML is called");
     String queryString = withClassName ? DUMP_XML_WITH_CLASSNAME_QUERYSTRING : "";
     String rawResponse = sendGetRequestWithRetries(DUMP_XML_ENDPOINT + queryString);
     ObjectMapper mapper = new ObjectMapper();
@@ -377,7 +390,7 @@ public class AndroidDeviceDriver {
 
   public void inputString(String content) {
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("adb shell input text '%s'", sanitizeAdbInput(content)),
           this.getDeviceId());
     } catch (UicdExternalCommandException e) {
@@ -388,7 +401,7 @@ public class AndroidDeviceDriver {
   public void inputKeyCode(int c) {
     int convertedKeyCode = covertCharToKeyCode(c);
     try {
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("adb shell input keyevent %d", convertedKeyCode), this.getDeviceId());
     } catch (UicdExternalCommandException e) {
       logger.info("Fail to execute adb input." + e.getMessage());
@@ -484,7 +497,7 @@ public class AndroidDeviceDriver {
 
   public void stopMinicapServer() {
     isMinicapStarted = false;
-    ADBCommandLineUtil.removePortForwarding(device.getDeviceId(), device.getMinicapHostPort());
+    adbCommandLineUtil.removePortForwarding(device.getDeviceId(), device.getMinicapHostPort());
   }
 
   public void stopXmlDumperServer() {
@@ -493,13 +506,13 @@ public class AndroidDeviceDriver {
       xmlDumperProcess = null;
     }
     isXmlDumperStarted = false;
-    ADBCommandLineUtil.removePortForwarding(device.getDeviceId(), device.getXmlDumperHostPort());
-    ADBCommandLineUtil.forceStopXmlDumperOnDevice(device.getDeviceId());
+    adbCommandLineUtil.removePortForwarding(device.getDeviceId(), device.getXmlDumperHostPort());
+    adbCommandLineUtil.forceStopXmlDumperOnDevice(device.getDeviceId());
   }
 
   public void startXmlDumperServer() throws UicdExternalCommandException {
     xmlDumperProcess =
-        ADBCommandLineUtil.startXmlDumperServer(
+        adbCommandLineUtil.startXmlDumperServer(
             getDeviceId(), device.getXmlDumperHostPort(), device.getXmlDumperDevicePort());
 
     // Sleep 5 seconds to make sure
@@ -523,8 +536,8 @@ public class AndroidDeviceDriver {
       String executeCmd =
           "shell settings put system user_rotation " + deviceOrientation.getOrientation();
 
-      ADBCommandLineUtil.executeAdb(disableAutoRotateCmd, getDeviceId(), true);
-      ADBCommandLineUtil.executeAdb(executeCmd, getDeviceId(), true);
+      adbCommandLineUtil.executeAdb(disableAutoRotateCmd, getDeviceId(), true);
+      adbCommandLineUtil.executeAdb(executeCmd, getDeviceId(), true);
 
       isRestartMinicap = true;
       isMinicapStarted = false;
@@ -540,7 +553,7 @@ public class AndroidDeviceDriver {
   public void refreshScreenDimension() {
     String screenDimension = null;
     try {
-      screenDimension = ADBCommandLineUtil.getDeviceScreenSize(device.getDeviceId());
+      screenDimension = adbCommandLineUtil.getDeviceScreenSize(device.getDeviceId());
     } catch (UicdExternalCommandException e) {
       logger.warning(e.getMessage());
       return;
@@ -561,6 +574,7 @@ public class AndroidDeviceDriver {
 
   private String sendGetRequestWithRetries(String urlEndPoint) {
     for (int i = 0; i < NUM_XML_DUMP_RETRIES; i++) {
+      logger.info("Sending getRequest attempt: " + i);
       try {
         return HttpProxyUtils.getRequestAsString(getXmlDumperUrl() + urlEndPoint);
       } catch (UicdDeviceHttpConnectionResetException e) {

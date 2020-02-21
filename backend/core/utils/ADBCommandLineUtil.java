@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,15 +35,20 @@ public class ADBCommandLineUtil {
   private static final int MINIMUM_API_LEVEL_FOR_PERMISSION_GRANT_FLAG = 23;
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
 
-  public static Process executeReboot(String deviceId, List<String> output)
+  private final CommandLineUtil commandLineUtil;
+  public ADBCommandLineUtil() {
+    this.commandLineUtil = new CommandLineUtil();
+  }
+
+  public Process executeReboot(String deviceId, List<String> output)
       throws UicdExternalCommandException {
     String adbShellPath = UicdConfig.getInstance().getAdbShellPath();
     String adbPrefix = String.format("%s -s %s ", adbShellPath, deviceId);
     String commandStr = adbPrefix + "reboot &&" + adbPrefix + " wait-for-device";
-    return CommandLineUtil.execute(commandStr, output, true, 120);
+    return commandLineUtil.execute(commandStr, output, true, 120);
   }
 
-  public static String constructAdbCommand(String commandLine, String deviceId) {
+  public String constructAdbCommand(String commandLine, String deviceId) {
     String adbShellPath = UicdConfig.getInstance().getAdbShellPath();
     String adbPrefix = String.format("%s -s %s ", adbShellPath, deviceId);
 
@@ -59,7 +64,7 @@ public class ADBCommandLineUtil {
     return commandLine;
   }
 
-  public static String constructAdbLogcatCommand(String commandLine, String deviceId) {
+  public String constructAdbLogcatCommand(String commandLine, String deviceId) {
     String adbPrefix =
         String.format("%s -s %s ", UicdConfig.getInstance().getAdbShellPath(), deviceId);
 
@@ -73,47 +78,47 @@ public class ADBCommandLineUtil {
     }
   }
 
-  public static Process executeAdbLogcatCommand(
+  public Process executeAdbLogcatCommand(
       String commandLine, String deviceId, List<String> output, int timeout)
       throws UicdExternalCommandException {
     String adbLogcatCmd = constructAdbLogcatCommand(commandLine, deviceId);
-    return CommandLineUtil.execute(adbLogcatCmd, output, true, timeout);
+    return commandLineUtil.execute(adbLogcatCmd, output, true, timeout);
   }
 
-  public static Process executeAdb(String commandLine, String deviceId, boolean waitFor)
+  public Process executeAdb(String commandLine, String deviceId, boolean waitFor)
       throws UicdExternalCommandException {
     String cmd = constructAdbCommand(commandLine, deviceId);
     List<String> output = new ArrayList<>();
-    return CommandLineUtil.execute(cmd, output, waitFor);
+    return commandLineUtil.execute(cmd, output, waitFor);
   }
 
-  public static Process executeAdb(
+  public Process executeAdb(
       String commandLine, String deviceId, List<String> output, boolean showDetailsLogging)
       throws UicdExternalCommandException {
     String cmd = constructAdbCommand(commandLine, deviceId);
-    return CommandLineUtil.execute(cmd, output, true, showDetailsLogging);
+    return commandLineUtil.execute(cmd, output, true, showDetailsLogging);
   }
 
-  public static Process executeAdb(
+  public Process executeAdb(
       String commandLine, String deviceId, List<String> output, int timeout)
       throws UicdExternalCommandException {
     String cmd = constructAdbCommand(commandLine, deviceId);
-    return CommandLineUtil.execute(cmd, output, true, timeout);
+    return commandLineUtil.execute(cmd, output, true, timeout);
   }
 
-  public static Process executeAdb(String commandLine, String deviceId)
+  public Process executeAdb(String commandLine, String deviceId)
       throws UicdExternalCommandException {
     List<String> output = new ArrayList<>();
     return executeAdb(commandLine, deviceId, output);
   }
 
-  public static Process executeAdb(String commandLine, String deviceId, List<String> output)
+  public Process executeAdb(String commandLine, String deviceId, List<String> output)
       throws UicdExternalCommandException {
     String cmd = constructAdbCommand(commandLine, deviceId);
-    return CommandLineUtil.execute(cmd, output, true);
+    return commandLineUtil.execute(cmd, output, true);
   }
 
-  public static Process startXmlDumperServer(String deviceId, int hostPort, int devicePort)
+  public Process startXmlDumperServer(String deviceId, int hostPort, int devicePort)
       throws UicdExternalCommandException {
 
     // We already did the port forward in the initDevice, however for some action (RebootAction)
@@ -159,7 +164,7 @@ public class ADBCommandLineUtil {
     return versionNum;
   }
 
-  public static Optional<String> getXmlDumperApkVersion(String deviceId) {
+  public Optional<String> getXmlDumperApkVersion(String deviceId) {
     String getDumperVersionCmd =
         String.format(
             "shell dumpsys package %s | grep versionName",
@@ -180,7 +185,7 @@ public class ADBCommandLineUtil {
     return Optional.empty();
   }
 
-  public static void updateXmlDumperApk(String deviceId, int apiLevel)
+  public void updateXmlDumperApk(String deviceId, int apiLevel)
       throws UicdExternalCommandException {
     // if already installed, skip install apks
     String listPackageAdbCmd = "shell pm list packages";
@@ -212,7 +217,7 @@ public class ADBCommandLineUtil {
     }
   }
 
-  private static void installXmlDumperApk(String deviceId, int apiLevel)
+  private void installXmlDumperApk(String deviceId, int apiLevel)
       throws UicdExternalCommandException {
     // parameters for adb install
     // -r replace existing application
@@ -242,14 +247,14 @@ public class ADBCommandLineUtil {
     executeAdb(startDumperAdbCmd2, deviceId);
   }
 
-  public static void turnOffAutoRotation(String deviceId) throws UicdExternalCommandException {
+  public void turnOffAutoRotation(String deviceId) throws UicdExternalCommandException {
     String turnOffCmd = "shell settings put system accelerometer_rotation 0";
     executeAdb(turnOffCmd, deviceId, true);
   }
 
-  public static List<String> getDevicesList() throws UicdExternalCommandException {
+  public List<String> getDevicesList() throws UicdExternalCommandException {
     List<String> commandLineOut = new ArrayList<>();
-    CommandLineUtil.execute(
+    commandLineUtil.execute(
         String.format("%s devices -l", UicdConfig.getInstance().getAdbShellPath()),
         commandLineOut,
         true /* waitFor */);
@@ -257,7 +262,7 @@ public class ADBCommandLineUtil {
   }
 
   /* get screen size of the devices */
-  public static String getDeviceScreenSize(String deviceId) throws UicdExternalCommandException {
+  public String getDeviceScreenSize(String deviceId) throws UicdExternalCommandException {
     List<String> ret = new ArrayList<>();
     executeAdb("shell wm size", deviceId, ret);
 
@@ -278,7 +283,7 @@ public class ADBCommandLineUtil {
   // need to provide a deviceId to prevent this. There will be one pitfall, allocating ports is
   // not an atomic operation. There is a small chance of a race condition in MH. However, we
   // don't have a easy way to solve it for now, it would require changes on the mobileharness side.
-  public static int getFirstAvailablePortSlot(String deviceId, int startIndex, int deviceCount)
+  public int getFirstAvailablePortSlot(String deviceId, int startIndex, int deviceCount)
       throws UicdExternalCommandException {
     List<String> output = new ArrayList<>();
     HashSet<Integer> existingPort = new HashSet<>();
@@ -312,7 +317,7 @@ public class ADBCommandLineUtil {
   }
 
   // Similar to adb forward, it only works on some machines when we provide the serial number.
-  public static void removePortForwarding(String deviceId, int port) {
+  public void removePortForwarding(String deviceId, int port) {
     String adbCommand = String.format("forward --remove tcp:%d", port);
     try {
       executeAdb(adbCommand, deviceId);
@@ -321,7 +326,7 @@ public class ADBCommandLineUtil {
     }
   }
 
-  public static void forceStopXmlDumperOnDevice(String deviceId) {
+  public void forceStopXmlDumperOnDevice(String deviceId) {
     String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
     String adbCommand1 = String.format("shell am force-stop %s", xmldumperPackagePrefix);
     String adbCommand2 = String.format("shell am force-stop %s.test", xmldumperPackagePrefix);
@@ -334,7 +339,7 @@ public class ADBCommandLineUtil {
   }
 
   /* get product name */
-  public static String getDeviceProperty(String deviceId, String propertyName)
+  public String getDeviceProperty(String deviceId, String propertyName)
       throws UicdExternalCommandException {
     List<String> ret = new ArrayList<>();
     String command = String.format("shell getprop %s", propertyName);
@@ -342,11 +347,11 @@ public class ADBCommandLineUtil {
     return ret.isEmpty() ? "" : ret.get(0);
   }
 
-  public static int getDeviceApiLevel(String deviceId) throws UicdExternalCommandException {
+  public int getDeviceApiLevel(String deviceId) throws UicdExternalCommandException {
     return Integer.parseInt(getDeviceProperty(deviceId, "ro.build.version.sdk"));
   }
 
-  public static String getDeviceProductName(String deviceId) throws UicdExternalCommandException {
+  public String getDeviceProductName(String deviceId) throws UicdExternalCommandException {
     return getDeviceProperty(deviceId, "ro.build.product");
   }
 }

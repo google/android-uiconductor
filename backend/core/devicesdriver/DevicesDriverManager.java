@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,14 @@
 
 package com.google.uicd.backend.core.devicesdriver;
 
+import com.google.common.collect.Iterables;
 import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.exceptions.UicdDeviceException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import com.google.uicd.backend.core.utils.JsonUtil;
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,12 +40,27 @@ public class DevicesDriverManager {
   private final HashMap<String, AndroidDeviceDriver> androidDriverLinkedMap = new LinkedHashMap<>();
   public HashSet<String> initXmlDumperDevices = new HashSet<>();
   private int selectedDeviceIndex = 0;
+  private final ADBCommandLineUtil adbCommandLineUtil;
+
+  // Returns a random free port
+  private static int getNewPort() throws UicdExternalCommandException {
+    int localPort;
+    try (ServerSocket s = new ServerSocket(0)) {
+      localPort = s.getLocalPort();
+    } catch (IOException e) {
+      throw new UicdExternalCommandException("failed to find a free port: " + e);
+    }
+    return localPort;
+  }
 
   public static DevicesDriverManager getInstance() {
     if (instance == null) {
       instance = new DevicesDriverManager();
     }
     return instance;
+  }
+  public DevicesDriverManager() {
+    this.adbCommandLineUtil = new ADBCommandLineUtil();
   }
 
   public Device getDevice(String deviceId) {
@@ -69,21 +87,21 @@ public class DevicesDriverManager {
   }
 
   public Optional<String> getXmlDumperVersion(String deviceId) {
-    return ADBCommandLineUtil.getXmlDumperApkVersion(deviceId);
+    return adbCommandLineUtil.getXmlDumperApkVersion(deviceId);
   }
 
   public void startXmlDumperServer(String deviceId, boolean isUpdateApk)
       throws UicdExternalCommandException {
     AndroidDeviceDriver androidDeviceDriver = androidDriverLinkedMap.get(deviceId);
     if (isUpdateApk) {
-      ADBCommandLineUtil.updateXmlDumperApk(
+      adbCommandLineUtil.updateXmlDumperApk(
           androidDeviceDriver.getDeviceId(), androidDeviceDriver.getDevice().getApiLevel());
     }
     androidDeviceDriver.startXmlDumperServer();
   }
 
   public void turnOffAutoRotation(String deviceId) throws UicdExternalCommandException {
-    ADBCommandLineUtil.turnOffAutoRotation(deviceId);
+    adbCommandLineUtil.turnOffAutoRotation(deviceId);
   }
 
   // Used by Mobile Harness Nuwa driver. In MH, we are still using AndroidNuwa as driver.
@@ -132,34 +150,23 @@ public class DevicesDriverManager {
     initXmlDumperDevices.clear();
     androidDriverLinkedMap.clear();
 
-    int forwardPort = UicdConfig.getInstance().getAdbForwardStartPort();
-    forwardPort =
-        autoAllocate
-            ? ADBCommandLineUtil.getFirstAvailablePortSlot(
-                deviceIds.get(0), forwardPort, deviceIds.size())
-            : forwardPort;
-
     int deviceIndex = 0;
     for (String deviceId : deviceIds) {
       logger.info("Init " + deviceId);
-      String screenSizeStr = ADBCommandLineUtil.getDeviceScreenSize(deviceId);
-      String productName = ADBCommandLineUtil.getDeviceProductName(deviceId);
-      int apiLevel = ADBCommandLineUtil.getDeviceApiLevel(deviceId);
+      String screenSizeStr = adbCommandLineUtil.getDeviceScreenSize(deviceId);
+      String productName = adbCommandLineUtil.getDeviceProductName(deviceId);
+      int apiLevel = adbCommandLineUtil.getDeviceApiLevel(deviceId);
       ArrayList<String> adbOutput = new ArrayList<>();
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           "adb shell dumpsys input | grep 'SurfaceOrientation' | awk '{ print $2 }'",
           deviceId,
           adbOutput);
-      String orientation = !adbOutput.isEmpty() ? adbOutput.get(0) : "0";
+      String orientation = Iterables.getFirst(adbOutput, "0");
       Device device =
           new Device(
               deviceId,
               screenSizeStr,
               productName,
-              forwardPort,
-              forwardPort + 1,
-              forwardPort + 2,
-              forwardPort + 3,
               deviceIndex,
               apiLevel,
               orientation);
@@ -169,17 +176,24 @@ public class DevicesDriverManager {
 
       // Allocate the port here to fix the multithread issue. We should forward all ports in
       // initDevicesList. However minicap is a little bit complicate. Currently in the CLI and
-      // Mobileharness, we don't need minicap, and the multithread issue only happend in MH.
+      // Mobileharness, we don't need minicap, and the multithread issue only happened in MH.
       // set the port forward here, so that the port is occupied immediately, other thread will
       // get the current port.
       String forwardCmd = "forward tcp:%d tcp:%d";
-      ADBCommandLineUtil.executeAdb(
-          String.format(forwardCmd, device.getXmlDumperHostPort(), device.getXmlDumperDevicePort()),
-          deviceId);
+      // find a random port here for xmlDumperHostPort
+      int freePort;
+      synchronized (this) {
+        freePort = getNewPort();
+        adbCommandLineUtil.executeAdb(
+            String.format(forwardCmd, freePort, device.getXmlDumperDevicePort()), deviceId);
+      }
+      device.setXmlDumperHostPort(freePort);
+      device.setMinicapHostPort(getNewPort());
+      device.setMinicapWebServerPort(getNewPort());
+      device.setSnippetClientHostPort(getNewPort());
       logger.info(device.toString());
       AndroidDeviceDriver androidDeviceDriver = new AndroidDeviceDriver(device);
       androidDriverLinkedMap.put(deviceId, androidDeviceDriver);
-      forwardPort += 3;
       deviceIndex++;
       androidDeviceDriver.refreshScreenDimension();
     }
@@ -219,20 +233,20 @@ public class DevicesDriverManager {
     return androidDriverLinkedMap;
   }
 
-  public static void reset() {
+  public void reset() {
     for (AndroidDeviceDriver androidDeviceDriver : instance.androidDriverLinkedMap.values()) {
       killXmlDumperServer(androidDeviceDriver);
     }
     instance = new DevicesDriverManager();
   }
 
-  public static void killXmlDumperServer(AndroidDeviceDriver androidDeviceDriver) {
+  public void killXmlDumperServer(AndroidDeviceDriver androidDeviceDriver) {
     try {
       Device device = androidDeviceDriver.getDevice();
       String deviceId = device.getDeviceId();
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           "forward --remove tcp:" + device.getXmlDumperHostPort(), deviceId, true /* waitFor */);
-      ADBCommandLineUtil.executeAdb(
+      adbCommandLineUtil.executeAdb(
           String.format("shell killall %s", UicdConfig.getInstance().getXmldumperPackagePrefix()),
           deviceId,
           true /* waitFor */);

@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,10 @@
 package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.uicd.backend.core.constants.StopType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.uicdactions.jsondbignores.BaseSantinizer.ConditionClickActionSantinizer;
-import com.google.uicd.backend.core.xmlparser.Bounds;
-import com.google.uicd.backend.core.xmlparser.NodeContext;
 import com.google.uicd.backend.core.xmlparser.Position;
 
 /** ConditionClickAction */
@@ -29,17 +26,6 @@ import com.google.uicd.backend.core.xmlparser.Position;
 public class ConditionClickAction extends ScreenContentValidationAction {
   // need by the jackson to deserialize
   public ConditionClickAction() {}
-
-  public ConditionClickAction(
-      Bounds selectedBound,
-      String type,
-      String value,
-      String textMatchType,
-      String boundsSearchType,
-      NodeContext nodeContext,
-      StopType stopType) {
-    super(selectedBound, type, value, textMatchType, boundsSearchType, nodeContext, stopType);
-  }
 
   public ConditionClickAction(ValidationReqDetails validationReqDetails) {
     super(validationReqDetails);
@@ -58,7 +44,7 @@ public class ConditionClickAction extends ScreenContentValidationAction {
       if (this.savedNodeContext != null) {
         pos = pos.getOffSetPosition(savedNodeContext.getRelativePos());
       }
-      androidDeviceDriver.clickDevice((int) pos.x, (int) pos.y);
+      androidDeviceDriver.clickDevice(pos);
     }
 
     actionContext.removeStatus(androidDeviceDriver.getDeviceId());

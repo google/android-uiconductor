@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ public enum ActionType {
   LONG_CLICK_ACTION("LongClickAction"),
   LOOP_SCREEN_CONTENT_VALIDATION_ACTION("LoopScreenContentValidationAction"),
   ML_IMAGE_VALIDATION_ACTION("MLImageValidationAction"),
+  PYTHON_SCRIPT_ACTION("PythonScriptAction"),
   REBOOT_ACTION("RebootAction"),
   SCREEN_CAP_ACTION("ScreenCapAction"),
   SCREEN_CONTENT_VALIDATION_ACTION("ScreenContentValidationAction"),

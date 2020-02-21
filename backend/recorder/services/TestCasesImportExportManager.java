@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -183,7 +183,6 @@ public class TestCasesImportExportManager {
     String treeDetails = srcProjectTestCaseTree.get().getTreeDetails();
     final List<String> actionIdList = getActionListFromTreeDetails(treeDetails);
 
-    List<BaseAction> actionList = actionStorageManager.getBaseActionsFromStorage(actionIdList);
     Optional<TestCaseTreeEntity> srcTestCaseTreeEntityOptional =
         testCaseTreeStorageManager.getFirstTreeByProjectId(srcProjectId);
     Optional<TestCaseTreeEntity> targetTestCaseTreeEntityOptional =
@@ -319,16 +318,23 @@ public class TestCasesImportExportManager {
       action.setActionId(UUID.fromString(uuidMapping.get(action.getActionId().toString())));
 
       action.setCreatedBy(UicdConfig.getInstance().getCurrentUser());
-      if (action.getActionType().equalsIgnoreCase(ActionType.COMPOUND_ACTION.getActionName())) {
+      if (action.getActionType() == ActionType.COMPOUND_ACTION) {
         CompoundAction compoundAction = (CompoundAction) action;
         for (int i = 0; i < compoundAction.childrenIdList.size(); i++) {
           // Generate new random uuid and put into the map, to make it simple we are not doing a
           // BFS/DFS for the action tree. Add the old-> new uuid mapping here also since we don't
           // know which comes first.
-          uuidMapping.putIfAbsent(
-              compoundAction.childrenIdList.get(i), UUID.randomUUID().toString());
-          compoundAction.childrenIdList.set(
-              i, uuidMapping.get(compoundAction.childrenIdList.get(i)));
+          String currentChildActionId = compoundAction.childrenIdList.get(i);
+          Optional<BaseAction> currentChildAction =
+              compoundAction.childrenActions.stream()
+                  .filter(o -> o.getActionId().toString().equals(currentChildActionId))
+                  .findFirst();
+          UUID randomUUID = UUID.randomUUID();
+          uuidMapping.putIfAbsent(currentChildActionId, randomUUID.toString());
+          compoundAction.childrenIdList.set(i, uuidMapping.get(currentChildActionId));
+          if (currentChildAction.isPresent()) {
+            currentChildAction.get().setActionId(randomUUID);
+          }
         }
       }
       actionEntities.set(j, new ActionEntity(action));
@@ -344,10 +350,21 @@ public class TestCasesImportExportManager {
     BaseAction action = actionStorageManager.getActionByUUID(actionId);
     if (action != null) {
       actionEntities.add(new ActionEntity(action));
-      if (action.getActionType().equalsIgnoreCase(ActionType.COMPOUND_ACTION.getActionName())) {
+      if (action.getActionType() == ActionType.COMPOUND_ACTION) {
         CompoundAction compoundAction = (CompoundAction) action;
         for (String childActionId : compoundAction.childrenIdList) {
-          fetchActionRecursively(childActionId, actionEntities);
+          Optional<BaseAction> childAction =
+              compoundAction.childrenActions.stream()
+                  .filter(x -> x != null)
+                  .filter(o -> o.getActionId().toString().equals(childActionId))
+                  .findFirst();
+          // In current design we already have the compound action in the childrenAction list,
+          // however still need to call the fetchActionRecursively, so that it will be added to the
+          // actionEntities and get deep copied later.
+          if (!childAction.isPresent()
+              || childAction.get().getActionType() == ActionType.COMPOUND_ACTION) {
+            fetchActionRecursively(childActionId, actionEntities);
+          }
         }
       }
     }

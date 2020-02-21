@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,22 +14,21 @@
 
 package com.google.uicd.backend.core.uicdactions;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.xmlparser.NodeContext;
 import com.google.uicd.backend.core.xmlparser.Position;
-import com.google.uicd.backend.core.xmlparser.XmlHelper;
-import java.util.List;
 
-/**
- * LongClickAction
- */
+/** LongClickAction */
 public class LongClickAction extends BaseAction {
 
   // need by the jackson
   public LongClickAction() {
+    this.positionHelper = new PositionHelper();
   }
 
   public LongClickAction(NodeContext nodeContext, int duration) {
+    this();
     this.nodeContext = nodeContext;
     this.duration = duration;
     if (nodeContext != null) {
@@ -41,6 +40,8 @@ public class LongClickAction extends BaseAction {
   private boolean isRawXY = false;
   private int duration = 2000;
 
+  @JsonIgnore
+  PositionHelper positionHelper;
   @Override
   public void updateAction(BaseAction baseAction) {
     super.updateCommonFields(baseAction);
@@ -63,16 +64,12 @@ public class LongClickAction extends BaseAction {
   @Override
   protected int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) {
     if (isRawXY) {
-      androidDeviceDriver.longClickDevice(
-          (int) nodeContext.getClickedPos().x, (int) nodeContext.getClickedPos().y, this.duration);
+      androidDeviceDriver.longClickDevice(nodeContext.getClickedPos(), this.duration);
       return 0;
     }
-    List<String> xmls = androidDeviceDriver.fetchCurrentXML();
-    Position pos = XmlHelper
-        .getPosFromContextXML(xmls, this.nodeContext, androidDeviceDriver.getWidthRatio(),
-            androidDeviceDriver.getHeightRatio());
-    androidDeviceDriver.longClickDevice((int) pos.x, (int) pos.y, this.duration);
+    Position pos =
+        positionHelper.getPositionFromScreen(androidDeviceDriver, nodeContext, actionContext);
+    androidDeviceDriver.longClickDevice(pos, this.duration);
     return 0;
   }
-
 }

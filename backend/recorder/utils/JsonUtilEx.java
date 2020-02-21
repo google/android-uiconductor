@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 /**
  * Helper class for Json, for saving the java 8 time object, we need depend on the
- * jackson2-datatype-jsr310, however internal is not avaiable, so we can not put the util in the
+ * jackson2-datatype-jsr310, however internal is not available, so we can not put the util in the
  * core package.
  */
 public class JsonUtilEx {

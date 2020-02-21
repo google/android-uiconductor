@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
-import com.google.uicd.backend.core.utils.CommandLineUtil;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +32,7 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
   public boolean needShellOutput;
   private String outputPath;
   @JsonIgnore private String exitValue;
+
 
   public CommandLineAction() {}
 
@@ -64,7 +63,7 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
     this.expectedReturnCode = commandLineAction.expectedReturnCode;
     this.commandlineExecutionTimeoutSec = commandLineAction.commandlineExecutionTimeoutSec;
     this.needShellOutput = commandLineAction.needShellOutput;
-    this.isAdbCommand = commandLineAction.isAdbCommand;  
+    this.isAdbCommand = commandLineAction.isAdbCommand;
   }
 
   @Override
@@ -75,10 +74,10 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
     String commandLine = actionContext.expandUicdGlobalVariable(this.commandLine, deviceId);
 
     if (isAdbCommand) {
-      ADBCommandLineUtil.executeAdb(commandLine, deviceId, output, commandlineExecutionTimeoutSec);
+      adbCommandLineUtil.executeAdb(commandLine, deviceId, output, commandlineExecutionTimeoutSec);
     } else {
       Process process =
-          CommandLineUtil.execute(commandLine, output, true, commandlineExecutionTimeoutSec);
+          commandLineUtil.execute(commandLine, output, true, commandlineExecutionTimeoutSec);
       exitValue = String.valueOf(process.exitValue());
       boolean isValid = validate(actionContext, androidDeviceDriver);
       if (!isValid) {
@@ -95,7 +94,7 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
       if (needShellOutput && UicdGlobalVariableMap.containsShellOutputKeyWord(s)) {
 
         String jsonContent = s;
-        for (String keyWord :  UicdGlobalVariableMap.SHELL_OUTPUT_KEYWORD_LIST) {
+        for (String keyWord : UicdGlobalVariableMap.SHELL_OUTPUT_KEYWORD_LIST) {
           jsonContent = s.replace(keyWord, "");
         }
         // only allow keys that start with "$uicd" in the map.

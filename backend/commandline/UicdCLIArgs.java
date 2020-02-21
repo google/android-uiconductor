@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ public class UicdCLIArgs {
   private static final String OUTPUT_OPTION_SHORT_NAME = "o";
   private static final String DEVICES_OPTION_SHORT_NAME = "d";
   private static final String CONFIG_OPTION_SHORT_NAME = "c";
+  // Details of the output will be hidden unless the user specifies -s as an argument
   private static final String SCREEN_OPTION_SHORT_NAME = "s";
   private static final String MODE_OPTION_SHORT_NAME = "m";
   private static final String GLOBAL_VARIABLE_OPTION_SHORT_NAME = "g";
@@ -90,7 +91,7 @@ public class UicdCLIArgs {
   }
 
   public boolean isScreenOutputMode() {
-    return !commandLine.hasOption(SCREEN_OPTION_SHORT_NAME);
+    return commandLine.hasOption(SCREEN_OPTION_SHORT_NAME);
   }
 
   public Map<String, String> getGlobalVariables() {

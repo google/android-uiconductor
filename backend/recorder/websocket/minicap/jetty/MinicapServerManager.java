@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,8 +41,11 @@ public class MinicapServerManager {
   private static Logger logger = LogManager.getLogManager().getLogger("uicd");
   private static final Duration IMG_POLL_TIMEOUT = Duration.ofSeconds(3);
   private static final Duration WAIT_FOR_IMG_QUEUE = Duration.ofSeconds(1);
+  private final ADBCommandLineUtil adbCommandLineUtil;
 
-  protected MinicapServerManager() {}
+  protected MinicapServerManager() {
+    this.adbCommandLineUtil = new ADBCommandLineUtil();
+  }
 
   public static MinicapServerManager getInstance() {
     if (instance == null) {
@@ -155,9 +158,9 @@ public class MinicapServerManager {
     portSessionMapping.clear();
   }
 
-  private static void killMinicap(String deviceId) {
+  private void killMinicap(String deviceId) {
     try {
-      ADBCommandLineUtil.executeAdb("shell pkill minicap", deviceId, true /* waitFor */);
+      adbCommandLineUtil.executeAdb("shell pkill minicap", deviceId, true /* waitFor */);
     } catch (UicdExternalCommandException e) {
       logger.info(e.getMessage());
     }

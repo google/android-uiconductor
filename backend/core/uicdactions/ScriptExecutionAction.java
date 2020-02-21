@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -100,13 +99,13 @@ public class ScriptExecutionAction extends BaseAction {
     if (saveScriptFile(scriptFileLocalPath)) {
       try {
         // Save the local script file to the SL4A script folder on the Android device
-        ADBCommandLineUtil.executeAdb(
+        adbCommandLineUtil.executeAdb(
             String.format(PUSH_CMD, scriptFileLocalPath, SCRIPT_DIRECTORY_PATH),
             androidDeviceDriver.getDeviceId());
         executionStatus = ScriptExecutionStatus.STATUS_SCRIPT_SAVED;
         // Execute the script with all the environment settings
         List<String> responseList = new ArrayList<>();
-        ADBCommandLineUtil.executeAdb(
+        adbCommandLineUtil.executeAdb(
             String.format(
                 EXECUTE_CMD,
                 ScriptConfig.pythonConfigMapToString(),
@@ -118,7 +117,7 @@ public class ScriptExecutionAction extends BaseAction {
             commandlineExecutionTimeoutSec);
         executionStatus = ScriptExecutionStatus.STATUS_SCRIPT_EXECUTED;
         // Remove the temporary script file on the Android device
-        ADBCommandLineUtil.executeAdb(
+        adbCommandLineUtil.executeAdb(
             String.format(REMOVE_CMD, SCRIPT_DIRECTORY_PATH + SCRIPT_FILE_TEMPORARY_NAME),
             androidDeviceDriver.getDeviceId());
         executionStatus = ScriptExecutionStatus.STATUS_ALL_DONE;

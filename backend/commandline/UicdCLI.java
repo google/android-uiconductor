@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,11 @@ package com.google.uicd.backend.commandline;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.db.ActionEntity;
 import com.google.uicd.backend.core.db.ActionStorageManager;
 import com.google.uicd.backend.core.db.FileSystemActionStorageManager;
 import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
@@ -182,7 +186,7 @@ public class UicdCLI {
 
     ActionStorageManager actionStorageManager = new FileSystemActionStorageManager();
     String jsonContent = new String(Files.readAllBytes(Paths.get(fullPath)), UTF_8);
-    BaseAction action = actionStorageManager.loadMapFromString(jsonContent);
+    BaseAction action = tryGetActionByStr(actionStorageManager, jsonContent);
 
     if (action == null) {
       System.out.println(String.format("File(%s) is not a valid Uicd recorded file.", fullPath));
@@ -190,7 +194,7 @@ public class UicdCLI {
       actionExecutionResult.setPlayStatus(PlayStatus.SKIPPED);
       return actionExecutionResult;
     }
-    DevicesDriverManager devicesDriverManager = new DevicesDriverManager();
+    DevicesDriverManager devicesDriverManager = DevicesDriverManager.getInstance();
     devicesDriverManager.initDevicesList(deviceIdList);
     devicesDriverManager.startMultiXmlDumperServer(deviceIdList, true);
 
@@ -203,6 +207,23 @@ public class UicdCLI {
     ActionExecutionResult actionExecutionResult = actionPlayer.playAction(action);
     devicesDriverManager.stopMultiXmlDumperServer(deviceIdList);
     return actionExecutionResult;
+  }
+
+  private static BaseAction tryGetActionByStr(
+      ActionStorageManager actionStorageManager, String jsonContent) throws UicdActionException {
+    // Currently we have two ways to export test cases. export single test case which is a
+    // serialization of a Action object or export by project which is an ActionEntity Object.
+    // ActionEntity is a wrapper of Action object. Unfortunately Jackson somehow can construct
+    // Action object using ActionsEntity Json but with incorrect Information. The following logic
+    // will handle both cases.
+    ActionEntity actionEntity = fromJsonEx(jsonContent, new TypeReference<ActionEntity>() {});
+    if (actionEntity != null) {
+      System.out.println(
+          "Input file is not ordinary export file, but exported by project, try using ActionEntity"
+              + " format");
+      jsonContent = actionEntity.getDetails();
+    }
+    return actionStorageManager.loadMapFromString(jsonContent);
   }
 
   private static void setRedirectOutputToFile(Path logFolder) throws IOException {
@@ -250,5 +271,19 @@ public class UicdCLI {
     System.out.println("Writing contents to: " + filepath);
     Files.createDirectories(Paths.get(new File(filepath).getParent()));
     Files.write(Paths.get(filepath), contents.getBytes(UTF_8));
+  }
+
+  // Todo(tccyp): change to JsonUtilEx.fromJson.
+  private static <T extends Object> T fromJsonEx(String jsonDataString, TypeReference<T> typeRef) {
+    ObjectMapper mapper = new ObjectMapper();
+    T obj = null;
+    try {
+      JavaTimeModule module = new JavaTimeModule();
+      mapper.registerModule(module);
+      obj = mapper.readValue(jsonDataString, typeRef);
+    } catch (IOException e) {
+      System.err.println("Error while converting from json: " + e.getMessage());
+    }
+    return obj;
   }
 }
