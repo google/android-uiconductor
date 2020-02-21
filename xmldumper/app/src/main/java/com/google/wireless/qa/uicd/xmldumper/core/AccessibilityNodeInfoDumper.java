@@ -1,14 +1,33 @@
-package com.google.uicd.xmldumper.core;
+// Copyright 2020 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package com.google.wireless.qa.uicd.xmldumper.core;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
+import android.app.Service;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Xml;
+import android.view.Display;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import androidx.test.uiautomator.UiDevice;
-import com.google.uicd.xmldumper.utils.UicdDevice;
+import com.google.wireless.qa.uicd.xmldumper.utils.UicdDevice;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -51,7 +70,6 @@ public class AccessibilityNodeInfoDumper {
   public static List<String> dumpWindowHierarchy(boolean withClassName) {
     List<String> xmls = new ArrayList<>();
     for (AccessibilityNodeInfo root : UicdDevice.getWindowRoots()) {
-      // TODO(yuchenhe): add drawing order to dump result
       // call requires API 24
       // int order = root.getDrawingOrder();
       xmls.add(getWindowXMLHierarchy(root, withClassName));
@@ -78,14 +96,8 @@ public class AccessibilityNodeInfoDumper {
       serializer.startTag("", "hierarchy");
 
       if (root != null) {
-        int width = -1;
-        int height = -1;
-
-        UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
-        height = mDevice.getDisplayHeight();
-        width = mDevice.getDisplayWidth();
-
-        dumpNodeRec(root, serializer, 0, width, height, withClassName);
+        Point physicalSize = getDevicePhysicalSize();
+        dumpNodeRec(root, serializer, 0, physicalSize.x, physicalSize.y, withClassName);
       }
 
       serializer.endTag("", "hierarchy");
@@ -94,6 +106,28 @@ public class AccessibilityNodeInfoDumper {
       Log.e(TAG, "failed to dump window to file " + e.getMessage());
     }
     return xmlDump.toString();
+  }
+
+  public static Point getDevicePhysicalSize() {
+    int width;
+    int height;
+    try {
+      UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
+      height = mDevice.getDisplayHeight();
+      width = mDevice.getDisplayWidth();
+      return new Point(width, height);
+    } catch (NullPointerException e) {
+      Log.e(TAG, "Failed get display size, using getRealMetrics instead. " + e.getMessage());
+    }
+    WindowManager windowManager = (WindowManager) getInstrumentation().getContext()
+        .getSystemService(Service.WINDOW_SERVICE);
+    Display display =  windowManager.getDefaultDisplay();
+    DisplayMetrics metrics = new DisplayMetrics();
+    display.getRealMetrics(metrics);
+    height = metrics.heightPixels;
+    width = metrics.widthPixels;
+    return new Point(width, height);
+
   }
 
   private static void dumpNodeRec(
