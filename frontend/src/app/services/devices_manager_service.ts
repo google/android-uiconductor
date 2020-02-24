@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,9 @@ export class DeviceInfo {
   physicalWidth: number;
   physicalHeight: number;
   constructor(jsonData: string) {
-    const obj = JSON.parse(jsonData);
+    // tslint:disable:no-any no-unnecessary-type-assertion
+    const obj = JSON.parse(jsonData) as any;
+    // tslint:enable:no-any no-unnecessary-type-assertion
     this.serial = obj['serial'];
     /**
      * backend are returning two different names, can not change backend before

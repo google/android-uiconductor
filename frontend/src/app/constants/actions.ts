@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ export interface ActionTypeInfo {
   LONG_CLICK_ACTION: ActionTypeItem;
   LOOP_SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
   ML_IMAGE_VALIDATION_ACTION: ActionTypeItem;
+  PYTHON_SCRIPT_ACTION: ActionTypeItem;
   REBOOT_ACTION: ActionTypeItem;
   SCREEN_CAP_ACTION: ActionTypeItem;
   SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
@@ -52,6 +53,7 @@ export interface ActionTypeInfo {
   SCROLL_SCREEN_CONTENT_VALIDATION_ACTION: ActionTypeItem;
   SNIPPET_VALIDATION_ACTION: ActionTypeItem;
   SWIPE_ACTION: ActionTypeItem;
+  WAIT_ACTION: ActionTypeItem;
   ZOOM_ACTION: ActionTypeItem;
   // go/keep-sorted end
 }
@@ -190,6 +192,12 @@ export const ACTIONS: ActionTypeInfo = {
     shortName: 'SWIPE',
     color: 'deepskyblue'
   },
+  WAIT_ACTION: {
+    actionType: 'WAIT_ACTION',
+    type: 'WaitAction',
+    shortName: 'WAIT',
+    color: 'limegreen',
+  },
   ZOOM_ACTION: {
     actionType: 'ZOOM_ACTION',
     type: 'ZoomAction',
@@ -200,6 +208,12 @@ export const ACTIONS: ActionTypeInfo = {
     actionType: 'DOUBLE_TAP_POWER_BUTTON_ACTION',
     type: 'DoubleTapPowerButtonAction',
     shortName: 'DPOWER',
+    color: 'tomato'
+  },
+  PYTHON_SCRIPT_ACTION: {
+    actionType: 'PYTHON_SCRIPT_ACTION',
+    type: 'PythonScriptAction',
+    shortName: 'PYSCRIPT',
     color: 'tomato'
   },
 };
@@ -214,6 +228,8 @@ export interface ActionSummaryMetaData {
   playStatus?: string;
   createdBy?: string;
   delayAfterActionMs?: number;
+  deviceIndex?: number;
+  forceDeviceOnChildren?: boolean;
   actionType?: string;
   isRawXY?: boolean;
   actionDescription?: string;
@@ -228,11 +244,16 @@ export declare interface ActionModel {
   actionId: string;
   actionType: string;
   name: string;
+  actionIndex: number;
 }
 
 /** Function to generate ActionModel from JSON data which backend returns. */
-export function actionModelFromJson(jsonData: string): ActionModel {
-  const actionModel: ActionModel = JSON.parse(jsonData);
+export function actionModelFromJson(
+    jsonData: string, index: number): ActionModel {
+  // tslint:disable:no-any no-unnecessary-type-assertion
+  const actionModel: ActionModel = JSON.parse(jsonData) as any;
+  // tslint:enable:no-any no-unnecessary-type-assertion
+  actionModel.actionIndex = index;
   return actionModel;
 }
 
@@ -243,11 +264,14 @@ export class WorkflowModel {
   childrenActions: ActionModel[];
 
   constructor(jsonData: string) {
-    const obj = JSON.parse(jsonData);
+    // tslint:disable:no-any no-unnecessary-type-assertion
+    const obj = JSON.parse(jsonData) as any;
+    // tslint:enable:no-any no-unnecessary-type-assertion
 
     this.actionId = obj['actionId'];
     this.name = obj['name'];
     this.childrenActions = obj['childrenActions'].map(
-        (item: object) => actionModelFromJson(JSON.stringify(item)));
+        (item: object, index: number) =>
+            actionModelFromJson(JSON.stringify(item), index));
   }
 }

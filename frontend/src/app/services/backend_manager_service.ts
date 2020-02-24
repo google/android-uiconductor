@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
 import {HttpClient, HttpHeaders, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-
 import {ActionSummaryMetaData} from '../constants/actions';
 import {BACKEND_BASE_URL, KeyCodes, RotateDirection, SwipeDirection} from '../constants/constants';
 import {CurrentUserResponse, ExportImportProjectRequest, GetUserPresetGlobalVariableResponse, ImageResponse, ImagesResponse, InitDevicesResponse, PlayActionRequest, PlayActionResponse, ProjectDeepCopyRequest, ProjectListResponse, ScaledScreenDimensionsResponse, ScreenContentSummary, UuidResponse, VersionInfoResponse} from '../constants/interfaces';
 import {Bounds, Point} from '../constants/rect';
 import {ValidationRequestDetails} from '../constants/screen_validation_constants';
 import {Shape} from '../constants/shape';
+
 
 /** Communicates to the UIConductor Java backend */
 @Injectable()
@@ -122,6 +122,31 @@ export class BackendManagerService {
                   .set('y', Math.floor(y).toString())
     });
   }
+
+  /** Performs Drag with context action on current devices */
+  dragWithStartEndContext(
+      startX: number, startY: number, endX: number, endY: number) {
+    return this.http.get(BACKEND_BASE_URL + '/dragWithStartEndContext', {
+      params: new HttpParams()
+                  .set('startX', Math.floor(startX).toString())
+                  .set('startY', Math.floor(startY).toString())
+                  .set('endX', Math.floor(endX).toString())
+                  .set('endY', Math.floor(endY).toString())
+    });
+  }
+
+  /** Performs Swipe with context action on current devices */
+  swipeWithStartEndContext(
+      startX: number, startY: number, endX: number, endY: number) {
+    return this.http.get(BACKEND_BASE_URL + '/swipeWithStartEndContext', {
+      params: new HttpParams()
+                  .set('startX', Math.floor(startX).toString())
+                  .set('startY', Math.floor(startY).toString())
+                  .set('endX', Math.floor(endX).toString())
+                  .set('endY', Math.floor(endY).toString())
+    });
+  }
+
 
   /** Returns raw json test information for given test */
   exportTestCase(uuid: string): Observable<unknown> {
@@ -232,6 +257,11 @@ export class BackendManagerService {
   getInitedDevices(): Observable<InitDevicesResponse> {
     return this.http.get<InitDevicesResponse>(
         BACKEND_BASE_URL + '/getInitializedDevicesDetails');
+  }
+
+  /** Gets current play mode */
+  getPlayMode(): Observable<string> {
+    return this.http.get<string>(BACKEND_BASE_URL + '/getPlayMode');
   }
 
   /** Gets xmldumper version and uicd backend version */
