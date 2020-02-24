@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,9 @@ export class HistoryDialog implements OnInit, OnDestroy {
   }
 
   showDetails(details: string) {
-    const data: PlayActionResponse = JSON.parse(details);
+    // tslint:disable:no-any no-unnecessary-type-assertion
+    const data: PlayActionResponse = JSON.parse(details) as any;
+    // tslint:enable:no-any no-unnecessary-type-assertion
     this.dialog.open(
         ReplayDetailsDialog,
         {width: POPUP_DIALOG_DEFAULT_DIMENSION.width, data});

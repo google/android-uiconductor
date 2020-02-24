@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,7 +51,9 @@ export interface ValidationActionModel {
 export enum SpecialClickType {
   // go/keep-sorted start
   DOUBLE_CLICK,
+  DRAG_WITH_CONTEXT,
   LONG_CLICK,
+  SWIPE_WITH_CONTEXT,
   ZOOM_IN,
   ZOOM_OUT,
   // go/keep-sorted end
@@ -114,6 +116,11 @@ export const VALIDATION_ACTIONS: ValidationActionModel[] = [
 export const SPECIAL_CLICK_ACTIONS: SpecialClickModel[] = [
   {value: SpecialClickType.LONG_CLICK, displayText: 'Long Click'},
   {value: SpecialClickType.DOUBLE_CLICK, displayText: 'Double Click'},
+  {value: SpecialClickType.DRAG_WITH_CONTEXT, displayText: 'Drag With Context'},
+  {
+    value: SpecialClickType.SWIPE_WITH_CONTEXT,
+    displayText: 'Swipe With Context'
+  },
   {value: SpecialClickType.ZOOM_IN, displayText: 'Zoom In'},
   {value: SpecialClickType.ZOOM_OUT, displayText: 'Zoom Out'},
 ];
@@ -142,8 +149,14 @@ export enum StopType {
 
 /** Stop Type for user to choose */
 export const STOP_TYPES: StopModel[] = [
-  {value: StopType.STOP_TEST_IF_FALSE, displayText: 'Stop Test If False'},
-  {value: StopType.STOP_TEST_IF_TRUE, displayText: 'Stop Test If True'},
+  {
+    value: StopType.STOP_TEST_IF_FALSE,
+    displayText: 'Stop Test If Validation False'
+  },
+  {
+    value: StopType.STOP_TEST_IF_TRUE,
+    displayText: 'Stop Test If Validation True'
+  },
   {
     value: StopType.STOP_CURRENT_COMPOUND_IF_FALSE,
     displayText: 'Stop Current Compound If False',
@@ -331,6 +344,7 @@ export interface ValidationRequestDetails {
   contextStorageType?: ContextStorageType;
   elementSelectorType?: ElementSelectorType;
   iconImageType?: IconImageType;
+  ocrMode?: boolean;
   screenContentSearchType?: ScreenContentSearchType;
   scrollDirectionType?: DirectionType;
   scrollMaxNumber?: number;

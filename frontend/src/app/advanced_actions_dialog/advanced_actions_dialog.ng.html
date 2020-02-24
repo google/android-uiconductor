@@ -1,5 +1,5 @@
 <!--
-  Copyright 2019 Google LLC
+  Copyright 2020 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -31,23 +31,23 @@
       </mat-form-field>
       <mat-form-field>
         <input matInput class="cmd-delay" [(ngModel)]="commandLineActionDetails.delayAfterActionMs"
-               placeholder="Delay After Action (ms)" type="number" class="cmd-delay-ms">
+          placeholder="Delay After Action (ms)" type="number" class="cmd-delay-ms">
       </mat-form-field>
       <mat-form-field>
         <textarea matInput [(ngModel)]="commandLineActionDetails.actionDescription" placeholder="Description"
-                  class="cmd-desc"></textarea>
+          class="cmd-desc"></textarea>
       </mat-form-field>
       <mat-form-field>
         <textarea rows="4" cols="500" matInput [(ngModel)]="commandLineActionDetails.commandLine"
-                  placeholder="Command Line" class="cmd-input"></textarea>
+          placeholder="Command Line" class="cmd-input"></textarea>
       </mat-form-field>
       <mat-form-field>
         <input matInput [(ngModel)]="commandLineActionDetails.expectedReturnCode" placeholder="Expected Return Code"
-               class="cmd-expected-code">
+          class="cmd-expected-code">
       </mat-form-field>
       <mat-form-field>
         <input matInput [(ngModel)]="commandLineActionDetails.commandlineExecutionTimeoutSec"
-               placeholder="Command Timeout (sec)" type="number" class='cmd-timeout'>
+          placeholder="Command Timeout (sec)" type="number" class='cmd-timeout'>
       </mat-form-field>
       <mat-checkbox [(ngModel)]="commandLineActionDetails.isAdbCommand">ADB command</mat-checkbox>
       <mat-checkbox [(ngModel)]="commandLineActionDetails.needShellOutput">Need Shell Output</mat-checkbox>
@@ -60,11 +60,11 @@
       </mat-form-field>
       <mat-form-field>
         <textarea rows="4" cols="500" matInput [(ngModel)]="logcatValidationActionDetails.commandLine"
-                  placeholder="Command Line"></textarea>
+          placeholder="Command Line"></textarea>
       </mat-form-field>
       <mat-form-field class="selector-css">
         <mat-select placeholder="Match Type" [(ngModel)]="logcatValidationActionDetails.textValidator.contentMatchType"
-                    class="slot-selector">
+          class="slot-selector">
           <mat-option *ngFor="let c of CONTENT_MATCH_TYPES" [value]="c.value" class='mat-option'>
             {{ c.displayText }}
           </mat-option>
@@ -72,7 +72,7 @@
       </mat-form-field>
       <mat-form-field>
         <textarea rows="4" cols="500" matInput [(ngModel)]="logcatValidationActionDetails.textValidator.patternValue"
-                  placeholder="Text Pattern"></textarea>
+          placeholder="Text Pattern"></textarea>
       </mat-form-field>
       <mat-form-field>
         <mat-select placeholder="Stop Type" [(ngModel)]="logcatValidationActionDetails.stopType">
@@ -81,7 +81,7 @@
       </mat-form-field>
       <mat-form-field>
         <input matInput [(ngModel)]="logcatValidationActionDetails.commandlineExecutionTimeoutSec"
-               placeholder="Command Timeout (sec)" type="number">
+          placeholder="Command Timeout (sec)" type="number">
       </mat-form-field>
       <mat-checkbox placeholder="Logcat Only" [(ngModel)]="logcatValidationActionDetails.logcatOnly">Logcat Only(No
         Validation)
@@ -94,13 +94,13 @@
       <div [hidden]='inputActionDetails.isSingleChar'>
         <mat-form-field>
           <textarea rows="4" cols="500" matInput [(ngModel)]="inputActionDetails.inputString"
-                    placeholder="Input String"></textarea>
+            placeholder="Input String"></textarea>
         </mat-form-field>
       </div>
       <div [hidden]='!inputActionDetails.isSingleChar'>
         <mat-form-field>
           <textarea rows="4" cols="500" matInput [(ngModel)]="inputActionDetails.keyCode"
-                    placeholder="Key Code"></textarea>
+            placeholder="Key Code"></textarea>
         </mat-form-field>
       </div>
       <mat-checkbox [(ngModel)]="inputActionDetails.isSingleChar">Raw Key Code</mat-checkbox>
@@ -111,14 +111,14 @@
       <mat-checkbox [(ngModel)]="rebootActionDetails.onlyReconnectToDevice">Skip Reboot, Reconnect to Device Only
       </mat-checkbox>
       Time to wait (in seconds) after reboot before reconnecting:<textarea rows="1" cols="10" matInput
-                                                                           [(ngModel)]="rebootActionDetails.reconnectTimeInSec">30</textarea>
+        [(ngModel)]="rebootActionDetails.reconnectTimeInSec">30</textarea>
       <br>
     </div>
   </div>
   <div *ngSwitchCase="ACTIONS.CLICK_ACTION.type">
     Click by Element Info
     <div class='new-action-form'>
-      <mat-form-field class="selector-css">
+      <mat-form-field class="selector-css" *ngIf="!clickActionDetails.isOcrMode">
         <mat-select placeholder="Selector Type" [(ngModel)]="clickActionDetails.strategy" class="slot-selector">
           <mat-option *ngFor="let c of STRATEGY_TYPES" [value]="c.value" class='mat-option'>
             {{ c.displayText }}
@@ -128,6 +128,9 @@
       <mat-form-field>
         <input matInput [(ngModel)]="clickActionDetails.selector" placeholder="Selector">
       </mat-form-field>
+      <mat-checkbox placeholder="OCR Enabled" [(ngModel)]="clickActionDetails.isOcrMode" (ngModelChange)="emitUpdate()">
+        Use OCR
+      </mat-checkbox>
     </div>
   </div>
   <div *ngSwitchCase="ACTIONS.GLOBAL_VARIABLE_VALIDATION_ACTION.type">
@@ -146,24 +149,28 @@
   <div *ngSwitchCase="ACTIONS.SNIPPET_VALIDATION_ACTION.type">
     <div class="row">
       <span class="form-text-align">Snippet Validation Action</span>
-      <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info" matTooltipPosition="right" matTooltipShowDelay="500">
+      <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info"
+        matTooltipPosition="right" matTooltipShowDelay="500">
         <i class="fa fa-info"></i>
       </button>
     </div>
     <div class='new-action-form'>
       <mat-form-field>
-        <mat-select placeholder="Package Name" [(ngModel)]="snippetValidationActionDetails.packageName" (ngModelChange)="selectedPackageChanged($event)">
+        <mat-select placeholder="Package Name" [(ngModel)]="snippetValidationActionDetails.packageName"
+          (ngModelChange)="selectedPackageChanged($event)">
           <mat-option *ngFor="let pName of PACKAGE_NAMES" [value]="pName.value">{{ pName.displayText }}</mat-option>
         </mat-select>
       </mat-form-field>
-          <mat-progress-bar *ngIf="isWaitingForMethods" mode="indeterminate"></mat-progress-bar>
+      <mat-progress-bar *ngIf="isWaitingForMethods" mode="indeterminate"></mat-progress-bar>
       <mat-form-field>
-        <mat-select placeholder="Method Name" [(ngModel)]="snippetValidationActionDetails.methodName" (ngModelChange)="methodSelected($event)">
+        <mat-select placeholder="Method Name" [(ngModel)]="snippetValidationActionDetails.methodName"
+          (ngModelChange)="methodSelected($event)">
           <mat-option *ngFor="let mName of methodNames" [value]="mName.value">{{ mName.displayText }}</mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field>
-        <input matInput [(ngModel)]="snippetValidationActionDetails.argumentsSeparatedByComma" placeholder="Arguments Separated By ','">
+        <input matInput [(ngModel)]="snippetValidationActionDetails.argumentsSeparatedByComma"
+          placeholder="Arguments Separated By ','">
       </mat-form-field>
       <mat-form-field>
         <input matInput [(ngModel)]="snippetValidationActionDetails.commandlineExecutionTimeoutSec"
@@ -171,7 +178,8 @@
       </mat-form-field>
       <mat-form-field>
         <mat-select placeholder="Match Type" [(ngModel)]="snippetValidationActionDetails.matchType">
-          <mat-option *ngFor="let cmType of CONTENT_MATCH_TYPES" [value]="cmType.value">{{ cmType.displayText }}</mat-option>
+          <mat-option *ngFor="let cmType of CONTENT_MATCH_TYPES" [value]="cmType.value">{{ cmType.displayText }}
+          </mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field>
@@ -185,40 +193,48 @@
     </div>
   </div>
   <div *ngSwitchCase="ACTIONS.SCRIPT_EXECUTION_ACTION.type">
-        <div class = "row">
-          <span class="form-text-align">Execute Python 2.7 Scripts on the Android Device</span>
-          <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info" matTooltipPosition="left" matTooltipShowDelay="500">
-            <i class="fa fa-info"></i>
-          </button>
-        </div>
-        <div class='new-action-form'>
-          <mat-form-field>
-            <input matInput [(ngModel)]="scriptExecutionActionDetails.delayAfterActionMs" placeholder="Delay After Action (ms)" type="number">
-          </mat-form-field>
-          <mat-form-field>
-            <textarea matInput [(ngModel)]="scriptExecutionActionDetails.actionDescription" placeholder="Description"></textarea>
-          </mat-form-field>
-          <mat-form-field>
-            <textarea rows="4" cols="500" matInput [(ngModel)]="scriptExecutionActionDetails.arguments" placeholder="Script Arguments (separated by spaces)"></textarea>
-          </mat-form-field>
-          <mat-form-field>
-            <textarea rows="8" cols="500" matInput [(ngModel)]="scriptExecutionActionDetails.scriptCodeContent" placeholder="Script Code Content"></textarea>
-          </mat-form-field>
-          <mat-form-field>
-            <input matInput [(ngModel)]="scriptExecutionActionDetails.commandlineExecutionTimeoutSec" placeholder="Script Timeout (sec)" type="number">
-          </mat-form-field>
-        </div>
-      </div>
+    <div class="row">
+      <span class="form-text-align">Execute Python 2.7 Scripts on the Android Device</span>
+      <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info"
+        matTooltipPosition="left" matTooltipShowDelay="500">
+        <i class="fa fa-info"></i>
+      </button>
+    </div>
+    <div class='new-action-form'>
+      <mat-form-field>
+        <input matInput [(ngModel)]="scriptExecutionActionDetails.delayAfterActionMs"
+          placeholder="Delay After Action (ms)" type="number">
+      </mat-form-field>
+      <mat-form-field>
+        <textarea matInput [(ngModel)]="scriptExecutionActionDetails.actionDescription"
+          placeholder="Description"></textarea>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea rows="4" cols="500" matInput [(ngModel)]="scriptExecutionActionDetails.arguments"
+          placeholder="Script Arguments (separated by spaces)"></textarea>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea rows="8" cols="500" matInput [(ngModel)]="scriptExecutionActionDetails.scriptCodeContent"
+          placeholder="Script Code Content"></textarea>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput [(ngModel)]="scriptExecutionActionDetails.commandlineExecutionTimeoutSec"
+          placeholder="Script Timeout (sec)" type="number">
+      </mat-form-field>
+    </div>
+  </div>
   <div *ngSwitchCase="ACTIONS.IMAGE_DIFF_VALIDATION_ACTION.type" (pan)="pan($event)">
     <div class="row">
       <span class="form-text-align">Image Diff Validation Action</span>
-      <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info" matTooltipPosition="left" matTooltipShowDelay="500">
+      <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info"
+        matTooltipPosition="left" matTooltipShowDelay="500">
         <i class="fa fa-info"></i>
       </button>
     </div>
     <div class="new-action-form">
       <mat-form-field>
-        <input matInput [(ngModel)]="imageDiffActionDetails.diffScoreThreshold" placeholder="Diff Score Threshold (0 - 1)" type="number"/>
+        <input matInput [(ngModel)]="imageDiffActionDetails.diffScoreThreshold"
+          placeholder="Diff Score Threshold (0 - 1)" type="number" />
       </mat-form-field>
 
       <div class="align-center">
@@ -227,8 +243,10 @@
       <div>
         <div class="row align-center">
           <mat-button-toggle-group>
-            <mat-button-toggle (change)="imageDiffActionDetails.includeRegion = $event.source.checked" class="margin-5" value="include">Include Regions</mat-button-toggle>
-            <mat-button-toggle (change)="imageDiffActionDetails.includeRegion = !$event.source.checked" class="margin-5" value="exclude">Exclude Regions</mat-button-toggle>
+            <mat-button-toggle (change)="imageDiffActionDetails.includeRegion = $event.source.checked" class="margin-5"
+              value="include">Include Regions</mat-button-toggle>
+            <mat-button-toggle (change)="imageDiffActionDetails.includeRegion = !$event.source.checked" class="margin-5"
+              value="exclude">Exclude Regions</mat-button-toggle>
           </mat-button-toggle-group>
         </div>
 
@@ -260,15 +278,12 @@
   </div>
   <div *ngSwitchCase="ACTIONS.ML_IMAGE_VALIDATION_ACTION.type">
     <mat-form-field class="selector-css">
-      <mat-select
-          placeholder="Icon Image"
-          [(ngModel)]="mlImageValidationActionDetails.iconImageType"
-          class="slot-selector">
-        <mat-option
-            *ngFor="let c of ICON_IMAGE_TYPES"
-            [value]="c.value"
-            class='mat-option'>
-          <span><mat-icon matTooltip="Icon Image" class="material-icons md-36 blue">{{c.matIcon}}</mat-icon></span>
+      <mat-select placeholder="Icon Image" [(ngModel)]="mlImageValidationActionDetails.iconImageType"
+        class="slot-selector">
+        <mat-option *ngFor="let c of ICON_IMAGE_TYPES" [value]="c.value" class='mat-option'>
+          <span>
+            <mat-icon matTooltip="Icon Image" class="material-icons md-36 blue">{{c.matIcon}}</mat-icon>
+          </span>
           <span>{{ "  " + c.displayText }}</span>
         </mat-option>
       </mat-select>
@@ -284,13 +299,17 @@
   <div *ngSwitchCase="ACTIONS.CONDITION_VALIDATION_ACTION.type">
     <div class='new-action-form'>
       <query-builder [(ngModel)]='conditionValidationAction.query' [config]='config'>
-        <ng-container *queryButtonGroup="let ruleset; let addRule=addRule; let addRuleSet=addRuleSet; let removeRuleSet=removeRuleSet">
+        <ng-container
+          *queryButtonGroup="let ruleset; let addRule=addRule; let addRuleSet=addRuleSet; let removeRuleSet=removeRuleSet">
           <button type="button" mat-icon-button color="primary" (click)="addRule()">
-            <mat-icon>add</mat-icon></button>
+            <mat-icon>add</mat-icon>
+          </button>
           <button type="button" mat-icon-button color="primary" *ngIf="addRuleSet" (click)="addRuleSet()">
-            <mat-icon>add_circle_outline</mat-icon></button>
+            <mat-icon>add_circle_outline</mat-icon>
+          </button>
           <button type="button" mat-icon-button color="accent" *ngIf="removeRuleSet" (click)="removeRuleSet()">
-            <mat-icon>remove_circle_outline</mat-icon></button>
+            <mat-icon>remove_circle_outline</mat-icon>
+          </button>
         </ng-container>
         <ng-container *queryArrowIcon>
           <mat-icon ngClass="mat-arrow-icon">chevron_right</mat-icon>
@@ -310,7 +329,7 @@
           <mat-form-field>
             <mat-select [(ngModel)]="rule.entity" (ngModelChange)="onChange($event, rule)">
               <mat-option *ngFor="let entity of entities" [value]="entity.value">
-              {{entity.name}}
+                {{entity.name}}
               </mat-option>
             </mat-select>
           </mat-form-field>
@@ -336,7 +355,8 @@
         <ng-container *queryInput="let rule; type: 'boolean'; let onChange=onChange">
           <mat-checkbox [(ngModel)]="rule.value" (ngModelChange)="onChange()"></mat-checkbox>
         </ng-container>
-        <ng-container *queryInput="let rule; let field=field; let options=options; type: 'category'; let onChange=onChange">
+        <ng-container
+          *queryInput="let rule; let field=field; let options=options; type: 'category'; let onChange=onChange">
           <mat-form-field>
             <mat-select [(ngModel)]="rule.value" (ngModelChange)="onChange()">
               <mat-option *ngFor="let opt of options" [value]="opt.value">
@@ -355,7 +375,7 @@
           </mat-form-field>
         </ng-container>
         <ng-container *queryInput="let rule; let field=field; type: 'number'; let onChange=onChange">
-          <mat-form-field calss="width-50">
+          <mat-form-field class="width-50">
             <input matInput [(ngModel)]="rule.value" type="number" (ngModelChange)="onChange()">
           </mat-form-field>
         </ng-container>
@@ -384,7 +404,26 @@
   <div *ngSwitchCase="ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.type">
   </div>
   <div *ngIf="isValidationAction()">
-    <validation-details [(validationActionDetails)]="validationRequestDetails" [showButtons]="false"></validation-details>
+    <validation-details [(validationActionDetails)]="validationRequestDetails" [showButtons]="false">
+    </validation-details>
+  </div>
+  <div *ngSwitchCase="ACTIONS.PYTHON_SCRIPT_ACTION.type">
+    <div class='new-action-form'>
+      <mat-form-field>
+        <input matInput [(ngModel)]="pythonScriptActionDetails.name" placeholder="Name">
+      </mat-form-field>
+      <mat-form-field>
+        <textarea rows="4" cols="1000" matInput [(ngModel)]="pythonScriptActionDetails.script"
+          placeholder="Python Script here"></textarea>
+      </mat-form-field>
+      <mat-form-field>
+        <textarea rows="4" cols="300" matInput [(ngModel)]="pythonScriptActionDetails.dependency"
+          placeholder="Dependency Of Python Script"></textarea>
+      </mat-form-field>
+      <mat-form-field>
+        <input matInput [(ngModel)]="pythonScriptActionDetails.expectedReturnCode" placeholder="Expected Return Code">
+      </mat-form-field>
+    </div>
   </div>
   <div>
     <button mat-raised-button class='save-action-btn' (click)="saveAction()">Save Action</button>

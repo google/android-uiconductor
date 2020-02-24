@@ -1,0 +1,11 @@
+need install gradlew first, can not checkin the binary due to the G3 limitation
+To build the xmldumper run the gradlew command
+./gradlew assembleDebug
+./gradlew assembleAndroidTest
+
+it will generate the following apk
+./app/build/outputs/apk/debug/app-debug.apks
+./app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+
+manually copy and rename to uicd-xmldumper-server-xxxx.apk and
+uicd-xmldumper-server-test-xxxx.apk

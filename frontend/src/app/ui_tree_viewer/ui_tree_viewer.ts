@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,6 @@ import {ControlMessage, ControlMessageService} from '../services/control_message
 
 import {CopyXmlDialog} from './copy_xml_dialog';
 
-declare var $: any;
-
 const ICON_CLASSES: {[key: string]: string} = {
   'hierarchy': 'fa fa-sitemap',
   'FrameLayout': 'fa fa-object-group',
@@ -52,6 +50,7 @@ interface BoundElement {
   bound: Rect;
 }
 
+declare var $: any;
 /**
  * Component responsible for drawing and interacting with UI tree XML of device
  * screen.
@@ -92,7 +91,10 @@ export class UiTreeViewer implements OnInit, OnDestroy {
                 (msg: ControlMessage) =>
                     msg.messageType === MessageTypes.INSPECT_CLICKED_NODE))
         .subscribe((msg: ControlMessage) => {
-          const coor: Rect = JSON.parse(msg.extra);
+          // `unknown`.
+          // tslint:disable:no-any no-unnecessary-type-assertion
+          const coor: Rect = JSON.parse(msg.extra) as any;
+          // tslint:enable:no-any no-unnecessary-type-assertion
           const smallestContainingNode =
               this.nodeBounds.filter(el => el.bound.contains(coor))
                   .reduce((prev, curr) => {

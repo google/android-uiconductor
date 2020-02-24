@@ -1,4 +1,4 @@
-// Copyright 2019 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ export class ActionEditDialog implements OnInit, OnDestroy {
   currentUser!: string;
   folderList: Folder[] = [];
   saveToFolderId: string = '';
+  playMode!: string;
   isNewWorkflow = false;
   showEditDetails = false;
   static SNACKBAR_DURATION_MS = 2000;
@@ -78,6 +79,7 @@ export class ActionEditDialog implements OnInit, OnDestroy {
     ACTIONS.LOOP_SCREEN_CONTENT_VALIDATION_ACTION.actionType,
     ACTIONS.CONDITION_CLICK_ACTION.actionType,
     ACTIONS.CONDITION_VALIDATION_ACTION.actionType,
+    ACTIONS.PYTHON_SCRIPT_ACTION.actionType,
   ];
 
   constructor(
@@ -113,12 +115,21 @@ export class ActionEditDialog implements OnInit, OnDestroy {
     this.testCaseManagerService.getTestCasesList()
         .pipe(take(1), takeUntil(this.destroyed))
         .subscribe(data => {
-          const root: TreeNode = JSON.parse(data.treeDetails);
+          // `unknown`.
+          // tslint:disable:no-any no-unnecessary-type-assertion
+          const root: TreeNode = JSON.parse(data.treeDetails) as any;
+          // tslint:enable:no-any no-unnecessary-type-assertion
           this.folderList = retrieveFolders(root);
           if (this.folderList.length > 0) {
             this.saveToFolderId =
                 this.folderList[this.folderList.length - 1].id;
           }
+        });
+
+    this.backendManagerService.getPlayMode()
+        .pipe(take(1), takeUntil(this.destroyed))
+        .subscribe(data => {
+          this.playMode = data;
         });
   }
 
@@ -149,6 +160,10 @@ export class ActionEditDialog implements OnInit, OnDestroy {
   isMLImageValidation() {
     return this.actionData.actionType ===
         ACTIONS.ML_IMAGE_VALIDATION_ACTION.actionType;
+  }
+
+  isMultiPlayMode() {
+    return this.playMode === 'MULTIDEVICE';
   }
 
   editAction() {
@@ -257,6 +272,9 @@ interface Folder {
 function retrieveFolders(node: TreeNode): Folder[] {
   let folders: Folder[] = [];
   if (node.children && node.children.length > 0) {
+    for (const n of node.children) {
+      folders = folders.concat(retrieveFolders(n));
+    }
   }
   if (node.id !== '#' && !node.hasOwnProperty('additionalData')) {
     // only add the folder, use unshift to make the order similar to the order

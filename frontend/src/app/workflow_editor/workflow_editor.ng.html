@@ -1,5 +1,5 @@
 <!--
-  Copyright 2019 Google LLC
+  Copyright 2020 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -37,6 +37,10 @@
     <button mat-raised-button (click)="addScreenShot()" class="btn-add-screenshot" [disabled]="isReplaying">
       <i class="fa fa-camera center-icon-img"></i>
       Add Screenshot
+    </button>
+    <button mat-raised-button (click)="addWait()" [disabled]="isReplaying">
+      <i class="fa fa-clock-o center-icon-img"></i>
+      Add Wait
     </button>
     <button mat-raised-button (click)="openHistoryDialog()" [disabled]="isReplaying">
       <i class="fa fa-history center-icon-img"></i>
