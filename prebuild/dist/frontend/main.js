@@ -130,6 +130,19 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./node_modules/raw-loader/dist/cjs.js!./src/app/popup_dialogs/python_debugger_dialog.ng.html":
+/*!****************************************************************************************************!*\
+  !*** ./node_modules/raw-loader/dist/cjs.js!./src/app/popup_dialogs/python_debugger_dialog.ng.html ***!
+  \****************************************************************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ("<!--\n  Copyright 2020 Google LLC\n\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License.\n-->\n<h3 mat-dialog-title>Python debugger dialog</h3>\n\n<div mat-dialog-content>\n  <div>\n    <as-split unit=\"percent\">\n      <as-split direction=\"horizontal\" restrictMove=\"true\">\n        <as-split-area size=\"75\">\n          <mat-form-field class=\"python-script-input\">\n              <textarea matInput placeholder=\"Python Script\" [(ngModel)]=\"pythonScript\" rows=\"10\"\n                cols=\"100\"></textarea>\n          </mat-form-field>\n        </as-split-area>\n        <as-split-area size=\"25\">\n          <mat-radio-group>\n            <mat-radio-button *ngFor=\"let option of pdbDebuggerOptions\" [ngModel]=\"pdbDebuggerOption\">\n              {{ option }}\n            </mat-radio-button>\n          </mat-radio-group>\n          <button mat-raised-button (click)=\"runDebugger()\">Run Debugger</button>\n        </as-split-area>\n      </as-split>\n    </as-split>\n  </div>\n  <div fxFlexFill>\n    Pdb debugger output:\n    <ul>\n      <li></li>\n    </ul>\n  </div>\n</div>\n\n");
+
+/***/ }),
+
 /***/ "./node_modules/raw-loader/dist/cjs.js!./src/app/popup_dialogs/replay_details_dialog.ng.html":
 /*!***************************************************************************************************!*\
   !*** ./node_modules/raw-loader/dist/cjs.js!./src/app/popup_dialogs/replay_details_dialog.ng.html ***!
@@ -308,7 +321,7 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = ("<!--\n  Copyright 2020 Google LLC\n\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License.\n-->\n<div>\n  <div class=\"control-area\" fxLayout='row wrap' fxLayoutGap=\"10px\">\n    <button mat-raised-button (click)=\"playCurrentWorkflow()\" class=\"play-current-btn\" *ngIf=\"!isReplaying\"\n      matTooltip=\"Play the current workflow\">\n      <i class=\"fa fa-play-circle center-icon-img\"></i>Play Workflow\n    </button>\n    <button mat-raised-button (click)=\"playCurrentWorkflow()\" class=\"play-current-btn\" *ngIf=\"isReplaying\"\n      matTooltip=\"Stop playing the current workflow\">\n      <i class=\"fa fa-stop-circle center-icon-img\"></i>Stop Playback\n    </button>\n    <button mat-raised-button (click)=\"clearRecord()\" class=\"btn-clear-record\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-remove center-icon-img\"></i>Clear Workspace\n    </button>\n    <button mat-raised-button (click)=\"addActionPlus()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-plus-circle center-icon-img\"></i>\n      Add Action\n    </button>\n    <button mat-raised-button (click)=\"openSaveWorkflowDialog()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-floppy-o center-icon-img\"></i>\n      Save Workflow\n    </button>\n    <button mat-raised-button (click)=\"addScreenShot()\" class=\"btn-add-screenshot\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-camera center-icon-img\"></i>\n      Add Screenshot\n    </button>\n    <button mat-raised-button (click)=\"addWait()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-clock-o center-icon-img\"></i>\n      Add Wait\n    </button>\n    <button mat-raised-button (click)=\"openHistoryDialog()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-history center-icon-img\"></i>\n      Test History\n    </button>\n    <button mat-raised-button (click)=\"openGlobalVarSettings()\" class=\"global-var-setting\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-superpowers center-icon-img\"></i>\n      Global Variable Settings\n    </button>\n    <button mat-raised-button (click)=\"removeLast()\" class=\"remove-last-btn\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-undo center-icon-img\"></i>\n      Remove Last Action\n    </button>\n\n    <div>\n      <span class=\"play-speed-text-label\">Play Speed: </span>\n      <span class=\"play-speed-value-label\">{{playSpeedFactor}}X</span>\n      <mat-slider min=\"0.5\" max=\"4\" step=\"0.25\" [(value)]=\"playSpeedFactor\" id=\"speed-slider\" (input)=\"onSpeedSliderChange($event)\"></mat-slider>\n    </div>\n  </div>\n  <div class=\"panel panel-success\">\n    <div class=\"breadcrumb flat\">\n      <a>Workflow: </a>\n      <a *ngFor=\"let action of pathStack\" class=\"link-style\"\n                                     (click)=\"goBackFromExpandedCompoundAction(action)\">\n      <span class=\"current-action-name-label\">{{action.name}}</span>\n    </a>\n    </div>\n    <div class=\"panel-heading\">Workflow Editor (Drag and drop to reorder sequence, hover over for more info)</div>\n    <div class=\"panel-body\">\n\n\n      <ol class=\"list-group\" dnd-sortable-container [sortableData]=\"workflowModel.childrenActions\">\n        <li *ngFor=\"let action of workflowModel.childrenActions; let i = index\"\n          (click)=\"isReplaying || openActionEditDialog(action.actionId, i)\" class=\"list-group-item action-item\"\n          [style.background-color]=\"getBackgroundColor(action)\" dnd-sortable (onDropSuccess)=\"onDropSuccess()\"\n          [sortableIndex]=\"i\">\n          <div class=\"expand-icon\" *ngIf=\"getTextByType(action)==='CPD'\" matTooltip=\"click to open\">\n            <i class=\"fa fa-plus-circle center-icon-img\" (click)=\"expandCompoundAction(action, $event)\"></i>\n          </div>\n          {{i + 1}}) {{getTextByType(action)}} <br> ({{action.name}})\n        </li>\n      </ol>\n    </div>\n  </div>\n</div>\n");
+/* harmony default export */ __webpack_exports__["default"] = ("<!--\n  Copyright 2020 Google LLC\n\n  Licensed under the Apache License, Version 2.0 (the \"License\");\n  you may not use this file except in compliance with the License.\n  You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n  Unless required by applicable law or agreed to in writing, software\n  distributed under the License is distributed on an \"AS IS\" BASIS,\n  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n  See the License for the specific language governing permissions and\n  limitations under the License.\n-->\n<div>\n  <div class=\"control-area\" fxLayout='row wrap' fxLayoutGap=\"10px\">\n    <button mat-raised-button (click)=\"playCurrentWorkflow()\" class=\"play-current-btn\" *ngIf=\"!isReplaying\"\n      matTooltip=\"Play the current workflow\">\n      <i class=\"fa fa-play-circle center-icon-img\"></i>Play Workflow\n    </button>\n    <button mat-raised-button (click)=\"playCurrentWorkflow()\" class=\"play-current-btn\" *ngIf=\"isReplaying\"\n      matTooltip=\"Stop playing the current workflow\">\n      <i class=\"fa fa-stop-circle center-icon-img\"></i>Stop Playback\n    </button>\n    <button mat-raised-button (click)=\"clearRecord()\" class=\"btn-clear-record\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-remove center-icon-img\"></i>Clear Workspace\n    </button>\n    <button mat-raised-button (click)=\"addActionPlus()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-plus-circle center-icon-img\"></i>\n      Add Action\n    </button>\n    <button mat-raised-button (click)=\"openSaveWorkflowDialog()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-floppy-o center-icon-img\"></i>\n      Save Workflow\n    </button>\n    <button mat-raised-button (click)=\"addScreenShot()\" class=\"btn-add-screenshot\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-camera center-icon-img\"></i>\n      Add Screenshot\n    </button>\n    <button mat-raised-button (click)=\"addWait()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-clock-o center-icon-img\"></i>\n      Add Wait\n    </button>\n    <button mat-raised-button (click)=\"openHistoryDialog()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-history center-icon-img\"></i>\n      Test History\n    </button>\n    <button mat-raised-button (click)=\"openGlobalVarSettings()\" class=\"global-var-setting\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-superpowers center-icon-img\"></i>\n      Global Variable Settings\n    </button>\n    <button mat-raised-button (click)=\"removeLast()\" class=\"remove-last-btn\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-undo center-icon-img\"></i>\n      Remove Last Action\n    </button>\n    <button mat-raised-button (click)=\"openPdbDebuggerDialog()\" [disabled]=\"isReplaying\">\n      <i class=\"fa fa-plus-circle center-icon-img\"></i>\n      Python Debugger\n    </button>\n\n    <div>\n      <span class=\"play-speed-text-label\">Play Speed: </span>\n      <span class=\"play-speed-value-label\">{{playSpeedFactor}}X</span>\n      <mat-slider min=\"0.5\" max=\"4\" step=\"0.25\" [(value)]=\"playSpeedFactor\" id=\"speed-slider\" (input)=\"onSpeedSliderChange($event)\"></mat-slider>\n    </div>\n  </div>\n  <div class=\"panel panel-success\">\n    <div class=\"breadcrumb flat\">\n      <a>Workflow: </a>\n      <a *ngFor=\"let action of pathStack\" class=\"link-style\"\n                                     (click)=\"goBackFromExpandedCompoundAction(action)\">\n      <span class=\"current-action-name-label\">{{action.name}}</span>\n    </a>\n    </div>\n    <div class=\"panel-heading\">Workflow Editor (Drag and drop to reorder sequence, hover over for more info)</div>\n    <div class=\"panel-body\">\n\n\n      <ol class=\"list-group\" dnd-sortable-container [sortableData]=\"workflowModel.childrenActions\">\n        <li *ngFor=\"let action of workflowModel.childrenActions; let i = index\"\n          (click)=\"isReplaying || openActionEditDialog(action.actionId, i)\" class=\"list-group-item action-item\"\n          [style.background-color]=\"getBackgroundColor(action)\" dnd-sortable (onDropSuccess)=\"onDropSuccess()\"\n          [sortableIndex]=\"i\">\n          <div class=\"expand-icon\" *ngIf=\"getTextByType(action)==='CPD'\" matTooltip=\"click to open\">\n            <i class=\"fa fa-plus-circle center-icon-img\" (click)=\"expandCompoundAction(action, $event)\"></i>\n          </div>\n          {{i + 1}}) {{getTextByType(action)}} <br> ({{action.name}})\n        </li>\n      </ol>\n    </div>\n  </div>\n</div>\n");
 
 /***/ }),
 
@@ -5366,20 +5379,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _popup_dialogs_dialogs_module__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ./popup_dialogs/dialogs_module */ "./src/app/popup_dialogs/dialogs_module.ts");
 /* harmony import */ var _popup_dialogs_global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ./popup_dialogs/global_var_setting_dialog */ "./src/app/popup_dialogs/global_var_setting_dialog.ts");
 /* harmony import */ var _popup_dialogs_history_dialog__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ./popup_dialogs/history_dialog */ "./src/app/popup_dialogs/history_dialog.ts");
-/* harmony import */ var _popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./popup_dialogs/replay_details_dialog */ "./src/app/popup_dialogs/replay_details_dialog.ts");
-/* harmony import */ var _screen_cast_screen_cast_module__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./screen_cast/screen_cast_module */ "./src/app/screen_cast/screen_cast_module.ts");
-/* harmony import */ var _screen_validation_flow_screen_validation_flow__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./screen_validation_flow/screen_validation_flow */ "./src/app/screen_validation_flow/screen_validation_flow.ts");
-/* harmony import */ var _screen_validation_flow_screen_validation_flow_module__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./screen_validation_flow/screen_validation_flow_module */ "./src/app/screen_validation_flow/screen_validation_flow_module.ts");
-/* harmony import */ var _screen_validation_flow_validation_info__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./screen_validation_flow/validation_info */ "./src/app/screen_validation_flow/validation_info.ts");
-/* harmony import */ var _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./services/backend_manager_service */ "./src/app/services/backend_manager_service.ts");
-/* harmony import */ var _services_control_message_service__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./services/control_message_service */ "./src/app/services/control_message_service.ts");
-/* harmony import */ var _services_devices_manager_service__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./services/devices_manager_service */ "./src/app/services/devices_manager_service.ts");
-/* harmony import */ var _services_log_service__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./services/log_service */ "./src/app/services/log_service.ts");
-/* harmony import */ var _services_minicap_service__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ./services/minicap_service */ "./src/app/services/minicap_service.ts");
-/* harmony import */ var _services_test_case_manager_service__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ./services/test_case_manager_service */ "./src/app/services/test_case_manager_service.ts");
-/* harmony import */ var _test_explorer_test_explorer_module__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ./test_explorer/test_explorer_module */ "./src/app/test_explorer/test_explorer_module.ts");
-/* harmony import */ var _ui_tree_viewer_ui_tree_viewer_module__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! ./ui_tree_viewer/ui_tree_viewer_module */ "./src/app/ui_tree_viewer/ui_tree_viewer_module.ts");
-/* harmony import */ var _workflow_editor_workflow_editor_module__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! ./workflow_editor/workflow_editor_module */ "./src/app/workflow_editor/workflow_editor_module.ts");
+/* harmony import */ var _popup_dialogs_python_debugger_dialog__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./popup_dialogs/python_debugger_dialog */ "./src/app/popup_dialogs/python_debugger_dialog.ts");
+/* harmony import */ var _popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./popup_dialogs/replay_details_dialog */ "./src/app/popup_dialogs/replay_details_dialog.ts");
+/* harmony import */ var _screen_cast_screen_cast_module__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./screen_cast/screen_cast_module */ "./src/app/screen_cast/screen_cast_module.ts");
+/* harmony import */ var _screen_validation_flow_screen_validation_flow__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./screen_validation_flow/screen_validation_flow */ "./src/app/screen_validation_flow/screen_validation_flow.ts");
+/* harmony import */ var _screen_validation_flow_screen_validation_flow_module__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./screen_validation_flow/screen_validation_flow_module */ "./src/app/screen_validation_flow/screen_validation_flow_module.ts");
+/* harmony import */ var _screen_validation_flow_validation_info__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./screen_validation_flow/validation_info */ "./src/app/screen_validation_flow/validation_info.ts");
+/* harmony import */ var _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./services/backend_manager_service */ "./src/app/services/backend_manager_service.ts");
+/* harmony import */ var _services_control_message_service__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./services/control_message_service */ "./src/app/services/control_message_service.ts");
+/* harmony import */ var _services_devices_manager_service__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./services/devices_manager_service */ "./src/app/services/devices_manager_service.ts");
+/* harmony import */ var _services_log_service__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ./services/log_service */ "./src/app/services/log_service.ts");
+/* harmony import */ var _services_minicap_service__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ./services/minicap_service */ "./src/app/services/minicap_service.ts");
+/* harmony import */ var _services_test_case_manager_service__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! ./services/test_case_manager_service */ "./src/app/services/test_case_manager_service.ts");
+/* harmony import */ var _test_explorer_test_explorer_module__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! ./test_explorer/test_explorer_module */ "./src/app/test_explorer/test_explorer_module.ts");
+/* harmony import */ var _ui_tree_viewer_ui_tree_viewer_module__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! ./ui_tree_viewer/ui_tree_viewer_module */ "./src/app/ui_tree_viewer/ui_tree_viewer_module.ts");
+/* harmony import */ var _workflow_editor_workflow_editor_module__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! ./workflow_editor/workflow_editor_module */ "./src/app/workflow_editor/workflow_editor_module.ts");
 // Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -5395,6 +5409,7 @@ __webpack_require__.r(__webpack_exports__);
 // limitations under the License.
 
 // taze: Hammer, hammerjs from //third_party/javascript/typings/hammerjs:hammerjs
+
 
 
 
@@ -5503,32 +5518,33 @@ var AppModule = /** @class */ (function () {
                 _angular_material_tabs__WEBPACK_IMPORTED_MODULE_23__["MatTabsModule"],
                 _angular_material_toolbar__WEBPACK_IMPORTED_MODULE_24__["MatToolbarModule"],
                 _angular_material_tooltip__WEBPACK_IMPORTED_MODULE_25__["MatTooltipModule"],
-                _screen_cast_screen_cast_module__WEBPACK_IMPORTED_MODULE_41__["ScreenCastModule"],
-                _screen_validation_flow_screen_validation_flow_module__WEBPACK_IMPORTED_MODULE_43__["ScreenValidationFlowModule"],
-                _ui_tree_viewer_ui_tree_viewer_module__WEBPACK_IMPORTED_MODULE_52__["UiTreeViewerModule"],
-                _test_explorer_test_explorer_module__WEBPACK_IMPORTED_MODULE_51__["TestExplorerModule"],
-                _workflow_editor_workflow_editor_module__WEBPACK_IMPORTED_MODULE_53__["WorkflowEditorModule"],
+                _screen_cast_screen_cast_module__WEBPACK_IMPORTED_MODULE_42__["ScreenCastModule"],
+                _screen_validation_flow_screen_validation_flow_module__WEBPACK_IMPORTED_MODULE_44__["ScreenValidationFlowModule"],
+                _ui_tree_viewer_ui_tree_viewer_module__WEBPACK_IMPORTED_MODULE_53__["UiTreeViewerModule"],
+                _test_explorer_test_explorer_module__WEBPACK_IMPORTED_MODULE_52__["TestExplorerModule"],
+                _workflow_editor_workflow_editor_module__WEBPACK_IMPORTED_MODULE_54__["WorkflowEditorModule"],
             ],
             providers: [
                 { provide: _angular_platform_browser__WEBPACK_IMPORTED_MODULE_26__["HAMMER_GESTURE_CONFIG"], useClass: UicdHammerConfig },
-                _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_45__["BackendManagerService"],
-                _services_control_message_service__WEBPACK_IMPORTED_MODULE_46__["ControlMessageService"],
-                _services_devices_manager_service__WEBPACK_IMPORTED_MODULE_47__["DevicesManagerService"],
-                _services_log_service__WEBPACK_IMPORTED_MODULE_48__["LogService"],
-                _services_minicap_service__WEBPACK_IMPORTED_MODULE_49__["MinicapService"],
-                _services_test_case_manager_service__WEBPACK_IMPORTED_MODULE_50__["TestCaseManagerService"],
+                _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_46__["BackendManagerService"],
+                _services_control_message_service__WEBPACK_IMPORTED_MODULE_47__["ControlMessageService"],
+                _services_devices_manager_service__WEBPACK_IMPORTED_MODULE_48__["DevicesManagerService"],
+                _services_log_service__WEBPACK_IMPORTED_MODULE_49__["LogService"],
+                _services_minicap_service__WEBPACK_IMPORTED_MODULE_50__["MinicapService"],
+                _services_test_case_manager_service__WEBPACK_IMPORTED_MODULE_51__["TestCaseManagerService"],
             ],
             bootstrap: [_app__WEBPACK_IMPORTED_MODULE_33__["AppComponent"]],
             entryComponents: [
                 _popup_dialogs_choose_device_dialog__WEBPACK_IMPORTED_MODULE_36__["ChooseDeviceDialogComponent"],
-                _screen_validation_flow_screen_validation_flow__WEBPACK_IMPORTED_MODULE_42__["ScreenValidationFlowComponent"],
-                _screen_validation_flow_validation_info__WEBPACK_IMPORTED_MODULE_44__["ValidationInfoDialogComponent"],
+                _screen_validation_flow_screen_validation_flow__WEBPACK_IMPORTED_MODULE_43__["ScreenValidationFlowComponent"],
+                _screen_validation_flow_validation_info__WEBPACK_IMPORTED_MODULE_45__["ValidationInfoDialogComponent"],
                 _advanced_actions_dialog_advanced_actions_dialog__WEBPACK_IMPORTED_MODULE_29__["AdvancedActionDialogComponent"],
-                _popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_40__["ReplayDetailsDialog"],
+                _popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_41__["ReplayDetailsDialog"],
                 _advanced_actions_dialog_snippet_action_info_dialog__WEBPACK_IMPORTED_MODULE_32__["SnippetActionInfoDialogComponent"],
                 _advanced_actions_dialog_script_action_info_dialog__WEBPACK_IMPORTED_MODULE_31__["ScriptActionInfoDialogComponent"],
                 _popup_dialogs_history_dialog__WEBPACK_IMPORTED_MODULE_39__["HistoryDialog"],
                 _popup_dialogs_global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_38__["GlobalVariableSettingDialog"],
+                _popup_dialogs_python_debugger_dialog__WEBPACK_IMPORTED_MODULE_40__["PythonDebuggerDialog"],
             ],
         })
     ], AppModule);
@@ -6972,14 +6988,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _angular_material_dialog__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @angular/material/dialog */ "./node_modules/@angular/material/esm5/dialog.es5.js");
 /* harmony import */ var _angular_material_grid_list__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @angular/material/grid-list */ "./node_modules/@angular/material/esm5/grid-list.es5.js");
 /* harmony import */ var _angular_material_input__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @angular/material/input */ "./node_modules/@angular/material/esm5/input.es5.js");
-/* harmony import */ var _angular_material_select__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @angular/material/select */ "./node_modules/@angular/material/esm5/select.es5.js");
-/* harmony import */ var _angular_material_table__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @angular/material/table */ "./node_modules/@angular/material/esm5/table.es5.js");
-/* harmony import */ var _angular_platform_browser__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @angular/platform-browser */ "./node_modules/@angular/platform-browser/fesm5/platform-browser.js");
-/* harmony import */ var _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @angular/platform-browser/animations */ "./node_modules/@angular/platform-browser/fesm5/animations.js");
-/* harmony import */ var _choose_device_dialog__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./choose_device_dialog */ "./src/app/popup_dialogs/choose_device_dialog.ts");
-/* harmony import */ var _global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./global_var_setting_dialog */ "./src/app/popup_dialogs/global_var_setting_dialog.ts");
-/* harmony import */ var _history_dialog__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./history_dialog */ "./src/app/popup_dialogs/history_dialog.ts");
-/* harmony import */ var _replay_details_dialog__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./replay_details_dialog */ "./src/app/popup_dialogs/replay_details_dialog.ts");
+/* harmony import */ var _angular_material_radio__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @angular/material/radio */ "./node_modules/@angular/material/esm5/radio.es5.js");
+/* harmony import */ var _angular_material_select__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @angular/material/select */ "./node_modules/@angular/material/esm5/select.es5.js");
+/* harmony import */ var _angular_material_table__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @angular/material/table */ "./node_modules/@angular/material/esm5/table.es5.js");
+/* harmony import */ var _angular_platform_browser__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @angular/platform-browser */ "./node_modules/@angular/platform-browser/fesm5/platform-browser.js");
+/* harmony import */ var _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! @angular/platform-browser/animations */ "./node_modules/@angular/platform-browser/fesm5/animations.js");
+/* harmony import */ var angular_split__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! angular-split */ "./node_modules/angular-split/fesm5/angular-split.js");
+/* harmony import */ var _choose_device_dialog__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./choose_device_dialog */ "./src/app/popup_dialogs/choose_device_dialog.ts");
+/* harmony import */ var _global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./global_var_setting_dialog */ "./src/app/popup_dialogs/global_var_setting_dialog.ts");
+/* harmony import */ var _history_dialog__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./history_dialog */ "./src/app/popup_dialogs/history_dialog.ts");
+/* harmony import */ var _python_debugger_dialog__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./python_debugger_dialog */ "./src/app/popup_dialogs/python_debugger_dialog.ts");
+/* harmony import */ var _replay_details_dialog__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./replay_details_dialog */ "./src/app/popup_dialogs/replay_details_dialog.ts");
 // Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -7014,20 +7033,25 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
 var DialogsModule = /** @class */ (function () {
     function DialogsModule() {
     }
     DialogsModule = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_2__["NgModule"])({
             declarations: [
-                _choose_device_dialog__WEBPACK_IMPORTED_MODULE_17__["ChooseDeviceDialogComponent"],
-                _global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_18__["GlobalVariableSettingDialog"],
-                _history_dialog__WEBPACK_IMPORTED_MODULE_19__["HistoryDialog"],
-                _replay_details_dialog__WEBPACK_IMPORTED_MODULE_20__["ReplayDetailsDialog"],
+                _choose_device_dialog__WEBPACK_IMPORTED_MODULE_19__["ChooseDeviceDialogComponent"],
+                _global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_20__["GlobalVariableSettingDialog"],
+                _history_dialog__WEBPACK_IMPORTED_MODULE_21__["HistoryDialog"],
+                _python_debugger_dialog__WEBPACK_IMPORTED_MODULE_22__["PythonDebuggerDialog"],
+                _replay_details_dialog__WEBPACK_IMPORTED_MODULE_23__["ReplayDetailsDialog"],
             ],
             imports: [
-                _angular_platform_browser__WEBPACK_IMPORTED_MODULE_15__["BrowserModule"],
-                _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_16__["BrowserAnimationsModule"],
+                angular_split__WEBPACK_IMPORTED_MODULE_18__["AngularSplitModule"],
+                _angular_platform_browser__WEBPACK_IMPORTED_MODULE_16__["BrowserModule"],
+                _angular_platform_browser_animations__WEBPACK_IMPORTED_MODULE_17__["BrowserAnimationsModule"],
                 _angular_common__WEBPACK_IMPORTED_MODULE_1__["CommonModule"],
                 _angular_flex_layout__WEBPACK_IMPORTED_MODULE_3__["FlexLayoutModule"],
                 _angular_forms__WEBPACK_IMPORTED_MODULE_4__["FormsModule"],
@@ -7040,14 +7064,16 @@ var DialogsModule = /** @class */ (function () {
                 _angular_material_input__WEBPACK_IMPORTED_MODULE_12__["MatInputModule"],
                 _angular_material_grid_list__WEBPACK_IMPORTED_MODULE_11__["MatGridListModule"],
                 _angular_material_core__WEBPACK_IMPORTED_MODULE_9__["MatOptionModule"],
-                _angular_material_select__WEBPACK_IMPORTED_MODULE_13__["MatSelectModule"],
-                _angular_material_table__WEBPACK_IMPORTED_MODULE_14__["MatTableModule"],
+                _angular_material_select__WEBPACK_IMPORTED_MODULE_14__["MatSelectModule"],
+                _angular_material_table__WEBPACK_IMPORTED_MODULE_15__["MatTableModule"],
+                _angular_material_radio__WEBPACK_IMPORTED_MODULE_13__["MatRadioModule"],
             ],
             exports: [
-                _choose_device_dialog__WEBPACK_IMPORTED_MODULE_17__["ChooseDeviceDialogComponent"],
-                _global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_18__["GlobalVariableSettingDialog"],
-                _history_dialog__WEBPACK_IMPORTED_MODULE_19__["HistoryDialog"],
-                _replay_details_dialog__WEBPACK_IMPORTED_MODULE_20__["ReplayDetailsDialog"],
+                _choose_device_dialog__WEBPACK_IMPORTED_MODULE_19__["ChooseDeviceDialogComponent"],
+                _global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_20__["GlobalVariableSettingDialog"],
+                _history_dialog__WEBPACK_IMPORTED_MODULE_21__["HistoryDialog"],
+                _python_debugger_dialog__WEBPACK_IMPORTED_MODULE_22__["PythonDebuggerDialog"],
+                _replay_details_dialog__WEBPACK_IMPORTED_MODULE_23__["ReplayDetailsDialog"],
             ],
         })
     ], DialogsModule);
@@ -7240,6 +7266,63 @@ var HistoryDialog = /** @class */ (function () {
             _services_test_case_manager_service__WEBPACK_IMPORTED_MODULE_6__["TestCaseManagerService"]])
     ], HistoryDialog);
     return HistoryDialog;
+}());
+
+
+
+/***/ }),
+
+/***/ "./src/app/popup_dialogs/python_debugger_dialog.css":
+/*!**********************************************************!*\
+  !*** ./src/app/popup_dialogs/python_debugger_dialog.css ***!
+  \**********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ("/*\n * Copyright 2020 Google LLC\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *      http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\n.python-script-input {\n  margin-top: 20px;\n  min-width: 600px;\n}\n\n/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInNyYy9hcHAvcG9wdXBfZGlhbG9ncy9weXRob25fZGVidWdnZXJfZGlhbG9nLmNzcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTs7Ozs7Ozs7Ozs7Ozs7RUFjRTs7QUFFRjtFQUNFLGdCQUFnQjtFQUNoQixnQkFBZ0I7QUFDbEIiLCJmaWxlIjoic3JjL2FwcC9wb3B1cF9kaWFsb2dzL3B5dGhvbl9kZWJ1Z2dlcl9kaWFsb2cuY3NzIiwic291cmNlc0NvbnRlbnQiOlsiLypcbiAqIENvcHlyaWdodCAyMDIwIEdvb2dsZSBMTENcbiAqXG4gKiBMaWNlbnNlZCB1bmRlciB0aGUgQXBhY2hlIExpY2Vuc2UsIFZlcnNpb24gMi4wICh0aGUgXCJMaWNlbnNlXCIpO1xuICogeW91IG1heSBub3QgdXNlIHRoaXMgZmlsZSBleGNlcHQgaW4gY29tcGxpYW5jZSB3aXRoIHRoZSBMaWNlbnNlLlxuICogWW91IG1heSBvYnRhaW4gYSBjb3B5IG9mIHRoZSBMaWNlbnNlIGF0XG4gKlxuICogICAgICBodHRwOi8vd3d3LmFwYWNoZS5vcmcvbGljZW5zZXMvTElDRU5TRS0yLjBcbiAqXG4gKiBVbmxlc3MgcmVxdWlyZWQgYnkgYXBwbGljYWJsZSBsYXcgb3IgYWdyZWVkIHRvIGluIHdyaXRpbmcsIHNvZnR3YXJlXG4gKiBkaXN0cmlidXRlZCB1bmRlciB0aGUgTGljZW5zZSBpcyBkaXN0cmlidXRlZCBvbiBhbiBcIkFTIElTXCIgQkFTSVMsXG4gKiBXSVRIT1VUIFdBUlJBTlRJRVMgT1IgQ09ORElUSU9OUyBPRiBBTlkgS0lORCwgZWl0aGVyIGV4cHJlc3Mgb3IgaW1wbGllZC5cbiAqIFNlZSB0aGUgTGljZW5zZSBmb3IgdGhlIHNwZWNpZmljIGxhbmd1YWdlIGdvdmVybmluZyBwZXJtaXNzaW9ucyBhbmRcbiAqIGxpbWl0YXRpb25zIHVuZGVyIHRoZSBMaWNlbnNlLlxuICovXG5cbi5weXRob24tc2NyaXB0LWlucHV0IHtcbiAgbWFyZ2luLXRvcDogMjBweDtcbiAgbWluLXdpZHRoOiA2MDBweDtcbn1cbiJdfQ== */");
+
+/***/ }),
+
+/***/ "./src/app/popup_dialogs/python_debugger_dialog.ts":
+/*!*********************************************************!*\
+  !*** ./src/app/popup_dialogs/python_debugger_dialog.ts ***!
+  \*********************************************************/
+/*! exports provided: PythonDebuggerDialog */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PythonDebuggerDialog", function() { return PythonDebuggerDialog; });
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+
+
+/**
+ * Pdb debugger component for python in UICD
+ */
+var PythonDebuggerDialog = /** @class */ (function () {
+    function PythonDebuggerDialog() {
+        this.pythonScript = '';
+        this.pdbDebuggerOption = '';
+        this.pdbDebuggerOptions = [
+            'N',
+            'S',
+            'C',
+            'R',
+            'B',
+        ];
+    }
+    PythonDebuggerDialog.prototype.runDebugger = function () { };
+    PythonDebuggerDialog = tslib__WEBPACK_IMPORTED_MODULE_0__["__decorate"]([
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
+            selector: 'python-debugger-dialog',
+            template: tslib__WEBPACK_IMPORTED_MODULE_0__["__importDefault"](__webpack_require__(/*! raw-loader!./python_debugger_dialog.ng.html */ "./node_modules/raw-loader/dist/cjs.js!./src/app/popup_dialogs/python_debugger_dialog.ng.html")).default,
+            styles: [tslib__WEBPACK_IMPORTED_MODULE_0__["__importDefault"](__webpack_require__(/*! ./python_debugger_dialog.css */ "./src/app/popup_dialogs/python_debugger_dialog.css")).default]
+        })
+    ], PythonDebuggerDialog);
+    return PythonDebuggerDialog;
 }());
 
 
@@ -11798,11 +11881,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _constants_constants__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../constants/constants */ "./src/app/constants/constants.ts");
 /* harmony import */ var _popup_dialogs_global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../popup_dialogs/global_var_setting_dialog */ "./src/app/popup_dialogs/global_var_setting_dialog.ts");
 /* harmony import */ var _popup_dialogs_history_dialog__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../popup_dialogs/history_dialog */ "./src/app/popup_dialogs/history_dialog.ts");
-/* harmony import */ var _popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../popup_dialogs/replay_details_dialog */ "./src/app/popup_dialogs/replay_details_dialog.ts");
-/* harmony import */ var _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../services/backend_manager_service */ "./src/app/services/backend_manager_service.ts");
-/* harmony import */ var _services_control_message_service__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../services/control_message_service */ "./src/app/services/control_message_service.ts");
-/* harmony import */ var _services_log_service__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../services/log_service */ "./src/app/services/log_service.ts");
-/* harmony import */ var _test_explorer_action_edit_dialog__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../test_explorer/action_edit_dialog */ "./src/app/test_explorer/action_edit_dialog.ts");
+/* harmony import */ var _popup_dialogs_python_debugger_dialog__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../popup_dialogs/python_debugger_dialog */ "./src/app/popup_dialogs/python_debugger_dialog.ts");
+/* harmony import */ var _popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../popup_dialogs/replay_details_dialog */ "./src/app/popup_dialogs/replay_details_dialog.ts");
+/* harmony import */ var _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../services/backend_manager_service */ "./src/app/services/backend_manager_service.ts");
+/* harmony import */ var _services_control_message_service__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../services/control_message_service */ "./src/app/services/control_message_service.ts");
+/* harmony import */ var _services_log_service__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../services/log_service */ "./src/app/services/log_service.ts");
+/* harmony import */ var _test_explorer_action_edit_dialog__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../test_explorer/action_edit_dialog */ "./src/app/test_explorer/action_edit_dialog.ts");
 // Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11816,6 +11900,7 @@ __webpack_require__.r(__webpack_exports__);
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 
 
 
@@ -11957,7 +12042,7 @@ var WorkflowEditorComponent = /** @class */ (function () {
         var _this = this;
         if (this.workflowModel.name === '' ||
             this.workflowModel.name.includes(_constants_constants__WEBPACK_IMPORTED_MODULE_8__["DEFAULT_WORKFLOW_NAME"])) { // New workflow
-            var dialogRef = this.dialog.open(_test_explorer_action_edit_dialog__WEBPACK_IMPORTED_MODULE_15__["ActionEditDialog"], {
+            var dialogRef = this.dialog.open(_test_explorer_action_edit_dialog__WEBPACK_IMPORTED_MODULE_16__["ActionEditDialog"], {
                 width: _constants_constants__WEBPACK_IMPORTED_MODULE_8__["POPUP_DIALOG_DEFAULT_DIMENSION"].width,
                 data: { uuid: this.workflowModel.actionId, isSaveWorkflow: true }
             });
@@ -11983,7 +12068,7 @@ var WorkflowEditorComponent = /** @class */ (function () {
         var dialogConfig = new _angular_material_dialog__WEBPACK_IMPORTED_MODULE_2__["MatDialogConfig"]();
         dialogConfig.width = _constants_constants__WEBPACK_IMPORTED_MODULE_8__["POPUP_DIALOG_DEFAULT_DIMENSION"].width;
         dialogConfig.data = { 'uuid': id, 'index': index };
-        var dialogRef = this.dialog.open(_test_explorer_action_edit_dialog__WEBPACK_IMPORTED_MODULE_15__["ActionEditDialog"], dialogConfig);
+        var dialogRef = this.dialog.open(_test_explorer_action_edit_dialog__WEBPACK_IMPORTED_MODULE_16__["ActionEditDialog"], dialogConfig);
         dialogRef.afterClosed()
             .pipe(Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["filter"])(function (data) { return data && data.hasOwnProperty('playWorkflowRequested'); }), Object(rxjs_operators__WEBPACK_IMPORTED_MODULE_5__["concatMap"])(function () {
             _this.preparePlay();
@@ -12016,7 +12101,7 @@ var WorkflowEditorComponent = /** @class */ (function () {
         this.isReplaying = false;
         this.controlMessageService.sendRefreshWorkflowMsg();
         this.logService.log(_constants_constants__WEBPACK_IMPORTED_MODULE_8__["TestStatusMsg"].TEST_END);
-        this.dialog.open(_popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_11__["ReplayDetailsDialog"], { width: _constants_constants__WEBPACK_IMPORTED_MODULE_8__["POPUP_DIALOG_DEFAULT_DIMENSION"].width, data: data });
+        this.dialog.open(_popup_dialogs_replay_details_dialog__WEBPACK_IMPORTED_MODULE_12__["ReplayDetailsDialog"], { width: _constants_constants__WEBPACK_IMPORTED_MODULE_8__["POPUP_DIALOG_DEFAULT_DIMENSION"].width, data: data });
     };
     WorkflowEditorComponent.prototype.playCurrentWorkflow = function () {
         var _this = this;
@@ -12096,6 +12181,9 @@ var WorkflowEditorComponent = /** @class */ (function () {
     WorkflowEditorComponent.prototype.openGlobalVarSettings = function () {
         this.dialog.open(_popup_dialogs_global_var_setting_dialog__WEBPACK_IMPORTED_MODULE_9__["GlobalVariableSettingDialog"], { width: _constants_constants__WEBPACK_IMPORTED_MODULE_8__["POPUP_DIALOG_DEFAULT_DIMENSION"].width });
     };
+    WorkflowEditorComponent.prototype.openPdbDebuggerDialog = function () {
+        this.dialog.open(_popup_dialogs_python_debugger_dialog__WEBPACK_IMPORTED_MODULE_11__["PythonDebuggerDialog"], { width: _constants_constants__WEBPACK_IMPORTED_MODULE_8__["POPUP_DIALOG_DEFAULT_DIMENSION"].width });
+    };
     WorkflowEditorComponent.prototype.onSpeedSliderChange = function (event) {
         if (this.isReplaying) {
             this.backendManagerService.setPlaySpeedFactor(event.value)
@@ -12110,9 +12198,9 @@ var WorkflowEditorComponent = /** @class */ (function () {
     var WorkflowEditorComponent_1;
     WorkflowEditorComponent.SNACKBAR_DURATION_MS = 2000;
     WorkflowEditorComponent.ctorParameters = function () { return [
-        { type: _services_control_message_service__WEBPACK_IMPORTED_MODULE_13__["ControlMessageService"] },
-        { type: _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_12__["BackendManagerService"] },
-        { type: _services_log_service__WEBPACK_IMPORTED_MODULE_14__["LogService"] },
+        { type: _services_control_message_service__WEBPACK_IMPORTED_MODULE_14__["ControlMessageService"] },
+        { type: _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_13__["BackendManagerService"] },
+        { type: _services_log_service__WEBPACK_IMPORTED_MODULE_15__["LogService"] },
         { type: _angular_material_dialog__WEBPACK_IMPORTED_MODULE_2__["MatDialog"] },
         { type: _angular_material_snack_bar__WEBPACK_IMPORTED_MODULE_3__["MatSnackBar"] }
     ]; };
@@ -12122,9 +12210,9 @@ var WorkflowEditorComponent = /** @class */ (function () {
             template: tslib__WEBPACK_IMPORTED_MODULE_0__["__importDefault"](__webpack_require__(/*! raw-loader!./workflow_editor.ng.html */ "./node_modules/raw-loader/dist/cjs.js!./src/app/workflow_editor/workflow_editor.ng.html")).default,
             styles: [tslib__WEBPACK_IMPORTED_MODULE_0__["__importDefault"](__webpack_require__(/*! ./workflow_editor.css */ "./src/app/workflow_editor/workflow_editor.css")).default]
         }),
-        tslib__WEBPACK_IMPORTED_MODULE_0__["__metadata"]("design:paramtypes", [_services_control_message_service__WEBPACK_IMPORTED_MODULE_13__["ControlMessageService"],
-            _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_12__["BackendManagerService"],
-            _services_log_service__WEBPACK_IMPORTED_MODULE_14__["LogService"],
+        tslib__WEBPACK_IMPORTED_MODULE_0__["__metadata"]("design:paramtypes", [_services_control_message_service__WEBPACK_IMPORTED_MODULE_14__["ControlMessageService"],
+            _services_backend_manager_service__WEBPACK_IMPORTED_MODULE_13__["BackendManagerService"],
+            _services_log_service__WEBPACK_IMPORTED_MODULE_15__["LogService"],
             _angular_material_dialog__WEBPACK_IMPORTED_MODULE_2__["MatDialog"],
             _angular_material_snack_bar__WEBPACK_IMPORTED_MODULE_3__["MatSnackBar"]])
     ], WorkflowEditorComponent);

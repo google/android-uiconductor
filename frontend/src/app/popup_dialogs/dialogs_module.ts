@@ -24,14 +24,17 @@ import {MatOptionModule} from '@angular/material/core';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatGridListModule} from '@angular/material/grid-list';
 import {MatInputModule} from '@angular/material/input';
+import {MatRadioModule} from '@angular/material/radio';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTableModule} from '@angular/material/table';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
+import {AngularSplitModule} from 'angular-split';
 
 import {ChooseDeviceDialogComponent} from './choose_device_dialog';
 import {GlobalVariableSettingDialog} from './global_var_setting_dialog';
 import {HistoryDialog} from './history_dialog';
+import {PythonDebuggerDialog} from './python_debugger_dialog';
 import {ReplayDetailsDialog} from './replay_details_dialog';
 
 @NgModule({
@@ -39,9 +42,11 @@ import {ReplayDetailsDialog} from './replay_details_dialog';
     ChooseDeviceDialogComponent,
     GlobalVariableSettingDialog,
     HistoryDialog,
+    PythonDebuggerDialog,
     ReplayDetailsDialog,
   ],
   imports: [
+    AngularSplitModule,
     BrowserModule,
     BrowserAnimationsModule,
     CommonModule,
@@ -58,11 +63,13 @@ import {ReplayDetailsDialog} from './replay_details_dialog';
     MatOptionModule,
     MatSelectModule,
     MatTableModule,
+    MatRadioModule,
   ],
   exports: [
     ChooseDeviceDialogComponent,
     GlobalVariableSettingDialog,
     HistoryDialog,
+    PythonDebuggerDialog,
     ReplayDetailsDialog,
   ],
 })

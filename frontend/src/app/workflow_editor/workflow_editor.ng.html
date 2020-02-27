@@ -54,6 +54,10 @@
       <i class="fa fa-undo center-icon-img"></i>
       Remove Last Action
     </button>
+    <button mat-raised-button (click)="openPdbDebuggerDialog()" [disabled]="isReplaying">
+      <i class="fa fa-plus-circle center-icon-img"></i>
+      Python Debugger
+    </button>
 
     <div>
       <span class="play-speed-text-label">Play Speed: </span>
