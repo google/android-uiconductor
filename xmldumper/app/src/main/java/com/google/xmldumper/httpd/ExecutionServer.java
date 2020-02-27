@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.xmldumper.httpd;
+package com.google.uicd.xmldumper.httpd;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import android.graphics.Point;
 import android.util.Log;
 import androidx.test.uiautomator.UiDevice;
-import com.google.wireless.qa.uicd.xmldumper.core.AccessibilityNodeInfoDumper;
-import com.google.wireless.qa.uicd.xmldumper.core.ComplexUiActionHandler;
+import com.google.uicd.xmldumper.core.AccessibilityNodeInfoDumper;
+import com.google.uicd.xmldumper.core.ComplexUiActionHandler;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.util.HashMap;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.wireless.qa.uicd.xmldumper.core;
+package com.google.uicd.xmldumper.core;
 
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
