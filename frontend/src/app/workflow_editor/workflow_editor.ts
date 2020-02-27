@@ -17,12 +17,14 @@ import {MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {ReplaySubject} from 'rxjs';
 import {concatMap, filter, take, takeUntil} from 'rxjs/operators';
+
 import {AdvancedActionDialogComponent} from '../advanced_actions_dialog/advanced_actions_dialog';
 import {ActionModel, actionModelFromJson, ACTIONS, ActionSummaryMetaData, WorkflowModel} from '../constants/actions';
 import {ActionColor, DEFAULT_WORKFLOW_NAME, MessageTypes, POPUP_DIALOG_DEFAULT_DIMENSION, TestStatusMsg} from '../constants/constants';
 import {PlayActionRequest, PlayActionResponse} from '../constants/interfaces';
 import {GlobalVariableSettingDialog} from '../popup_dialogs/global_var_setting_dialog';
 import {HistoryDialog} from '../popup_dialogs/history_dialog';
+import {PythonDebuggerDialog} from '../popup_dialogs/python_debugger_dialog';
 import {ReplayDetailsDialog} from '../popup_dialogs/replay_details_dialog';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessage, ControlMessageService} from '../services/control_message_service';
@@ -341,6 +343,11 @@ export class WorkflowEditorComponent implements OnDestroy {
     this.dialog.open(
         GlobalVariableSettingDialog,
         {width: POPUP_DIALOG_DEFAULT_DIMENSION.width});
+  }
+
+  openPdbDebuggerDialog() {
+    this.dialog.open(
+        PythonDebuggerDialog, {width: POPUP_DIALOG_DEFAULT_DIMENSION.width});
   }
 
   onSpeedSliderChange(event: SliderChangeEvent) {
