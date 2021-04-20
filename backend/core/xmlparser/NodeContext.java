@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,16 +63,29 @@ public class NodeContext {
     this.tmpUUID = tmpUUID;
   }
   private String uuid = "";
+
+  @JsonInclude(Include.NON_DEFAULT)
   private String displayText = "";
+
   private static final String REGULAR_EXPRESSION_DELIMITING = "[\\s,.|/]+";
   private boolean isUniqueResourceId;
+
   private List<NodeContext> children = new ArrayList<>();
 
   //fields from the xml
+
+  @JsonInclude(Include.NON_DEFAULT)
   private String className = "";
+
+  @JsonInclude(Include.NON_DEFAULT)
   private String resourceId = "";
+
+  @JsonInclude(Include.NON_DEFAULT)
   private String text = "";
+
+  @JsonInclude(Include.NON_DEFAULT)
   private String contentDesc = "";
+
   private boolean checked;
   private boolean isCheckableNode;
   private boolean isClickableNode;
@@ -82,6 +95,10 @@ public class NodeContext {
   private Position relativePos;
   private boolean isRawXYPosition;
   private boolean isClickedCurrentNode;
+
+  public List<NodeContext> getChildrenNodeContext() {
+    return children;
+  }
 
   // Only use xmlLayerIndex when recording an action to make sure we are recording the correct click
   // position. Otherwise, saveNodeContext can possibly save something in the wrong layer.
@@ -269,7 +286,7 @@ public class NodeContext {
   }
 
   /**
-   * Returns true if either root node or any of it's children evaluates
+   * Returns true if either root node or any of its children evaluates
    * correct with given query.
    * Example:
    * Query:
@@ -335,7 +352,7 @@ public class NodeContext {
       int childrenMatchCnt = 0;
       for (int i = 0; i < children.size(); i++) {
         NodeContext srcChildNode = children.get(i);
-        if (srcChildNode.getCountVal() == 0) { // ingore those no-text node
+        if (srcChildNode.getCountVal() == 0) { // ignore those no-text node
           continue;
         }
         for (int j = 0; j < nodeContext.getChildren().size(); j++) {
@@ -660,6 +677,10 @@ public class NodeContext {
 
   public String getUuid() {
     return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
   }
 
   public String getTmpUUID() {

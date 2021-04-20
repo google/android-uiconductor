@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,49 +27,46 @@ import {MatInputModule} from '@angular/material/input';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTableModule} from '@angular/material/table';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {AngularSplitModule} from 'angular-split';
 
 import {ChooseDeviceDialogComponent} from './choose_device_dialog';
 import {GlobalVariableSettingDialog} from './global_var_setting_dialog';
+import {HardAndSoftInfoDialogComponent} from './hard_soft_import_action_info_dialog';
 import {HistoryDialog} from './history_dialog';
-import {PythonDebuggerDialog} from './python_debugger_dialog';
+import {PythonDebuggerSimpleDialog} from './python_debugger_simple_dialog';
+import {PythonEditorSimpleComponent} from './python_editor_simple';
+
 import {ReplayDetailsDialog} from './replay_details_dialog';
 
 @NgModule({
   declarations: [
     ChooseDeviceDialogComponent,
     GlobalVariableSettingDialog,
+    HardAndSoftInfoDialogComponent,
     HistoryDialog,
-    PythonDebuggerDialog,
+    PythonDebuggerSimpleDialog,
+    PythonEditorSimpleComponent,
     ReplayDetailsDialog,
   ],
   imports: [
-    AngularSplitModule,
-    BrowserModule,
-    BrowserAnimationsModule,
-    CommonModule,
-    FlexLayoutModule,
-    FormsModule,
-    ReactiveFormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatInputModule,
-    MatGridListModule,
-    MatOptionModule,
-    MatSelectModule,
-    MatTableModule,
+    AngularSplitModule,  BrowserModule,     BrowserAnimationsModule,
+    CommonModule,        FlexLayoutModule,  FormsModule,
+    ReactiveFormsModule, MatButtonModule,   MatCardModule,
+    MatCheckboxModule,   MatChipsModule,    MatDialogModule,
+    MatInputModule,      MatGridListModule, MatOptionModule,
+    MatSelectModule,     MatTableModule,    MatTooltipModule,
     MatRadioModule,
   ],
   exports: [
     ChooseDeviceDialogComponent,
     GlobalVariableSettingDialog,
+    HardAndSoftInfoDialogComponent,
     HistoryDialog,
-    PythonDebuggerDialog,
+    PythonDebuggerSimpleDialog,
+    PythonEditorSimpleComponent,
     ReplayDetailsDialog,
   ],
 })

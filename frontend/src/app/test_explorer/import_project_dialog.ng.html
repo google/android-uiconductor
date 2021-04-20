@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
           <input matInput placeholder="Import by Username" [(ngModel)]="usernameImportText" (keyup.enter)="fetchProjectListByUsername()">
           <mat-hint align="end">Click "Fetch Projects" button after input username</mat-hint>
         </mat-form-field>
+        <br/>
         <mat-form-field>
           <mat-select placeholder="Select a project you want to import" [(ngModel)]="selectedProject" (click)="fetchProjectListByUsername()">
           <mat-option *ngFor="let projectRecord of projectList" [value]="projectRecord">{{projectRecord.projectName}}</mat-option>

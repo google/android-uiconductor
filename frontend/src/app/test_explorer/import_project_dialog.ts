@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
 // taze: $, JQuery from //third_party/javascript/typings/jquery:jquery_without_externs
 // taze: jstree from //third_party/javascript/typings/jstree:jstree
 
-import {Component, ElementRef, OnDestroy, OnInit} from '@angular/core';
-import {MatDialogRef} from '@angular/material/dialog';
+import {Component, NgZone, OnDestroy, OnInit} from '@angular/core';
+import {MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {EMPTY, ReplaySubject} from 'rxjs';
 import {switchMap, take, takeUntil} from 'rxjs/operators';
 
-import {SNACKBAR_DURATION_MS} from '../constants/constants';
-import {ProjectDeepCopyRequest, ProjectListResponse, ProjectRecord} from '../constants/interfaces';
+import {IMPORT_COPY_TYPES, SNACKBAR_DURATION_MS} from '../constants/constants';
+import {ProjectCopyRequest, ProjectListResponse, ProjectRecord} from '../constants/interfaces';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessageService} from '../services/control_message_service';
 
@@ -39,6 +39,7 @@ export class ImportProjectDialog implements OnInit, OnDestroy {
   readonly IMPORT_ZIP = 'From zip file';
   readonly IMPORT_USER = 'From user';
   readonly importTypes = [this.IMPORT_ZIP, this.IMPORT_USER];
+  readonly IMPORT_COPY_TYPES = IMPORT_COPY_TYPES;
   importedZipFileName = '';
   selectedImportType = '';
   usernameImportText = '';
@@ -52,10 +53,12 @@ export class ImportProjectDialog implements OnInit, OnDestroy {
   importedFile: File|null = null;
 
   constructor(
+      public dialog: MatDialog,
       private readonly dialogRef: MatDialogRef<ImportProjectDialog>,
       private readonly backendManagerService: BackendManagerService,
       private readonly controlMessageService: ControlMessageService,
-      private readonly snackBar: MatSnackBar) {}
+      private readonly snackBar: MatSnackBar, private readonly ngZone: NgZone) {
+  }
 
   ngOnInit() {}
 
@@ -78,6 +81,7 @@ export class ImportProjectDialog implements OnInit, OnDestroy {
       this.importProjectFromZip();
       return;
     }
+
     this.importProjectFromUser();
   }
 
@@ -87,12 +91,12 @@ export class ImportProjectDialog implements OnInit, OnDestroy {
         .pipe(
             switchMap((response: ProjectListResponse) => {
               if (response.success) {
-                const projectDeepCopyRequest: ProjectDeepCopyRequest = {
+                const projectCopyRequest: ProjectCopyRequest = {
                   srcProjectId: this.selectedProject.projectId,
-                  targetProjectId: response.projectList[0].projectId,
+                  targetProjectId: response.projectList[0].projectId
                 };
-                return this.backendManagerService.deepCopyProject(
-                    projectDeepCopyRequest);
+                return this.backendManagerService.copyProject(
+                    projectCopyRequest);
               } else {
                 this.controlMessageService.sendHideOverlayMsg();
                 this.snackBar.open(

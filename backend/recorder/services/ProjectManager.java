@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,26 @@ public class ProjectManager {
 
   public ProjectResponse getProjectListOfCurrentUser() {
     List<ProjectEntity> projectEntities = projectStorageManager.getCurrentUserProjectList();
+
+    // Add the project shared by other user.
+    List<ProjectEntity> sharedProjectEntities =
+        projectStorageManager.getCurrentUserSharedProjectList();
+
+    // Add userid as perfix to the project name to make the frontend easy to read. ideally should
+    // move the logic to frontend, but here is easy to implement.
+    sharedProjectEntities.stream()
+        .forEach(
+            entity -> entity.setProjectName(entity.getUserId() + ":" + entity.getProjectName()));
+    projectEntities.addAll(sharedProjectEntities);
     // Convert to ProjectRecord object, and move the default one to the first of the list
-    return ProjectResponse.create(
-        projectEntities.stream()
-            .map(projectEntity -> ProjectRecord.createdFromProjectEntity(projectEntity))
-            .sorted((s1, s2) -> s1.getProjectName().startsWith("default_") ? -1 : 1)
-            .collect(Collectors.toList()),
-        true);
+    ProjectResponse projectResponse =
+        ProjectResponse.create(
+            projectEntities.stream()
+                .map(projectEntity -> ProjectRecord.createdFromProjectEntity(projectEntity))
+                .sorted((s1, s2) -> s1.getProjectName().startsWith("default_") ? -1 : 1)
+                .collect(Collectors.toList()),
+            true);
+    return projectResponse;
   }
 
   public ProjectResponse createProject(String projectName) {
@@ -68,6 +81,19 @@ public class ProjectManager {
       }
     }
     return ProjectResponse.create(new ArrayList<>(), /* isSuccess */ false);
+  }
+
+  /**
+   * Provides a list of users that current project is shared with, this is a simple solution for the
+   * sharing asked by a few teams. To implement a real sharing, lots of work need to be done in the
+   * backend part.
+   */
+  public void addShareWithUserListToProject(String sharedWith) {
+    if (currentProject == null) {
+      return;
+    }
+    currentProject.setShareWith(sharedWith);
+    projectStorageManager.saveProject(currentProject);
   }
 
   public ProjectResponse setCurrentProject(String projectId) {
@@ -92,8 +118,7 @@ public class ProjectManager {
   }
 
   public ProjectResponse getProjectListByUsername(String username) {
-    List<ProjectEntity> projectEntities =
-        projectStorageManager.getProjectListByUsername(username);
+    List<ProjectEntity> projectEntities = projectStorageManager.getProjectListByUsername(username);
     return ProjectResponse.create(
         projectEntities.stream()
             .map(projectEntity -> ProjectRecord.createdFromProjectEntity(projectEntity))

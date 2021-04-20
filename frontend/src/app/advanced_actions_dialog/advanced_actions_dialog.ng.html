@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -51,6 +51,10 @@
       </mat-form-field>
       <mat-checkbox [(ngModel)]="commandLineActionDetails.isAdbCommand">ADB command</mat-checkbox>
       <mat-checkbox [(ngModel)]="commandLineActionDetails.needShellOutput">Need Shell Output</mat-checkbox>
+      <mat-checkbox [(ngModel)]="cmdlineDirectSetVariable">Directly set output To global variable</mat-checkbox>
+      <mat-form-field *ngIf="cmdlineDirectSetVariable">
+        <input matInput [(ngModel)]="commandLineActionDetails.uicdVariableName" placeholder="Uicd global variable name start with $uicd_">
+      </mat-form-field>
     </div>
   </div>
   <div *ngSwitchCase="ACTIONS.LOGCAT_VALIDATION_ACTION.type">
@@ -391,7 +395,10 @@
           </mat-form-field>
         </ng-container>
       </query-builder>
-      <mat-form-field>
+      <mat-checkbox placeholder="Find Element and Click" [(ngModel)]="conditionValidationAction.clickAfterValidation">Find and Click(No
+        Validation)
+      </mat-checkbox>
+      <mat-form-field *ngIf="!conditionValidationAction.clickAfterValidation">
         <mat-select placeholder="Stop Type" [(ngModel)]="conditionValidationAction.stopType">
           <mat-option *ngFor="let sType of STOP_TYPES" [value]="sType.value">{{ sType.displayText }}</mat-option>
         </mat-select>
@@ -412,14 +419,7 @@
       <mat-form-field>
         <input matInput [(ngModel)]="pythonScriptActionDetails.name" placeholder="Name">
       </mat-form-field>
-      <mat-form-field>
-        <textarea rows="4" cols="1000" matInput [(ngModel)]="pythonScriptActionDetails.script"
-          placeholder="Python Script here"></textarea>
-      </mat-form-field>
-      <mat-form-field>
-        <textarea rows="4" cols="300" matInput [(ngModel)]="pythonScriptActionDetails.dependency"
-          placeholder="Dependency Of Python Script"></textarea>
-      </mat-form-field>
+      <python-editor-simple class="python-editor-simple" language="python"></python-editor-simple>
       <mat-form-field>
         <input matInput [(ngModel)]="pythonScriptActionDetails.expectedReturnCode" placeholder="Expected Return Code">
       </mat-form-field>

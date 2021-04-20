@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,13 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.ExternalFileTypeFilter;
+import com.google.uicd.backend.core.uicdactions.jsondbignores.OutputTypeFilter;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.LogManager;
@@ -31,6 +36,7 @@ import java.util.logging.Logger;
  *
  * @author tccyp@google.com
  */
+@SuppressWarnings("UnusedVariable")
 @JsonAutoDetect(
     fieldVisibility = ANY,
     getterVisibility = NONE,
@@ -38,14 +44,31 @@ import java.util.logging.Logger;
     isGetterVisibility = NONE)
 public class ActionExecutionResult {
 
+  @JsonInclude(Include.NON_EMPTY)
   private final List<ActionExecutionResult> childrenResult = new ArrayList<>();
+
   private String actionId;
+
+  @JsonInclude(value = Include.CUSTOM, valueFilter = OutputTypeFilter.class)
   private OutputType outputType;
+
+  @JsonInclude(value = Include.CUSTOM, valueFilter = ExternalFileTypeFilter.class)
   private ExternalFileType externalFileType;
+
+  @JsonInclude(Include.NON_DEFAULT)
   private String externalFilePath;
+
   private String content;
+
+  @JsonInclude(Include.NON_DEFAULT)
   private int sequenceIndex = 0;
+
+  private String executionId;
+
   private ActionContext.PlayStatus playStatus;
+
+  private Instant timestamp;
+
   private String validationDetails;
 
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
@@ -140,6 +163,7 @@ public class ActionExecutionResult {
     this.externalFileType = ExternalFileType.NA;
     this.setExternalFilePath("");
     this.content = content;
+    this.timestamp = Instant.now();
   }
 
   /** setValidationOutput */
@@ -170,6 +194,14 @@ public class ActionExecutionResult {
       logger.warning(e.getMessage());
     }
     return jsonDataString;
+  }
+
+  public String getExecutionId() {
+    return executionId;
+  }
+
+  public void setExecutionId(String executionId) {
+    this.executionId = executionId;
   }
 
   /** ExecutionResult OutputType */

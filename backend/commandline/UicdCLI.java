@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -200,6 +200,7 @@ public class UicdCLI {
 
     ActionContext actionContext = new ActionContext();
     actionContext.setPlayMode(playMode.isEmpty() ? PlayMode.SINGLE : PlayMode.valueOf(playMode));
+    actionContext.setRootActionName(action.getName());
     globalVariablesMap.forEach((k, v) -> actionContext.getGlobalVariableMap().addVariable(k, v));
     ActionPlayer actionPlayer =
         new ActionPlayer(devicesDriverManager.getXmlDumperDriverList(), actionContext);
@@ -216,12 +217,12 @@ public class UicdCLI {
     // ActionEntity is a wrapper of Action object. Unfortunately Jackson somehow can construct
     // Action object using ActionsEntity Json but with incorrect Information. The following logic
     // will handle both cases.
-    ActionEntity actionEntity = fromJsonEx(jsonContent, new TypeReference<ActionEntity>() {});
-    if (actionEntity != null) {
-      System.out.println(
-          "Input file is not ordinary export file, but exported by project, try using ActionEntity"
-              + " format");
+    ActionEntity actionEntity = null;
+    try {
+      actionEntity = fromJsonEx(jsonContent, new TypeReference<ActionEntity>() {});
       jsonContent = actionEntity.getDetails();
+    } catch (UicdActionException e) {
+      System.out.println("Input file is ordinary export file, skip ActionEntity loading");
     }
     return actionStorageManager.loadMapFromString(jsonContent);
   }
@@ -274,7 +275,8 @@ public class UicdCLI {
   }
 
   // Todo(tccyp): change to JsonUtilEx.fromJson.
-  private static <T extends Object> T fromJsonEx(String jsonDataString, TypeReference<T> typeRef) {
+  private static <T extends Object> T fromJsonEx(String jsonDataString, TypeReference<T> typeRef)
+      throws UicdActionException {
     ObjectMapper mapper = new ObjectMapper();
     T obj = null;
     try {
@@ -282,7 +284,7 @@ public class UicdCLI {
       mapper.registerModule(module);
       obj = mapper.readValue(jsonDataString, typeRef);
     } catch (IOException e) {
-      System.err.println("Error while converting from json: " + e.getMessage());
+      throw new UicdActionException("Cannot be converted to Json");
     }
     return obj;
   }

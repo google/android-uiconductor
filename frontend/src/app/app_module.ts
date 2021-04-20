@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ import {ChooseDeviceDialogComponent} from './popup_dialogs/choose_device_dialog'
 import {DialogsModule} from './popup_dialogs/dialogs_module';
 import {GlobalVariableSettingDialog} from './popup_dialogs/global_var_setting_dialog';
 import {HistoryDialog} from './popup_dialogs/history_dialog';
-import {PythonDebuggerDialog} from './popup_dialogs/python_debugger_dialog';
+import {PythonDebuggerSimpleDialog} from './popup_dialogs/python_debugger_simple_dialog';
 import {ReplayDetailsDialog} from './popup_dialogs/replay_details_dialog';
 import {ScreenCastModule} from './screen_cast/screen_cast_module';
 import {ScreenValidationFlowComponent} from './screen_validation_flow/screen_validation_flow';
@@ -139,7 +139,7 @@ export class UicdHammerConfig extends HammerGestureConfig {
     ScriptActionInfoDialogComponent,
     HistoryDialog,
     GlobalVariableSettingDialog,
-    PythonDebuggerDialog,
+    PythonDebuggerSimpleDialog,
   ],
 })
 export class AppModule {

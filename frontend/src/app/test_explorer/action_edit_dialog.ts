@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import {ACTIONS, ActionSummaryMetaData} from '../constants/actions';
 import {DEFAULT_WORKFLOW_NAME, MessageTypes, POPUP_DIALOG_DEFAULT_DIMENSION} from '../constants/constants';
 import {PlayActionRequest} from '../constants/interfaces';
 import {JsTreeNode, NodeParentPair, TreeNode} from '../constants/jstree';
+import {PythonDebuggerSimpleDialog} from '../popup_dialogs/python_debugger_simple_dialog';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessageService} from '../services/control_message_service';
 import {TestCaseManagerService} from '../services/test_case_manager_service';
@@ -38,6 +39,7 @@ export interface ActionEditDialogData {
   isCopyAction?: boolean;
   isSaveWorkflow?: boolean;
   isByElement?: boolean;
+  isWorkflow?: boolean;
 }
 
 /**
@@ -167,10 +169,18 @@ export class ActionEditDialog implements OnInit, OnDestroy {
   }
 
   editAction() {
-    const dialogRef = this.dialog.open(
-        AdvancedActionDialogComponent,
-        {width: POPUP_DIALOG_DEFAULT_DIMENSION.width, data: this.actionData});
-    dialogRef.afterClosed().subscribe((isSaved: boolean) => {
+    let detailDialogRef;
+    if (this.actionData.actionType ===
+        ACTIONS.PYTHON_SCRIPT_ACTION.actionType) {
+      detailDialogRef = this.dialog.open(
+          PythonDebuggerSimpleDialog,
+          {panelClass: 'python-overlay-style', data: this.actionData});
+    } else {
+      detailDialogRef = this.dialog.open(
+          AdvancedActionDialogComponent,
+          {width: POPUP_DIALOG_DEFAULT_DIMENSION.width, data: this.actionData});
+    }
+    detailDialogRef.afterClosed().subscribe((isSaved: boolean) => {
       if (isSaved) {
         this.closeDialog();
       }

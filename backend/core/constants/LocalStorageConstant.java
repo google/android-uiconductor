@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ public class LocalStorageConstant {
 
   public static final String LOCALSTORAGE_PATH = "localstorage";
   public static final String TESTCASES_FOLDERNAME = "testcases";
+  public static final String PYTHON_SCRIPTS_FOLDERNAME = "python_scripts";
   public static final String TESTCASES_TREE_FOLDERNAME = "testcases_tree";
   public static final String TEST_HISTORY_FOLDERNAME = "test_history";
   public static final String PROJECT_PATH_FOLDERNAME = "projects";

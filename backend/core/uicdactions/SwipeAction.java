@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,14 @@ public class SwipeAction extends BaseAction {
   private int startY;
   private int endX;
   private int endY;
+
+  public NodeContext getStartPointNodeContext() {
+    return startPointNodeContext;
+  }
+
+  public NodeContext getEndPointNodeContext() {
+    return endPointNodeContext;
+  }
 
   private NodeContext startPointNodeContext;
   private NodeContext endPointNodeContext;

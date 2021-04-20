@@ -1,0 +1,31 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<h3 mat-dialog-title>Python script action</h3>
+
+<div class="main-container" fxLayout='column' fxFill>
+  <div class="python-script-input">
+    <python-editor-simple language="python" fxFlex></python-editor-simple>
+  </div>
+    <div>
+        <button class="python-save-action" mat-raised-button (click)="saveAction()" matTooltip="Save"
+                    matTooltipPosition="left" matTooltipShowDelay="500">
+                <i class="fa fa-download"></i>
+                Save Python Action
+         </button>
+    </div>
+</div>
+
+

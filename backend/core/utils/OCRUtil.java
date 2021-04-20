@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.google.uicd.backend.core.utils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.OCREngineType;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.xmlparser.Bounds;
 import java.nio.file.Paths;
@@ -37,8 +38,14 @@ import java.util.stream.Collectors;
  */
 public class OCRUtil {
   private static final String TAG = "OCRUtil";
-  private static final String TESSERACT_DATAPATH_TAG = "--tessdata-dir";
+
   private static final String UICD_PLUGINS_FOLDER = "uicd-plugins";
+
+  private static final String UI_DETECTOR_FOLDER = "ui-detector";
+  private static final String UI_DETECTOR_BINARY = "uicd_uidetector_proxy.par";
+  private static final String UI_DETETCOR_DATAPATH_TAG = "--infile";
+
+  private static final String TESSERACT_DATAPATH_TAG = "--tessdata-dir";
   private static final String TESSERACT_FOLDER = "tesseract";
   private static final String TESSERACT_DATA_FOLDER = "tessdata";
   private static final String TESSERACT_BINARY = "tesseract";
@@ -53,23 +60,39 @@ public class OCRUtil {
   private static final String OUTPUT_FILE_TYPE = "tsv";
   private static final String CMD_SEPARATOR = " ";
   private static final String SET_LIB_PATH_CMD = "LD_LIBRARY_PATH=%s";
+  private static final int TIME_OUT_SEC = 15;
   protected static Logger logger = LogManager.getLogManager().getLogger("uicd");
 
   private final CommandLineUtil commandLineUtil;
 
+  private final OCREngineType ocrEngineType;
+
   /** Default Constructor. */
   public OCRUtil() {
-    this(new CommandLineUtil());
+    this.commandLineUtil = new CommandLineUtil();
+    ocrEngineType = UicdConfig.getInstance().getOrcEngineType();
   }
 
   /** Constructor for testing only. */
   @VisibleForTesting
   OCRUtil(CommandLineUtil commandLineUtil) {
     this.commandLineUtil = commandLineUtil;
+    ocrEngineType = OCREngineType.TESSERACT;
   }
 
+  /** Gets all the existing bounds and text in the given image. */
+  public Map<Bounds, String> getAllTextFromScreen(String imagePath) {
+    Map<String, List<Bounds>> stringBoundsMapping = processImage(imagePath);
+    Map<Bounds, String> boundsStringMapping = new HashMap<>();
+    for (Map.Entry<String, List<Bounds>> entry : stringBoundsMapping.entrySet()) {
+      for (Bounds bounds : entry.getValue()) {
+        boundsStringMapping.put(bounds, entry.getKey());
+      }
+    }
+    return boundsStringMapping;
+  }
   /**
-   * Get all the existing bounds in the given image.
+   * Gets all the existing bounds in the given image.
    *
    * <p>If text exist as a single line, the bounds will be return directly.
    *
@@ -79,17 +102,17 @@ public class OCRUtil {
    * <p>Otherwise a empty list will be return.
    */
   public List<Bounds> getBoundsOfText(String text, String imagePath) {
-    Map<String, List<Bounds>> map = processImage(imagePath);
     List<Bounds> allBounds = new ArrayList<>();
+    Map<String, List<Bounds>> resultMap = processImage(imagePath);
     text = text.replaceAll("\\s", "");
     int minLenMatched = Integer.MAX_VALUE;
-    for (String key : map.keySet()) {
+    for (String key : resultMap.keySet()) {
       if (Ascii.toLowerCase(key).contains(Ascii.toLowerCase(text))) {
         if (key.length() < minLenMatched) {
-          allBounds.addAll(0, map.get(key));
+          allBounds.addAll(0, resultMap.get(key));
           minLenMatched = key.length();
         } else {
-          allBounds.addAll(map.get(key));
+          allBounds.addAll(resultMap.get(key));
         }
       }
     }
@@ -97,11 +120,74 @@ public class OCRUtil {
   }
 
   /**
-   * Get information from the image generated from the adb dump.
+   * Gets information from the screenshot image.
    *
    * @param imagePath the tmp path for the dump image
    */
   private Map<String, List<Bounds>> processImage(String imagePath) {
+    switch (ocrEngineType) {
+      case TESSERACT:
+        return processImageWithTesseract(imagePath);
+      case UIDETECTOR:
+        return processImageWithUIDetector(imagePath);
+      case DISABLE:
+    }
+    return new HashMap<>();
+  }
+
+  /**
+   * Gets information from the screenshot image based on UIDetector Engine.
+   *
+   * @param imagePath the tmp path for the dump image
+   */
+  private Map<String, List<Bounds>> processImageWithUIDetector(String imagePath) {
+    List<String> cmdParts = new ArrayList<>();
+    String uiDetectorBinaryPath =
+        Paths.get(
+                UicdConfig.getInstance().getTestInputFolder(),
+                UICD_PLUGINS_FOLDER,
+                UI_DETECTOR_FOLDER,
+                UI_DETECTOR_BINARY)
+            .toString();
+    cmdParts.add(uiDetectorBinaryPath);
+    cmdParts.add(UI_DETETCOR_DATAPATH_TAG);
+    cmdParts.add(imagePath);
+    String uiDetectorCmd = String.join(CMD_SEPARATOR, cmdParts);
+
+    try {
+      List<String> resultList = new ArrayList<>();
+      commandLineUtil.execute(uiDetectorCmd, resultList, true, TIME_OUT_SEC);
+      return getTextAndBoundsFromUIDetectorRecords(resultList);
+    } catch (UicdExternalCommandException e) {
+      logger.severe(TAG + ": " + e.getMessage());
+    }
+    return new HashMap<>();
+  }
+
+  private static Map<String, List<Bounds>> getTextAndBoundsFromUIDetectorRecords(
+      List<String> resultList) {
+    Map<String, List<Bounds>> textToBoundsMap = new HashMap<>();
+    List<UIDetectorOutputRecord> records =
+        resultList.stream()
+            .map(UIDetectorOutputRecord::create)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    records.stream()
+        .filter(x -> !x.text().isEmpty())
+        .forEach(
+            t -> {
+              textToBoundsMap
+                  .computeIfAbsent(t.text(), k -> new ArrayList<>())
+                  .add(new Bounds(t.left(), t.top(), t.right(), t.bottom()));
+            });
+    return textToBoundsMap;
+  }
+  /**
+   * Gets information from the image generated from the adb dump.
+   *
+   * @param imagePath the tmp path for the dump image
+   */
+  private Map<String, List<Bounds>> processImageWithTesseract(String imagePath) {
     List<String> cmdParts = new ArrayList<>();
     String tesseractBasePath =
         Paths.get(
@@ -134,15 +220,10 @@ public class OCRUtil {
 
   /**
    * Converts the tesseract tsv output to internal map. The tesseract output format is something
-   * like following(tab separated):
-   * level page_num block_num par_num line_num word_num left top width height conf text
-   * 1 1 0 0 0 0 0 0 1440 2960 -1
-   * 2 1 1 0 0 0 549 406 338 47 -1
-   * 3 1 1 1 0 0 549 406 338 47 -1
-   * 4 1 1 1 1 0 549 406 338 47 -1
-   * 5 1 1 1 1 1 549 406 122 36 96 Search
-   * 5 1 1 1 1 2 678 407 209 46 96 settings
-   * ...
+   * like following(tab separated): level page_num block_num par_num line_num word_num left top
+   * width height conf text 1 1 0 0 0 0 0 0 1440 2960 -1 2 1 1 0 0 0 549 406 338 47 -1 3 1 1 1 0 0
+   * 549 406 338 47 -1 4 1 1 1 1 0 549 406 338 47 -1 5 1 1 1 1 1 549 406 122 36 96 Search 5 1 1 1 1
+   * 2 678 407 209 46 96 settings ...
    *
    * @param tessResultList standard output for the tesseract commandline
    */

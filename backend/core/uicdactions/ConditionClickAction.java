@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package com.google.uicd.backend.core.uicdactions;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.uicd.backend.core.constants.ContextStorageType;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
@@ -34,22 +35,30 @@ public class ConditionClickAction extends ScreenContentValidationAction {
   @Override
   public int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
       throws UicdException {
-    super.play(androidDeviceDriver, actionContext);
-
-    if (this.playStatus != PlayStatus.FAIL) {
+    this.validationResult = validate(actionContext, androidDeviceDriver);
+    if (this.validationResult) {
       Position pos = this.foundNodeContext.getBounds().getCenter();
 
       // If we match by the node context, our saved nodeContext could be a big area. Center is not
-      // accurate enough.
-      if (this.savedNodeContext != null) {
+      // accurate enough. Only need adjust for the context based. For text/resource_id based the
+      // found nodeContext is not same as savedNodeContext. See the ScreenContentValidationAction
+      // for more detail
+      if (this.savedNodeContext != null
+          && this.contextStorageType == ContextStorageType.CONTEXT_BASED) {
         pos = pos.getOffSetPosition(savedNodeContext.getRelativePos());
       }
       androidDeviceDriver.clickDevice(pos);
+      actionContext.updateTopPlayStatus(PlayStatus.PASS);
+    } else {
+      actionContext.updateTopPlayStatus(PlayStatus.SKIPPED);
     }
 
-    actionContext.removeStatus(androidDeviceDriver.getDeviceId());
-    this.playStatus = PlayStatus.READY;
-
     return 0;
+  }
+
+  @Override
+  protected String getStopTypeStr() {
+    // StopType for Condition click is meaningless. Set as "Condition Click" for less confusion.
+    return "Condition Click.";
   }
 }

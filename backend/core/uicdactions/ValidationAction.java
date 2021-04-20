@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -108,16 +108,39 @@ public abstract class ValidationAction extends BaseAction implements IValidatorA
       throws UicdException {
     this.clear();
     this.validationResult = validate(actionContext, androidDeviceDriver);
-    if (!this.validationResult) {
+    updatePlayStatus(actionContext, this.validationResult, androidDeviceDriver);
+    return 0;
+  }
+
+  protected void updatePlayStatus(
+      ActionContext actionContext,
+      boolean validationResult,
+      AndroidDeviceDriver androidDeviceDriver) {
+    if (!validationResult) {
       if (isStopCurrentLevel()) {
-        // properly with multithreading.
-        this.playStatus = PlayStatus.EXIT_CURRENT_COMPOUND;
+        actionContext.updateTopPlayStatus(PlayStatus.EXIT_CURRENT_COMPOUND);
+        actionContext.updateParentPlayStatus(PlayStatus.EXIT_CURRENT_COMPOUND);
       } else {
         // Set the global Pass/Fail status.
-        actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-        this.playStatus = ActionContext.PlayStatus.FAIL;
+        actionContext.setFailStatusRecordXmlAndScreen(androidDeviceDriver.getDeviceId());
       }
     }
-    return 0;
+  }
+
+  @Override
+  protected ActionExecutionResult genActionExecutionResults(AndroidDeviceDriver androidDeviceDriver,
+      ActionContext actionContext) {
+    ActionExecutionResult actionExecutionResult =
+        super.genActionExecutionResults(androidDeviceDriver, actionContext);
+    String logContent =
+        String.format(
+            "Validation Result: %b.%s Looking for %s: %s, Can not find on xml.",
+            this.validationResult,
+            stopType,
+            textValidator.getContentMatchType(),
+            textValidator.getPatternValue());
+
+    actionExecutionResult.setRegularOutput(logContent);
+    return actionExecutionResult;
   }
 }

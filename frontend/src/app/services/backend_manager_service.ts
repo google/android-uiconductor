@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 import {ActionSummaryMetaData} from '../constants/actions';
 import {BACKEND_BASE_URL, KeyCodes, RotateDirection, SwipeDirection} from '../constants/constants';
-import {CurrentUserResponse, ExportImportProjectRequest, GetUserPresetGlobalVariableResponse, ImageResponse, ImagesResponse, InitDevicesResponse, PlayActionRequest, PlayActionResponse, ProjectDeepCopyRequest, ProjectListResponse, ScaledScreenDimensionsResponse, ScreenContentSummary, UuidResponse, VersionInfoResponse} from '../constants/interfaces';
+import {CurrentUserResponse, ExportedTestCaseData, ExportImportProjectRequest, GetUserPresetGlobalVariableResponse, ImageResponse, ImagesResponse, InitDevicesResponse, OcrDetailsResponse, PlayActionRequest, PlayActionResponse, ProjectCopyRequest, ProjectListResponse, PythonDebuggerRequest, PythonDebuggerResponse, ScaledScreenDimensionsResponse, ScreenContentSummary, UuidResponse, VersionInfoResponse} from '../constants/interfaces';
 import {Bounds, Point} from '../constants/rect';
 import {ValidationRequestDetails} from '../constants/screen_validation_constants';
 import {Shape} from '../constants/shape';
@@ -68,22 +68,15 @@ export class BackendManagerService {
     return this.http.get(BACKEND_BASE_URL + '/cancelCurrentWorkflow');
   }
 
-  /** Copies the given action with a new uuid */
-  copyAction(uuid: string): Observable<ActionSummaryMetaData> {
-    return this.http.get<ActionSummaryMetaData>(
-        BACKEND_BASE_URL + '/copyAction',
-        {params: new HttpParams().set('uuidStr', uuid)});
-  }
-
   /** Creates a new workspace */
   createNewWorkSpace() {
     return this.http.get(BACKEND_BASE_URL + '/createNewWorkSpace');
   }
 
-  /** Deep copy project */
-  deepCopyProject(projectDeepCopyRequest: ProjectDeepCopyRequest) {
+  /** copy project */
+  copyProject(projectCopyRequest: ProjectCopyRequest) {
     return this.http.post(
-        BACKEND_BASE_URL + '/deepCopyProjectTree', projectDeepCopyRequest,
+        BACKEND_BASE_URL + '/copyProjectTree', projectCopyRequest,
         this.OPTIONS);
   }
 
@@ -149,10 +142,11 @@ export class BackendManagerService {
 
 
   /** Returns raw json test information for given test */
-  exportTestCase(uuid: string): Observable<unknown> {
-    return this.http.get(BACKEND_BASE_URL + '/exportTestCase', {
-      params: new HttpParams().set('uuidStr', uuid),
-    });
+  exportTestCase(uuid: string): Observable<ExportedTestCaseData> {
+    return this.http.get<ExportedTestCaseData>(
+        BACKEND_BASE_URL + '/exportTestCase', {
+          params: new HttpParams().set('uuidStr', uuid),
+        });
   }
 
   /**
@@ -171,6 +165,18 @@ export class BackendManagerService {
    */
   exportCurrentProject(exportImportProjectReq: ExportImportProjectRequest) {
     const url = BACKEND_BASE_URL + '/exportProjectToZip?' +
+        new HttpParams()
+            .set('projectId', exportImportProjectReq.projectId)
+            .set('projectName', exportImportProjectReq.projectName)
+            .toString();
+    window.open(url);
+  }
+
+  /**
+   * Exports the given project as a zip file
+   */
+  exportTopLevelTests(exportImportProjectReq: ExportImportProjectRequest) {
+    const url = BACKEND_BASE_URL + '/exportTopLevelCaseOnlyToZip?' +
         new HttpParams()
             .set('projectId', exportImportProjectReq.projectId)
             .set('projectName', exportImportProjectReq.projectName)
@@ -362,8 +368,13 @@ export class BackendManagerService {
   }
 
   /** Removes last action in current workflow */
-  removeLastAction() {
-    return this.http.get(BACKEND_BASE_URL + '/removeLastAction');
+  undo() {
+    return this.http.get(BACKEND_BASE_URL + '/undo');
+  }
+
+  /** Removes last action in current workflow */
+  redo() {
+    return this.http.get(BACKEND_BASE_URL + '/redo');
   }
 
   /**
@@ -444,11 +455,12 @@ export class BackendManagerService {
    * point), and backend will covert to physical point(store the logic
    * point).
    */
-  tap(x: number, y: number) {
+  tap(x: number, y: number, isStrictMode: boolean) {
     return this.http.get(BACKEND_BASE_URL + '/tap', {
       params: new HttpParams()
                   .set('x', Math.floor(x).toString())
                   .set('y', Math.floor(y).toString())
+                  .set('isStrictMode', String(isStrictMode))
     });
   }
 
@@ -555,6 +567,14 @@ export class BackendManagerService {
   }
 
   /**
+   * Adds share with user list to current project
+   */
+  addShareWithUserListToProject(userList: string): Observable<void> {
+    return this.http.post<void>(
+        BACKEND_BASE_URL + '/addShareWithUserListToProject', userList);
+  }
+
+  /**
    * Gets project list that contains all the projects of current user.
    */
   getProjectList(): Observable<ProjectListResponse> {
@@ -581,7 +601,7 @@ export class BackendManagerService {
   }
 
   /**
-   * Fetches the methods availabe in the snippet validation action for the
+   * Fetches the methods available in the snippet validation action for the
    * selected package.
    * @param packageName name of the package of which the methods needs to
    *     fetched
@@ -590,5 +610,56 @@ export class BackendManagerService {
     return this.http.get(BACKEND_BASE_URL + '/getAllAvailableSnippetMethods', {
       params: new HttpParams().set('packageName', packageName),
     });
+  }
+
+  /** Fetches details information from ocr engine. */
+  getOcrDetails() {
+    return this.http.get<OcrDetailsResponse>(
+        BACKEND_BASE_URL + '/getOcrDetails');
+  }
+
+  /** Start python debugger service */
+  initPdbDebuggerServer(pythonDebugger: PythonDebuggerRequest):
+      Observable<PythonDebuggerResponse> {
+    return this.http.post<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/runPdbDebugger', pythonDebugger, this.OPTIONS);
+  }
+
+  /** Set break points in pdb debugger */
+  pdbDebuggerBreak(breakLines: string): Observable<PythonDebuggerResponse> {
+    return this.http.get<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/pdbDebuggerBreak',
+        {params: new HttpParams().set('breakLines', breakLines)});
+  }
+
+  /** Remove break points in pdb debugger */
+  pdbDebuggerClear(breakLines: string): Observable<PythonDebuggerResponse> {
+    return this.http.get<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/pdbDebuggerClear',
+        {params: new HttpParams().set('breakLines', breakLines)});
+  }
+
+  /** Continue in pdb debugger */
+  pdbDebuggerContinue(): Observable<PythonDebuggerResponse> {
+    return this.http.get<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/pdbDebuggerContinue');
+  }
+
+  /** Step in in pdb debugger */
+  pdbDebuggerStepIn(): Observable<PythonDebuggerResponse> {
+    return this.http.get<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/pdbDebuggerStepIn');
+  }
+
+  /** Next in pdb debugger */
+  pdbDebuggerNext(): Observable<PythonDebuggerResponse> {
+    return this.http.get<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/pdbDebuggerNext');
+  }
+
+  /** Stop the pdb debugger */
+  pdbDebuggerStop(): Observable<PythonDebuggerResponse> {
+    return this.http.get<PythonDebuggerResponse>(
+        BACKEND_BASE_URL + '/stopPdbDebugger');
   }
 }

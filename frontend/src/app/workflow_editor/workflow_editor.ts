@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import {ActionColor, DEFAULT_WORKFLOW_NAME, MessageTypes, POPUP_DIALOG_DEFAULT_D
 import {PlayActionRequest, PlayActionResponse} from '../constants/interfaces';
 import {GlobalVariableSettingDialog} from '../popup_dialogs/global_var_setting_dialog';
 import {HistoryDialog} from '../popup_dialogs/history_dialog';
-import {PythonDebuggerDialog} from '../popup_dialogs/python_debugger_dialog';
+import {PythonDebuggerSimpleDialog} from '../popup_dialogs/python_debugger_simple_dialog';
 import {ReplayDetailsDialog} from '../popup_dialogs/replay_details_dialog';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessage, ControlMessageService} from '../services/control_message_service';
@@ -47,6 +47,7 @@ export class WorkflowEditorComponent implements OnDestroy {
   readonly START_ACTION_STATUS_KEYWORD = 'Start Action Path:';
   readonly END_ACTION_STATUS_KEYWORD = 'End Action Path:';
   readonly PLAYACTION_STATUS_SPLITTER = '->';
+  showPython = true;
   isReplaying = false;
   workflowModel: WorkflowModel = {actionId: '', name: '', childrenActions: []};
   /** Handle on-destroy Subject, used to unsubscribe. */
@@ -79,10 +80,8 @@ export class WorkflowEditorComponent implements OnDestroy {
             concatMap(() => this.backendManagerService.getCurrentWorkflow()))
         .subscribe(data => {
           this.workflowModel = new WorkflowModel(JSON.stringify(data));
-          if (this.pathStack.length <= 1) {
-            this.pathStack = [actionModelFromJson(JSON.stringify(data), 0)];
-            this.pathIndexStack = [0];
-          }
+          this.pathStack = [actionModelFromJson(JSON.stringify(data), 0)];
+          this.pathIndexStack = [0];
         });
 
     // Highlight the playing action by check the action id in log messages
@@ -162,6 +161,13 @@ export class WorkflowEditorComponent implements OnDestroy {
           this.pathIndexStack = [];
           this.controlMessageService.sendRefreshWorkflowMsg();
         });
+  }
+
+  getActionToolTip(action: ActionModel) {
+    if (!action.actionDescription || '' === action.actionDescription) {
+      return action.name;
+    }
+    return action.actionDescription;
   }
 
   onDropSuccess() {
@@ -272,11 +278,16 @@ export class WorkflowEditorComponent implements OnDestroy {
         });
   }
 
-  removeLast() {
-    this.backendManagerService.removeLastAction().pipe(take(1)).subscribe(
-        () => {
-          this.controlMessageService.sendRefreshWorkflowMsg();
-        });
+  undo() {
+    this.backendManagerService.undo().pipe(take(1)).subscribe(() => {
+      this.controlMessageService.sendRefreshWorkflowMsg();
+    });
+  }
+
+  redo() {
+    this.backendManagerService.redo().pipe(take(1)).subscribe(() => {
+      this.controlMessageService.sendRefreshWorkflowMsg();
+    });
   }
 
   getTextByType(actionModel: ActionModel) {
@@ -347,7 +358,7 @@ export class WorkflowEditorComponent implements OnDestroy {
 
   openPdbDebuggerDialog() {
     this.dialog.open(
-        PythonDebuggerDialog, {width: POPUP_DIALOG_DEFAULT_DIMENSION.width});
+        PythonDebuggerSimpleDialog, {panelClass: 'python-overlay-style'});
   }
 
   onSpeedSliderChange(event: SliderChangeEvent) {

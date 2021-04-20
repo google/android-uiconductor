@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ public class ADBCommandLineUtil {
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
 
   private final CommandLineUtil commandLineUtil;
+
   public ADBCommandLineUtil() {
     this.commandLineUtil = new CommandLineUtil();
   }
@@ -99,8 +100,7 @@ public class ADBCommandLineUtil {
     return commandLineUtil.execute(cmd, output, true, showDetailsLogging);
   }
 
-  public Process executeAdb(
-      String commandLine, String deviceId, List<String> output, int timeout)
+  public Process executeAdb(String commandLine, String deviceId, List<String> output, int timeout)
       throws UicdExternalCommandException {
     String cmd = constructAdbCommand(commandLine, deviceId);
     return commandLineUtil.execute(cmd, output, true, timeout);
@@ -127,17 +127,27 @@ public class ADBCommandLineUtil {
     executeAdb(String.format(forwardCmd, hostPort, devicePort), deviceId);
 
     String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
-    String targetXmldumperVersion = UicdConfig.getInstance().getXmlDumperApkVersion();
-    String runnerPrefix = "android.support";
-    if (compareVersion(targetXmldumperVersion, "2.0.0") >= 0) {
-      runnerPrefix = "androidx";
+    String targetXmldumperVersion =
+        getXmlDumperApkVersion(deviceId).orElse(UicdConfig.getInstance().getXmlDumperApkVersion());
+
+    String runnerPrefix = "androidx";
+    if (compareVersion(targetXmldumperVersion, "2.0.0") < 0) {
+      runnerPrefix = "android.support";
+      logger.info(
+          "xmldumper v1 is deprecated, Please upgrade the xmldumper to v3+ in the build file");
+    }
+    // After 3.1.0, we are using single apk
+    String testSuffix = ".test";
+    if (compareVersion(targetXmldumperVersion, "3.1.0") >= 0) {
+      testSuffix = "";
     }
     String startXmlDumperServerCmd =
         String.format(
             "shell am instrument -w -e debug false -e class "
-                + "'%s.DumperServerInstrumentation#startServer' %s.test/"
+                + "'%s.DumperServerInstrumentation#startServer' %s/"
                 + "%s.test.runner.AndroidJUnitRunner",
-            xmldumperPackagePrefix, xmldumperPackagePrefix, runnerPrefix);
+            xmldumperPackagePrefix, xmldumperPackagePrefix + testSuffix, runnerPrefix);
+    logger.info(startXmlDumperServerCmd);
     // don't wait for the instrument command
     return executeAdb(startXmlDumperServerCmd, deviceId, false);
   }
@@ -167,7 +177,7 @@ public class ADBCommandLineUtil {
   public Optional<String> getXmlDumperApkVersion(String deviceId) {
     String getDumperVersionCmd =
         String.format(
-            "shell dumpsys package %s | grep versionName",
+            "shell 'dumpsys package %s | grep versionName'",
             UicdConfig.getInstance().getXmldumperPackagePrefix());
     List<String> dumperVersionOutputList = new ArrayList<>();
     try {
@@ -195,7 +205,7 @@ public class ADBCommandLineUtil {
     executeAdb(listPackageAdbCmd, deviceId, packageList, false);
 
     String xmldumperPackagePrefix = UicdConfig.getInstance().getXmldumperPackagePrefix();
-    if (packageList.contains(xmldumperPackagePrefix)) {
+    if (packageList.stream().anyMatch(s -> s.contains(xmldumperPackagePrefix))) {
       Optional<String> dumperApkVersion = getXmlDumperApkVersion(deviceId);
       if (!UicdConfig.getInstance().getXmlDumperApkVersion().isEmpty()
           && dumperApkVersion.isPresent()
@@ -228,13 +238,16 @@ public class ADBCommandLineUtil {
     if (apiLevel >= MINIMUM_API_LEVEL_FOR_PERMISSION_GRANT_FLAG) {
       installCmd += "-g ";
     }
-    String startDumperAdbCmd1 =
-        installCmd
-            + Paths.get(
-                UicdConfig.getInstance().getXmlDumperAPKPath().toString(),
-                String.format(
-                    "uicd-xmldumper-server-test-v%s.apk",
-                    UicdConfig.getInstance().getXmlDumperApkVersion()));
+    if (compareVersion(UicdConfig.getInstance().getXmlDumperApkVersion(), "3.1.0") < 0) {
+      String startDumperAdbCmd1 =
+          installCmd
+              + Paths.get(
+                  UicdConfig.getInstance().getXmlDumperAPKPath().toString(),
+                  String.format(
+                      "uicd-xmldumper-server-test-v%s.apk",
+                      UicdConfig.getInstance().getXmlDumperApkVersion()));
+      executeAdb(startDumperAdbCmd1, deviceId);
+    }
 
     String startDumperAdbCmd2 =
         installCmd
@@ -243,7 +256,7 @@ public class ADBCommandLineUtil {
                 String.format(
                     "uicd-xmldumper-server-v%s.apk",
                     UicdConfig.getInstance().getXmlDumperApkVersion()));
-    executeAdb(startDumperAdbCmd1, deviceId);
+
     executeAdb(startDumperAdbCmd2, deviceId);
   }
 
@@ -267,7 +280,7 @@ public class ADBCommandLineUtil {
     executeAdb("shell wm size", deviceId, ret);
 
     if (ret.isEmpty()) {
-      return "";
+      return DEFAULT_SCREEN_SIZE;
     }
 
     String sizeString = ret.get(0);
@@ -276,6 +289,7 @@ public class ADBCommandLineUtil {
         sizeString = str;
       }
     }
+
     return StringUtil.getPartFromString(sizeString, ":", 1, DEFAULT_SCREEN_SIZE);
   }
 

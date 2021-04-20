@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 package com.google.uicd.backend.core.xmlparser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Query represents a nestable condition that can be matched with XML tree */
@@ -27,6 +28,21 @@ public class Query implements IPredicate {
   Query(String condition, List<IPredicate> rules) {
     this.condition = condition;
     this.rules = rules;
+  }
+
+  public Query makeCopy() {
+    Query cloneQuery = new Query(this.condition, new ArrayList<>());
+    for (IPredicate predicate : this.rules) {
+      if (predicate instanceof QueryField) {
+        QueryField queryField = (QueryField) predicate;
+        cloneQuery.rules.add(queryField.makeCopy());
+      }
+      if (predicate instanceof Query) {
+        Query query = (Query) predicate;
+        cloneQuery.rules.add(query.makeCopy());
+      }
+    }
+    return cloneQuery;
   }
 
   @Override

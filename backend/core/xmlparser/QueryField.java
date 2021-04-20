@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,24 +15,33 @@
 package com.google.uicd.backend.core.xmlparser;
 
 import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.ANY;
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 /** QueryField represents single atomic predicate that can be evaluated on a NodeContext */
-@JsonAutoDetect(fieldVisibility = ANY)
+@JsonAutoDetect(
+    fieldVisibility = ANY,
+    getterVisibility = NONE,
+    setterVisibility = NONE,
+    isGetterVisibility = NONE)
 public class QueryField implements IPredicate {
   public static final String EQUALS = "=";
   public static final String NOT_EQUALS = "!=";
   public static final String CONTAINS = "contains";
 
-  private final String field;
+  private String field;
   private final String operator;
-  private final String value;
+  private String value;
 
   QueryField(String field, String operator, String value) {
     this.field = field;
     this.operator = operator;
     this.value = value;
+  }
+
+  QueryField makeCopy() {
+    return new QueryField(this.field, this.operator, this.value);
   }
 
   private boolean evalString(String realValue) {
@@ -74,5 +83,21 @@ public class QueryField implements IPredicate {
       default:
         return false;
     }
+  }
+
+  public String getField() {
+    return field;
+  }
+
+  public String getValue() {
+    return value;
+  }
+
+  public void setField(String field) {
+    this.field = field;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
   }
 }

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -122,8 +123,7 @@ public class ScriptExecutionAction extends BaseAction {
             androidDeviceDriver.getDeviceId());
         executionStatus = ScriptExecutionStatus.STATUS_ALL_DONE;
       } catch (UicdExternalCommandException e) {
-        actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-        this.playStatus = ActionContext.PlayStatus.FAIL;
+        actionContext.updateTopPlayStatus(PlayStatus.FAIL);
         logger.warning("Failed to execute the script.");
       }
     }
@@ -158,7 +158,7 @@ public class ScriptExecutionAction extends BaseAction {
 
     actionExecutionResult.setRegularOutput(logContent);
     actionExecutionResult.setActionId(this.getActionId().toString());
-    actionExecutionResult.setPlayStatus(this.playStatus);
+    actionExecutionResult.setPlayStatus(actionContext.getTopPlayStatus());
     return actionExecutionResult;
   }
 

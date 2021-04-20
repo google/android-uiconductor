@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,10 @@ import static com.google.uicd.backend.core.utils.ADBCommands.ROOT_ACCESS_CMD;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Ascii;
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.constants.DeviceOrientation;
 import com.google.uicd.backend.core.constants.StrategyType;
 import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
@@ -82,7 +84,10 @@ public class AndroidDeviceDriver {
   private static final String TOUCH_UP_ENDPOINT = "/action/touch/up";
   private static final String ZOOM_ENDPOINT = "/action/zoom";
 
-  private static final Set<String> TV_DEVICE_TYPES = new HashSet<>(Arrays.asList("fugu", "elfin"));
+  private static final Set<String> TV_DEVICE_TYPES =
+      new HashSet<>(
+          Arrays.asList(
+              "fugu", "elfin", "adt3", "deadpool", "Sabrina", "sdk_goog3_atv", "cf_x86_tv"));
   private static final Set<String> AUTO_DEVICE_TYPES =
       new HashSet<>(Arrays.asList("bat_land", "bat", "hawk"));
   private static final Set<String> WEARABLE_DEVICE_TYPES = new HashSet<>(Arrays.asList());
@@ -175,10 +180,12 @@ public class AndroidDeviceDriver {
 
   private String getXpathBySelector(StrategyType strategy, String selector) {
     if (strategy == StrategyType.TEXT) {
-      selector = String.format("//*[contains(@text,'%s')]", selector);
-    }
-
-    if (strategy == StrategyType.RESOURCEID) {
+      selector =
+          String.format(
+              "//*[contains(@text,'%s')] | //*[contains(@content-desc,'%s')]", selector, selector);
+    } else if (strategy == StrategyType.TEXT_EQUALS) {
+      selector = String.format("//*[@text='%s'] | //*[@content-desc='%s']", selector, selector);
+    } else if (strategy == StrategyType.RESOURCEID) {
       selector = String.format("//*[@resource-id='%s']", selector);
     }
     return selector;
@@ -344,12 +351,17 @@ public class AndroidDeviceDriver {
 
   public List<String> fetchCurrentXML(boolean withClassName) {
     logger.info("fetchCurrentXML is called");
+    List<String> xmls = new ArrayList<>();
+    if (UicdConfig.getInstance().isDisableXMLDumper()) {
+      logger.info(
+          "Can not fetchCurrentXML since xml dumper is disabled, please check the uicd config.");
+      return xmls;
+    }
     String queryString = withClassName ? DUMP_XML_WITH_CLASSNAME_QUERYSTRING : "";
     String rawResponse = sendGetRequestWithRetries(DUMP_XML_ENDPOINT + queryString);
     ObjectMapper mapper = new ObjectMapper();
     Map<String, Object> map;
 
-    List<String> xmls = new ArrayList<>();
     try {
       map = mapper.readValue(rawResponse, new TypeReference<Map<String, Object>>() {});
       @SuppressWarnings("unchecked") // safe covariant cast
@@ -478,11 +490,16 @@ public class AndroidDeviceDriver {
         break;
     }
 
-    if (TV_DEVICE_TYPES.contains(deviceType) || WEARABLE_DEVICE_TYPES.contains(deviceType)) {
+    Set<String> tvAndWearableSet = new HashSet<>();
+    tvAndWearableSet.addAll(TV_DEVICE_TYPES);
+    tvAndWearableSet.addAll(WEARABLE_DEVICE_TYPES);
+    if (tvAndWearableSet.stream()
+            .anyMatch(d -> Ascii.toLowerCase(deviceType).contains(Ascii.toLowerCase(d)))) {
       scale = 0.5f;
     }
 
-    if (AUTO_DEVICE_TYPES.contains(deviceType)) {
+    if (AUTO_DEVICE_TYPES.stream()
+            .anyMatch(d -> Ascii.toLowerCase(deviceType).contains(Ascii.toLowerCase(d)))) {
       // Current Android auto resolution: 1024x600
       scale = 0.75f;
     }
@@ -531,7 +548,9 @@ public class AndroidDeviceDriver {
   public void rotateDevice(DeviceOrientation deviceOrientation)
       throws UicdExternalCommandException {
     if (!device.getOrientation().equals(deviceOrientation)) {
-      UicdCoreDelegator.getInstance().tryStopMinicap(getDeviceId());
+      if (UicdConfig.getInstance().isEnableMinicap()) {
+        UicdCoreDelegator.getInstance().tryStopMinicap(getDeviceId());
+      }
       String disableAutoRotateCmd = "adb shell settings put system accelerometer_rotation 0";
       String executeCmd =
           "shell settings put system user_rotation " + deviceOrientation.getOrientation();
@@ -539,14 +558,18 @@ public class AndroidDeviceDriver {
       adbCommandLineUtil.executeAdb(disableAutoRotateCmd, getDeviceId(), true);
       adbCommandLineUtil.executeAdb(executeCmd, getDeviceId(), true);
 
-      isRestartMinicap = true;
-      isMinicapStarted = false;
       device.setOrientation(deviceOrientation);
       // minicap restart relies on dimensions being already rotated
       refreshScreenDimension();
-      UicdCoreDelegator.getInstance()
-          .tryRestartMinicap(
-              getDeviceId(), Integer.parseInt(deviceOrientation.getOrientation()) * 90);
+
+      // only need restart in the minicap mode, for the scrcpy, there is no need to do that.
+      if (UicdConfig.getInstance().isEnableMinicap()) {
+        isRestartMinicap = true;
+        isMinicapStarted = false;
+        UicdCoreDelegator.getInstance()
+            .tryRestartMinicap(
+                getDeviceId(), Integer.parseInt(deviceOrientation.getOrientation()) * 90);
+      }
     }
   }
 

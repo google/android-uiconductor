@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
 
 import {AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {ReplaySubject, Subscription, timer} from 'rxjs';
 import {filter, take, takeUntil} from 'rxjs/operators';
 
-import {CanvasOverlayColor, KeyCodes, LONGCLICK_DURATION_MS, MessageTypes, RotateDirection, SwipeDirection} from '../constants/constants';
+import {CanvasOverlayColor, KeyCodes, LONGCLICK_DURATION_MS, MessageTypes, RotateDirection, SNACKBAR_DURATION_MS, SwipeDirection} from '../constants/constants';
 import {Point, Rect} from '../constants/rect';
 import {ScreenValidationFlowComponent} from '../screen_validation_flow/screen_validation_flow';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessage, ControlMessageService} from '../services/control_message_service';
 import {DeviceInfo, DevicesManagerService} from '../services/devices_manager_service';
+import {LogService, Message} from '../services/log_service';
 import {MinicapService} from '../services/minicap_service';
 
 /** Custom event for the pan swipe action from Hammerjs  */
@@ -50,15 +52,36 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
       private readonly dialog: MatDialog,
       private readonly minicapService: MinicapService,
+      private readonly snackBar: MatSnackBar,
       private readonly backendManagerService: BackendManagerService,
       private readonly controlMessageService: ControlMessageService,
-      private readonly devicesManagerService: DevicesManagerService) {}
+      private readonly devicesManagerService: DevicesManagerService,
+      private readonly logService: LogService) {
+    this.logService.getMessages()
+        .pipe(
+            takeUntil(this.destroyed),
+            )
+        .subscribe((data: Message) => {
+          const dInfo = this.devicesManagerService.getCurrentDevice();
+          // Small hack here to tell the reboot is ready, need match
+          // the backend string in the log.
+          if (data.text.includes('Reboot Done. DeviceId') && dInfo) {
+            this.initFEMiniCap(dInfo.minicapPort);
+          }
+        });
+  }
   canvasWidth = 360;
   canvasHeight = 640;
+
+  rotated = false;
+  canvasWrapperCss = 'canvas-wrapper';
+  canvasPhoneCss = 'phone-canvas-widget';
   inspectMode = false;
   loading = false;
   readonly swipeDirection = SwipeDirection;
   readonly rotateDirection = RotateDirection;
+
+  currentRotateDirection = RotateDirection.PORTRAIT;
 
   dragCoordinates: Point[] = [];
   timeOfLastPan = 0;
@@ -70,8 +93,13 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly destroyed = new ReplaySubject<void>(1);
 
   clearOverlayCanvas(ctx: CanvasRenderingContext2D) {
-    ctx.canvas.width = this.canvasWidth;
-    ctx.canvas.height = this.canvasHeight;
+    if (this.currentRotateDirection === RotateDirection.LANDSCAPE) {
+      ctx.canvas.width = this.canvasHeight;
+      ctx.canvas.height = this.canvasWidth;
+    } else {
+      ctx.canvas.width = this.canvasWidth;
+      ctx.canvas.height = this.canvasHeight;
+    }
   }
 
   getScreenCanvasCtx() {
@@ -91,13 +119,40 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
     this.clearOverlayCanvas(ctx);
 
     const oriRect = Rect.createFromCoordinatesStr(coordinates);
-    const srcRect = this.devicesManagerService.getDevicePhysicalScreenSize();
-    const targetRect = new Rect(0, 0, this.canvasWidth, this.canvasHeight);
+    let srcRect = this.devicesManagerService.getDevicePhysicalScreenSize();
+    let targetRect = new Rect(0, 0, this.canvasWidth, this.canvasHeight);
+    if (this.currentRotateDirection === RotateDirection.LANDSCAPE) {
+      targetRect = new Rect(0, 0, this.canvasHeight, this.canvasWidth);
+      if (srcRect.width < srcRect.height) {
+        srcRect = new Rect(0, 0, srcRect.height, srcRect.width);
+      }
+    }
     const rectToDraw = oriRect.scaleToTargetSurface(srcRect, targetRect);
 
     ctx.rect(rectToDraw.x, rectToDraw.y, rectToDraw.width, rectToDraw.height);
     ctx.fillStyle = color;
     ctx.fill();
+  }
+
+  highlightOCRElement(
+      boundsList: string[], color: string, ctx: CanvasRenderingContext2D) {
+    this.clearOverlayCanvas(ctx);
+    for (const bounds of boundsList) {
+      const oriRect = Rect.createFromBoundsStr(bounds);
+      let srcRect = this.devicesManagerService.getDevicePhysicalScreenSize();
+      let targetRect = new Rect(0, 0, this.canvasWidth, this.canvasHeight);
+      if (this.currentRotateDirection === RotateDirection.LANDSCAPE) {
+        targetRect = new Rect(0, 0, this.canvasHeight, this.canvasWidth);
+        if (srcRect.width < srcRect.height) {
+          srcRect = new Rect(0, 0, srcRect.height, srcRect.width);
+        }
+      }
+      const rectToDraw = oriRect.scaleToTargetSurface(srcRect, targetRect);
+      ctx.rect(rectToDraw.x, rectToDraw.y, rectToDraw.width, rectToDraw.height);
+    }
+
+    ctx.strokeStyle = color;
+    ctx.stroke();
   }
 
   initFEMiniCap(port: number) {
@@ -129,6 +184,11 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
                              .subscribe((output: string) => {
                                let blob =
                                    new Blob([output], {type: 'image/jpeg'});
+                               // Old code: objUrl = URL.createObjectURL(blob).
+                               // Error message from iblaze:
+                               // TS21228: [tsetse] Do not call
+                               // URL.createObjectURL, as this can
+                               // lead to XSS due to content sniffing.
                                objUrl = URL.createObjectURL(blob);
                                img.src = objUrl;
                                objUrl = '';
@@ -273,6 +333,9 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
 
   press(event: PointerEvent) {
     if (this.inspectMode || !this.devicesManagerService.getCurrentDevice()) {
+      this.snackBar.open(
+          'Please connect device or exit the UI Viewer Mode', 'OK',
+          {duration: SNACKBAR_DURATION_MS});
       return;
     }
     const point = new Point(event.offsetX, event.offsetY);
@@ -332,14 +395,22 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
 
   tap(event: PointerEvent) {
     if (!this.devicesManagerService.getCurrentDevice()) {
+      this.snackBar.open(
+          'Please connect device', 'OK', {duration: SNACKBAR_DURATION_MS});
       return;
     }
     if (this.inspectMode) {
       // send message to tree component and select that component
       const screenCoordinate = new Rect(event.offsetX, event.offsetY, 0, 0);
-      const srcRect = new Rect(0, 0, this.canvasWidth, this.canvasHeight);
-      const targetRect =
-          this.devicesManagerService.getDevicePhysicalScreenSize();
+
+      let srcRect = new Rect(0, 0, this.canvasWidth, this.canvasHeight);
+      let targetRect = this.devicesManagerService.getDevicePhysicalScreenSize();
+      if (this.currentRotateDirection === RotateDirection.LANDSCAPE) {
+        srcRect = new Rect(0, 0, this.canvasHeight, this.canvasWidth);
+        if (targetRect.width < targetRect.height) {
+          targetRect = new Rect(0, 0, targetRect.height, targetRect.width);
+        }
+      }
       const deviceCoordinate =
           screenCoordinate.scaleToTargetSurface(srcRect, targetRect);
 
@@ -352,7 +423,7 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
         console.log('tap control on');
         return;
       }
-      this.backendManagerService.tap(event.offsetX, event.offsetY)
+      this.backendManagerService.tap(event.offsetX, event.offsetY, true)
           .pipe(take(1), takeUntil(this.destroyed))
           .subscribe(() => {
             this.sendRefreshWorkflowMsg();
@@ -363,6 +434,9 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
 
   quickSwipe(direction: SwipeDirection) {
     if (this.inspectMode || !this.devicesManagerService.getCurrentDevice()) {
+      this.snackBar.open(
+          'Please connect device or exit the UI Viewer Mode', 'OK',
+          {duration: SNACKBAR_DURATION_MS});
       return;
     }
     this.backendManagerService.quickSwipe(direction)
@@ -375,8 +449,21 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
 
   rotateScreen(direction: RotateDirection) {
     if (this.inspectMode || !this.devicesManagerService.getCurrentDevice()) {
+      this.snackBar.open(
+          'Please connect device or exit the UI Viewer Mode', 'OK',
+          {duration: SNACKBAR_DURATION_MS});
       return;
     }
+    if (direction === RotateDirection.LANDSCAPE) {
+      this.canvasPhoneCss = 'phone-canvas-widget-rotated';
+      this.canvasWrapperCss = 'canvas-wrapper-rotated';
+
+    } else {
+      this.canvasPhoneCss = 'phone-canvas-widget';
+      this.canvasWrapperCss = 'canvas-wrapper';
+    }
+    this.currentRotateDirection = direction;
+
     this.loading = true;
     this.backendManagerService.rotateScreen(direction)
         .pipe(take(1), takeUntil(this.destroyed))
@@ -386,6 +473,8 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
           this.sendRefreshWorkflowMsg();
           this.sendRefreshXmlMsg();
         });
+    this.clearOverlayCanvas(this.getOverlayHoveredCanvasCtx());
+    this.clearOverlayCanvas(this.getOverlaySelectedCanvasCtx());
   }
 
   power() {
@@ -438,7 +527,8 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
                     msg.messageType === MessageTypes.NODE_HOVERED ||
                     msg.messageType === MessageTypes.NODE_SELECTED ||
                     msg.messageType === MessageTypes.CLEAR_CANVAS ||
-                    msg.messageType === MessageTypes.SET_INSPECT_MODE))
+                    msg.messageType === MessageTypes.SET_INSPECT_MODE ||
+                    msg.messageType === MessageTypes.HIGHLIGHT_OCR))
         .subscribe((msg: ControlMessage) => {
           if (msg.messageType === MessageTypes.CLEAR_CANVAS) {
             this.clearOverlayCanvas(this.getOverlayHoveredCanvasCtx());
@@ -455,6 +545,10 @@ export class ScreenCastComponent implements OnInit, OnDestroy, AfterViewInit {
                 this.getOverlayHoveredCanvasCtx());
           } else if (msg.messageType === MessageTypes.SET_INSPECT_MODE) {
             this.inspectMode = msg.extra.toLowerCase() === 'true';
+          } else if (msg.messageType === MessageTypes.HIGHLIGHT_OCR) {
+            this.highlightOCRElement(
+                msg.extra.split('|'), CanvasOverlayColor.OCR_SELECT,
+                this.getOverlaySelectedCanvasCtx());
           }
         });
   }

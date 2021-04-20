@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,6 +100,15 @@ public abstract class ActionStorageManager {
     return action;
   }
 
+  public void updateCachedMap(CompoundAction compoundAction) {
+    cachedMap.put(compoundAction.getActionId().toString(), compoundAction);
+    for (BaseAction baseAction : compoundAction.childrenActions) {
+      cachedMap.put(baseAction.getActionId().toString(), baseAction);
+      if (baseAction.getActionType().equals(ActionType.COMPOUND_ACTION)) {
+        updateCachedMap((CompoundAction) baseAction);
+      }
+    }
+  }
   /**
    * Updates the action base on the json string provided by frontend.
    *

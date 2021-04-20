@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,16 +23,20 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {v4 as uuid} from 'uuid';
 import {ReplaySubject} from 'rxjs';
 import {filter, switchMap, take, takeUntil} from 'rxjs/operators';
+
 import {DEFAULT_PROJECT_ID_PREFIX, DEFAULT_PROJECT_NAME_PREFIX, MessageTypes, POPUP_DIALOG_DEFAULT_DIMENSION, SNACKBAR_DURATION_MS} from '../constants/constants';
 import {ExportImportProjectRequest, ProjectListResponse, ProjectRecord, UuidToBase64ImgResponse} from '../constants/interfaces';
 import {JsTreeAction, JsTreeInternalNode, JsTreeNode, NodeParentPair} from '../constants/jstree';
 import {BackendManagerService} from '../services/backend_manager_service';
 import {ControlMessageService} from '../services/control_message_service';
 import {convertToJsonTreeFormat, convertToJsTreeFormat, emptyTreeExample, reconstructJsTreeData, TestCaseManagerService} from '../services/test_case_manager_service';
+
 import {ActionEditDialog} from './action_edit_dialog';
+import {ExportGoogle3Dialog} from './export_google3_dialog';
 import {ImportDialog} from './import_dialog';
 import {ImportProjectDialog} from './import_project_dialog';
 import {NewProjectDialog} from './new_project_dialog';
+import {ShareWithProjectDialog} from './share_with_project_dialog';
 
 
 
@@ -55,6 +59,7 @@ export class TestExplorer implements OnInit, OnDestroy {
   selectedProject: ProjectRecord = {
     projectName: '',
     projectId: '',
+    shareWith: '',
   };
   defaultProjectId: string = '';
   defaultProjectName: string = '';
@@ -102,20 +107,20 @@ export class TestExplorer implements OnInit, OnDestroy {
       'label': 'Rename',
       'icon': 'fa fa-tag'
     },
-    'copyTo': {
-      'action': this.copyAction.bind(this),
-      'label': 'CopyTo',
-      'icon': 'fa fa-files-o'
-    },
     'moveTo': {
       'action': this.moveAction.bind(this),
       'label': 'MoveTo',
       'icon': 'fa fa-paper-plane-o'
     },
-    'export': {
+    'download': {
+      'action': this.downloadAction.bind(this),
+      'label': 'Download',
+      'icon': 'fa fa-download'
+    },
+    'exportToGoogle3': {
       'action': this.exportAction.bind(this),
-      'label': 'Export',
-      'icon': 'fa fa-cloud-download'
+      'label': 'Export to Google3',
+      'icon': 'fa fa-cloud-upload'
     }
   };
 
@@ -435,48 +440,6 @@ export class TestExplorer implements OnInit, OnDestroy {
         });
   }
 
-  copyAction(nodeRef: unknown) {
-    const currentNode = this.getCurrentNode(nodeRef);
-    if (currentNode.original.isFolder) {
-      this.snackBar.open(
-          'CopyTo operation cannot be performed on a folder!', 'OK',
-          {duration: SNACKBAR_DURATION_MS});
-      return;
-    }
-    const uuid = this.getUUIDFromNode(currentNode);
-    this.backendManagerService.copyAction(uuid)
-        .pipe(take(1), takeUntil(this.destroyed))
-        .subscribe(data => {
-          this.ngZone.run(() => {
-            const dialogRef = this.dialog.open(ActionEditDialog, {
-              width: POPUP_DIALOG_DEFAULT_DIMENSION.width,
-              data: {
-                uuid: data.actionId,
-                isCopyAction: true,
-                isSaveWorkflow: true,
-              },
-            });
-            dialogRef.afterClosed().subscribe(dialogData => {
-              if (dialogData && !dialogData.hasOwnProperty('deleted')) {
-                let newName = dialogData.name;
-                if (dialogData.name === currentNode.text) {
-                  newName = currentNode.text + ' (Copy)';
-                  dialogData.metadata.name = newName;
-                  this.backendManagerService
-                      .updateActionMetadata(dialogData.metadata)
-                      .pipe(take(1), takeUntil(this.destroyed))
-                      .subscribe();
-                }
-                const newNode =
-                    new JsTreeNode(newName, dialogData.actionId, false);
-                newNode.additionalData = [dialogData.actionId];
-                this.jsTree.jstree('create_node', dialogData.parentId, newNode);
-              }
-            });
-          });
-        });
-  }
-
   moveAction(nodeRef: unknown) {
     const currentNode = this.getCurrentNode(nodeRef);
     if (currentNode.original.isFolder) {
@@ -517,8 +480,10 @@ export class TestExplorer implements OnInit, OnDestroy {
     });
   }
 
-  downloadTest(uuid: string, filename: string) {
+  downloadTest(
+      uuid: string, filename: string, filterTopLevelWorkflow: boolean) {
     this.backendManagerService.exportTestCase(uuid).subscribe(data => {
+      if (filterTopLevelWorkflow && !data.isTopLevelWorkflow) return;
       const formatted = JSON.stringify(data, null, 2);
       const exportData =
           new Blob([formatted + '\n'], {type: 'application/octet-stream'});
@@ -564,18 +529,54 @@ export class TestExplorer implements OnInit, OnDestroy {
     return byteArrays;
   }
 
-  exportAction(nodeRef: unknown) {
+  downloadAction(nodeRef: unknown) {
     const currentNode = this.getCurrentNode(nodeRef);
+    console.log('Start download action');
     if (currentNode.original.isFolder) {
+      this.downloadActionInFolder(currentNode.id);
       this.snackBar.open(
-          'Export operation cannot be performed on a folder!', 'OK',
+          'Batch export only download top level workflow!', 'OK',
           {duration: SNACKBAR_DURATION_MS});
       return;
     }
+    // Only filter by toplevel when it is a batch download
+    this.downloadActionByUUID(currentNode.id, currentNode.text, false);
+  }
 
-    const uuid = this.getUUIDFromNode(currentNode);
-    this.downloadTest(uuid, currentNode.text);
+  downloadActionInFolder(uuid: string) {
+    const currentNode = this.getJsTreeInstance().get_node(uuid);
+    for (let i = 0; i < currentNode.children.length; i++) {
+      const childNode =
+          this.getJsTreeInstance().get_node(currentNode.children[i]);
+      if (childNode.original.isFolder) {
+        this.downloadActionInFolder(currentNode.children[i]);
+      } else {
+        this.downloadActionByUUID(
+            currentNode.children[i], childNode.text, true);
+      }
+    }
+  }
+
+  downloadActionByUUID(
+      uuid: string, fileName: string, filterTopLevelWorkflow: boolean) {
+    const testcaseId =
+        this.getUUIDFromNode(this.getJsTreeInstance().get_node(uuid));
+    this.downloadTest(testcaseId, fileName, filterTopLevelWorkflow);
     this.downloadRefImgs(uuid);
+  }
+
+  exportAction(nodeRef: unknown) {
+    const currentNode = this.getCurrentNode(nodeRef);
+    const uuid = this.getUUIDFromNode(currentNode);
+    this.backendManagerService.exportTestCase(uuid).subscribe(returnedData => {
+      let google3Path = '';
+      google3Path = returnedData.additionalData.filePath;
+      this.ngZone.run(() => {
+        this.dialog.open(
+            ExportGoogle3Dialog,
+            {width: '800px', data: {actionId: uuid, google3Path}});
+      });
+    });
   }
 
   exportCurrentProject() {
@@ -585,6 +586,15 @@ export class TestExplorer implements OnInit, OnDestroy {
       zipFileName: '',
     };
     this.backendManagerService.exportCurrentProject(exportProjectReq);
+  }
+
+  exportTopLevelTests() {
+    const exportProjectReq: ExportImportProjectRequest = {
+      projectId: this.selectedProject.projectId,
+      projectName: this.selectedProject.projectName,
+      zipFileName: '',
+    };
+    this.backendManagerService.exportTopLevelTests(exportProjectReq);
   }
 
   getAllActionId(node: JsTreeNode, actionIdList: string[]) {
@@ -609,6 +619,14 @@ export class TestExplorer implements OnInit, OnDestroy {
         this.controlMessageService.sendRefreshTestCaseTreeMsg();
       }
     });
+  }
+
+  openShareProjectDialog() {
+    const dialogConfig = new MatDialogConfig();
+    dialogConfig.width = POPUP_DIALOG_DEFAULT_DIMENSION.width;
+    dialogConfig.data = this.selectedProject;
+    const dialogRef = this.dialog.open(ShareWithProjectDialog, dialogConfig);
+    dialogRef.afterClosed().subscribe();
   }
 
   openImportProjectDialog() {
@@ -680,7 +698,7 @@ export class TestExplorer implements OnInit, OnDestroy {
             )
         .subscribe((data: ProjectListResponse) => {
           this.projectList = data.projectList;
-          this.selectedProject.projectId = data.projectList[0].projectId;
+          this.selectedProject = data.projectList[0];
           this.setupDataTree();
         });
   }

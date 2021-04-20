@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,16 +15,18 @@
 package com.google.uicd.backend.controllers;
 
 import com.google.common.io.ByteStreams;
-import com.google.uicd.backend.controllers.requests.ProjectDeepCopyRequest;
+import com.google.uicd.backend.controllers.requests.ProjectCopyRequest;
 import com.google.uicd.backend.controllers.requests.UpdateTestCaseTreeRequest;
 import com.google.uicd.backend.controllers.responses.ProjectRecord;
 import com.google.uicd.backend.controllers.responses.ProjectResponse;
 import com.google.uicd.backend.controllers.responses.TestCaseTreeResponse;
 import com.google.uicd.backend.controllers.responses.TestHistoryResponse;
 import com.google.uicd.backend.core.config.UicdConfig;
+import com.google.uicd.backend.core.constants.ImportCopyType;
 import com.google.uicd.backend.core.constants.JsonFlag;
 import com.google.uicd.backend.core.db.ActionStorageManager;
 import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
 import com.google.uicd.backend.recorder.services.ProjectManager;
 import com.google.uicd.backend.recorder.services.TestCaseTreeManager;
 import com.google.uicd.backend.recorder.services.TestCasesImportExportManager;
@@ -88,12 +90,12 @@ public class TestCaseController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/deepCopyProjectTree", method = RequestMethod.POST)
+  @RequestMapping(value = "/copyProjectTree", method = RequestMethod.POST)
   public Callable<String> createProjectAndDeepCopy(
-      @RequestBody ProjectDeepCopyRequest projectDeepCopyRequest) {
+      @RequestBody ProjectCopyRequest projectCopyRequest) {
     return () -> {
-      testCasesImportExportManager.deepCopyTree(
-          projectDeepCopyRequest.getSrcProjectId(), projectDeepCopyRequest.getTargetProjectId());
+      testCasesImportExportManager.copyTree(
+          projectCopyRequest.getSrcProjectId(), projectCopyRequest.getTargetProjectId());
       return DONE;
     };
   }
@@ -148,11 +150,28 @@ public class TestCaseController {
   @RequestMapping(value = "/exportProjectToZip", method = RequestMethod.GET)
   public ResponseEntity<Resource> exportProjectToZip(
       @RequestParam(value = "projectId") String projectId,
-      @RequestParam(value = "projectName") String projectName) throws IOException, UicdException{
+      @RequestParam(value = "projectName") String projectName)
+      throws IOException, UicdException {
     ZipFile file = testCasesImportExportManager.zipAndExport(projectId, projectName, "");
+    return getZipFileResponseEntity(projectName, file);
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping(value = "/exportTopLevelCaseOnlyToZip", method = RequestMethod.GET)
+  public ResponseEntity<Resource> exportTopLevelCaseOnlyToZip(
+      @RequestParam(value = "projectId") String projectId,
+      @RequestParam(value = "projectName") String projectName)
+      throws IOException, UicdException {
+    ZipFile file =
+        testCasesImportExportManager.zipAndExportTopLevelCaseOnly(projectId, projectName, "");
+    return getZipFileResponseEntity(projectName, file);
+  }
+
+  private ResponseEntity<Resource> getZipFileResponseEntity(
+      @RequestParam("projectName") String projectName, ZipFile file) throws IOException {
     HttpHeaders header = new HttpHeaders();
-    header.add(HttpHeaders.CONTENT_DISPOSITION,
-        String.format("attachment; filename=%s.zip", projectName));
+    header.add(
+        HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=%s.zip", projectName));
     header.add("Cache-Control", "no-cache, no-store, must-revalidate");
     header.add("Pragma", "no-cache");
     header.add("Expires", "0");
@@ -169,11 +188,9 @@ public class TestCaseController {
   @CrossOrigin(origins = "*")
   @RequestMapping(value = "/unzipAndImport", method = RequestMethod.POST)
   public Callable<String> unzipAndImport(
-      @RequestParam("file") MultipartFile file,
-      @RequestParam("projectName") String projectName) {
+      @RequestParam("file") MultipartFile file, @RequestParam("projectName") String projectName) {
     return () -> {
-      ProjectResponse projectResponse =
-           projectManager.createProject(projectName);
+      ProjectResponse projectResponse = projectManager.createProject(projectName);
       if (projectResponse.isSuccess()) {
         File tempFile = File.createTempFile(projectName, ".zip");
         tempFile.deleteOnExit();
@@ -181,8 +198,7 @@ public class TestCaseController {
           IOUtils.copy(file.getInputStream(), out);
         }
         ProjectRecord projectRecord = projectResponse.getProjectList().get(0);
-        testCasesImportExportManager.unzipAndImport(
-            tempFile, projectRecord.getProjectId());
+        testCasesImportExportManager.unzipAndImport(tempFile, projectRecord.getProjectId());
       }
       return DONE;
     };
@@ -200,9 +216,19 @@ public class TestCaseController {
   @CrossOrigin(origins = "*")
   @RequestMapping(value = "/importTestCaseByActionId", method = RequestMethod.GET)
   public Callable<String> importTestCaseByActionId(
-      @RequestParam(value = "actionId") String actionId) {
+      @RequestParam(value = "actionId") String actionId,
+      @RequestParam(value = "copyRequest") ImportCopyType copyRequest) {
     return () -> {
       try {
+        if (ImportCopyType.SOFTCOPY.equals(copyRequest)) {
+          BaseAction baseAction = actionStorageManager.getActionByUUID(actionId);
+          if (!testCasesImportExportManager.hasPermissionToSoftCopy(baseAction)) {
+            // return a black response to specify that the user doesn't have permission
+            // to access the test
+            return "";
+          }
+          return baseAction.toJson(JsonFlag.FRONTEND);
+        }
         String newActionId = testCasesImportExportManager.deepImportAction(actionId);
         return actionStorageManager.getActionByUUID(newActionId).toJson(JsonFlag.FRONTEND);
       } catch (UicdException e) {

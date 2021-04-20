@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,19 +101,22 @@ public abstract class BaseAction {
     this.commandLineUtil = new CommandLineUtil();
   }
 
-  protected PlayStatus playStatus = PlayStatus.READY;
   // User specified name for the current action.
   protected String name = "";
   // Unique Id for current action
   private UUID actionId = UUID.randomUUID();
   // Action real type
   private ActionType actionType;
+
   // User defined description for the action, plain text field
   private String actionDescription = "";
+
   // Default delay time after the action 1500ms
   private int delayAfterActionMs = 1500;
+
   // Only used in the multi-device mode, to indicate which device should execute the action
   private int deviceIndex = 0;
+
   // Use this field to indicate whether the action has been modified, if not we don't need save to
   // the DB later.
   private boolean isDirty = true;
@@ -123,6 +126,18 @@ public abstract class BaseAction {
   private String createdBy = UicdConfig.getInstance().getCurrentUser();
 
   protected boolean runAlways = false;
+
+  private String shareWith = "";
+
+  public void setShareWith(String shareWith) {
+    // remove all the whitespaces
+    shareWith = shareWith.replaceAll("\\s", "");
+    this.shareWith = shareWith;
+  }
+
+  public String getShareWith() {
+    return shareWith;
+  }
 
   @JsonIgnore protected Logger logger = LogManager.getLogManager().getLogger("uicd");
 
@@ -242,9 +257,9 @@ public abstract class BaseAction {
     AndroidDeviceDriver androidDeviceDriver =
         getAndroidDeviceDriver(deviceDrivers, actionContext, dIndex);
     logActionStart(actionContext);
-    if (needSkipAction(androidDeviceDriver, actionContext)) {
-      playStatus = PlayStatus.SKIPPED;
-    } else {
+    // Push first, actionContext will adjust the status inside based on parent's status
+    actionContext.pushPlayStatus(PlayStatus.READY, this.runAlways);
+    if (actionContext.getTopPlayStatus() == PlayStatus.READY) {
       try {
         play(androidDeviceDriver, actionContext);
       } catch (Exception e) {
@@ -254,10 +269,12 @@ public abstract class BaseAction {
     }
 
     logActionEnd(actionContext);
-    if (playStatus == ActionContext.PlayStatus.READY) {
-      playStatus = ActionContext.PlayStatus.PASS;
-    }
-    return genActionExecutionResults(androidDeviceDriver, actionContext);
+    ActionExecutionResult actionExecutionResult =
+        genActionExecutionResults(androidDeviceDriver, actionContext);
+    // need call pop after genActionExecutionResults, since genActionExecutionResults will rely on
+    // the play status
+    actionContext.popPlayStatus();
+    return actionExecutionResult;
   }
 
   public abstract void updateAction(BaseAction baseAction);
@@ -273,7 +290,6 @@ public abstract class BaseAction {
       case EXPORT:
         mapper.addMixIn(BaseAction.class, BaseActionDBIgnoreFields.class);
         break;
-      default:
         // continue below
     }
 
@@ -308,33 +324,31 @@ public abstract class BaseAction {
     actionExecutionResult.setRegularOutput(this.getActionTypeString() + ": " + this.getDisplay());
     actionExecutionResult.setSequenceIndex(actionContext.getNextActionSequenceIndex());
     actionExecutionResult.setActionId(this.actionId.toString());
-    actionExecutionResult.setPlayStatus(this.playStatus);
+    actionExecutionResult.setExecutionId(actionContext.getExecutionId().toString());
+    actionExecutionResult.setPlayStatus(actionContext.getTopPlayStatus());
     return actionExecutionResult;
   }
 
   public void updateCommonFields(BaseAction baseAction) {
     this.setName(baseAction.getName());
+    this.setShareWith(baseAction.getShareWith());
     this.setActionDescription(baseAction.getActionDescription());
     this.setDelayAfterActionMs(baseAction.getDelayAfterActionMs());
     this.setDeviceIndex(baseAction.getDeviceIndex());
     this.runAlways = baseAction.runAlways;
   }
 
+  public boolean isRunAlways() {
+    return this.runAlways;
+  }
+
   protected abstract int play(AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext)
       throws UicdException;
 
-  protected boolean needSkipAction(
-      AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) {
-    if (runAlways) {
-      return false;
-    }
-    if (playStatus == PlayStatus.SKIPPED) {
-      return true;
-    }
-    return !actionContext.canRunAction(androidDeviceDriver.getDeviceId());
-  }
-
   protected void waitAfter(ActionContext actionContext) {
+    if (!actionContext.canRunAction()) {
+      return;
+    }
     try {
       long remainingWaitTime =
           (long) (getDelayAfterActionMs() / actionContext.getPlaySpeedFactor());
@@ -357,7 +371,7 @@ public abstract class BaseAction {
     }
   }
 
-  private AndroidDeviceDriver getAndroidDeviceDriver(
+  protected AndroidDeviceDriver getAndroidDeviceDriver(
       List<AndroidDeviceDriver> deviceDrivers, ActionContext actionContext, int deviceIndex)
       throws UicdDeviceException {
     switch (actionContext.getPlayMode()) {

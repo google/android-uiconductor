@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.utils.AdditionalData;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +39,9 @@ public class CompoundAction extends BaseAction implements Cloneable {
   private int repeatTime = 1;
   private boolean failAtTheEnd = false;
   private boolean forceDeviceOnChildren = false;
+  private boolean runAlwaysRecursive = false;
   private final AdditionalData additionalData = new AdditionalData();
+  private boolean isTopLevelWorkflow = false;
 
   @Override
   public String getName() {
@@ -74,16 +75,13 @@ public class CompoundAction extends BaseAction implements Cloneable {
   public ActionExecutionResult playWithDelay(
       List<AndroidDeviceDriver> deviceDrivers, ActionContext actionContext, int deviceIndex)
       throws UicdDeviceException {
-    boolean playbackCancelled = false;
     ActionExecutionResult actionExecutionResult = new ActionExecutionResult();
     actionExecutionResult.setSequenceIndex(actionContext.getNextActionSequenceIndex());
     actionExecutionResult.setRegularOutput(this.getDisplay());
     actionExecutionResult.setOutputType(ActionExecutionResult.OutputType.COMPOUND);
     actionExecutionResult.setActionId(this.getActionId().toString());
+    actionExecutionResult.setExecutionId(actionContext.getExecutionId().toString());
     logActionStart(actionContext);
-
-    playStatus = ActionContext.PlayStatus.READY;
-    boolean stopCurrentLevel = false;
 
     // If user is doing "play from here", we pass in the offset index.
     if (actionContext.getCurrentPlayingPath().isEmpty()
@@ -93,32 +91,26 @@ public class CompoundAction extends BaseAction implements Cloneable {
       actionContext.getCurrentPlayingPath().add(actionContext.getCurrentPlayActionIndex());
       actionContext.setCurrentPlayActionIndex(0);
     }
+    actionContext.pushPlayStatus(PlayStatus.READY, this.runAlways);
     for (int i = 0; i < repeatTime; i++) {
       for (BaseAction action : childrenActions) {
         // Update currently playing action ID.
-        actionContext.setCurrentPlayingActionId(action.getActionId());
-
-        if (stopCurrentLevel) {
-          action.playStatus = PlayStatus.SKIPPED;
-        } else {
-          // Reset the playStatus. Action is always in memory, we need to clear the status before
-          action.playStatus = PlayStatus.READY;
-        }
+        actionContext.setCurrentPlayingAction(action.getActionId(), action.getDisplay());
 
         // For the compound action, we are still using the abstract deviceDriver, since for multi
         // device case, compound action might need control different device
         if (actionContext.playbackStopRequested()) {
-          playbackCancelled = true;
           ActionExecutionResult childResult = new ActionExecutionResult();
           childResult.setRegularOutput(action.getDisplay());
           childResult.setSequenceIndex(actionContext.getNextActionSequenceIndex());
           childResult.setActionId(action.getActionId().toString());
-          childResult.setPlayStatus(ActionContext.PlayStatus.CANCELLED);
+          childResult.setPlayStatus(PlayStatus.CANCELLED);
           actionExecutionResult.addChildResult(childResult);
+          actionContext.updateTopPlayStatus(PlayStatus.CANCELLED);
         } else {
           ActionExecutionResult childResult;
           if (actionContext.getPlayMode() == PlayMode.MULTIDEVICE) {
-            if (forceDeviceOnChildren) {
+            if (isForceDeviceOnChildren()) {
               // use Single play mode for this subtree to force specific device
               actionContext.setPlayMode(PlayMode.SINGLE);
               childResult = action.playWithDelay(deviceDrivers, actionContext, deviceIndex);
@@ -131,14 +123,12 @@ public class CompoundAction extends BaseAction implements Cloneable {
             childResult = action.playWithDelay(deviceDrivers, actionContext, deviceIndex);
           }
           actionExecutionResult.addChildResult(childResult);
-          if (action.playStatus == PlayStatus.EXIT_CURRENT_COMPOUND) {
-            stopCurrentLevel = true;
-          }
         }
       }
       // wait for single repeat
       waitAfter(actionContext);
     }
+    PlayStatus playStatus = actionContext.popPlayStatus();
 
     actionContext.setCurrentPlayActionIndex(actionContext.getCurrentPlayingPath().getLast());
     actionContext.getCurrentPlayingPath().removeLast();
@@ -147,17 +137,12 @@ public class CompoundAction extends BaseAction implements Cloneable {
     for (ActionExecutionResult childRes : actionExecutionResult.getChildrenResult()) {
       if (childRes.getPlayStatus() == ActionContext.PlayStatus.FAIL) {
         actionExecutionResult.setPlayStatus(ActionContext.PlayStatus.FAIL);
-        this.playStatus = ActionContext.PlayStatus.FAIL;
       }
     }
-    if (this.playStatus == ActionContext.PlayStatus.READY) {
-      if (playbackCancelled) {
-        this.playStatus = ActionContext.PlayStatus.CANCELLED;
-        actionExecutionResult.setPlayStatus(ActionContext.PlayStatus.CANCELLED);
-      } else {
-        this.playStatus = ActionContext.PlayStatus.PASS;
-        actionExecutionResult.setPlayStatus(ActionContext.PlayStatus.PASS);
-      }
+
+    actionExecutionResult.setPlayStatus(playStatus);
+    if (playStatus == PlayStatus.READY) {
+      actionExecutionResult.setPlayStatus(PlayStatus.PASS);
     }
     return actionExecutionResult;
   }
@@ -171,13 +156,6 @@ public class CompoundAction extends BaseAction implements Cloneable {
     }
   }
 
-  public void removeLastAction() {
-    if (this.childrenActions.isEmpty()) {
-      return;
-    }
-    this.removeByIndex(this.childrenIdList.size() - 1);
-  }
-
   public void removeByIndex(int index) {
     this.childrenActions.remove(index);
     this.childrenIdList.remove(index);
@@ -185,42 +163,44 @@ public class CompoundAction extends BaseAction implements Cloneable {
 
   @Override
   public void updateAction(BaseAction baseAction) {
-    boolean runAlwaysChanged = baseAction.runAlways != this.runAlways;
+    boolean oldRunAlwaysValue = this.runAlways;
     super.updateCommonFields(baseAction);
 
     if (baseAction instanceof CompoundAction) {
       CompoundAction otherAction = (CompoundAction) baseAction;
       this.repeatTime = otherAction.repeatTime;
       this.failAtTheEnd = otherAction.failAtTheEnd;
-      this.forceDeviceOnChildren = otherAction.forceDeviceOnChildren;
-
-      // reorder current action list based on list order of input
-      HashMap<UUID, BaseAction> map = new HashMap<>();
-      for (BaseAction childAction : childrenActions) {
-        if (childAction == null) {
-          System.out.println("child action is null");
-        } else {
-          map.put(childAction.getActionId(), childAction);
-        }
-      }
-      childrenIdList = otherAction.childrenIdList;
-      childrenActions = new ArrayList<>();
-      for (String childId : childrenIdList) {
-        childrenActions.add(map.get(UUID.fromString(childId)));
-      }
-      if (runAlwaysChanged) {
-        setRunAlwaysForChildren(this.runAlways);
+      this.forceDeviceOnChildren = otherAction.isForceDeviceOnChildren();
+      this.isTopLevelWorkflow = otherAction.isTopLevelWorkflow;
+      // only set children's value when it is changed, otherwise it could override the child's value
+      // set by user manually.
+      boolean runAlwaysChanged =
+          otherAction.runAlways != oldRunAlwaysValue
+              || otherAction.runAlwaysRecursive != this.runAlwaysRecursive;
+      this.runAlwaysRecursive = otherAction.runAlwaysRecursive;
+      this.runAlways = otherAction.runAlways;
+      if (runAlwaysChanged && this.runAlwaysRecursive) {
+        setRunAlwaysForChildren(this.runAlways, this.runAlwaysRecursive);
       }
     }
   }
 
-  private void setRunAlwaysForChildren(boolean isRunWays) {
+  private void setRunAlwaysForChildren(boolean isRunWays, boolean recursive) {
     for (BaseAction childAction : childrenActions) {
       if (childAction != null) {
-        childAction.runAlways = isRunWays;
+        // Only change the regular action to runAlways, for the compound children action, we should
+        // keep the runAlways unchecked. Just like a regular filesystem, compoundAction is similar
+        // to folder.
         if (childAction instanceof CompoundAction) {
-          CompoundAction childCompound = (CompoundAction) childAction;
-          childCompound.setRunAlwaysForChildren(isRunWays);
+          if (recursive) {
+            CompoundAction childCompound = (CompoundAction) childAction;
+            childCompound.runAlwaysRecursive = recursive;
+            if (recursive) {
+              childCompound.setRunAlwaysForChildren(isRunWays, recursive);
+            }
+          }
+        } else {
+          childAction.runAlways = isRunWays;
         }
       }
     }
@@ -247,8 +227,7 @@ public class CompoundAction extends BaseAction implements Cloneable {
   public void addAction(BaseAction action) {
     if (checkCycling(this.getActionId().toString(), action)) {
       logger.warning(
-          String.format(
-              "Cycling reference. Can not add child Action: %s", action.getActionId().toString()));
+          String.format("Cycling reference. Can not add child Action: %s", action.getActionId()));
       return;
     }
     if (action.getName().isEmpty()) {
@@ -298,5 +277,21 @@ public class CompoundAction extends BaseAction implements Cloneable {
 
   public AdditionalData getAdditionalData() {
     return this.additionalData;
+  }
+
+  public boolean isForceDeviceOnChildren() {
+    return forceDeviceOnChildren;
+  }
+
+  public int getRepeatTime() {
+    return repeatTime;
+  }
+
+  public boolean isTopLevelWorkflow() {
+    return isTopLevelWorkflow;
+  }
+
+  public void setTopLevelWorkflow(boolean topLevelWorkflow) {
+    isTopLevelWorkflow = topLevelWorkflow;
   }
 }

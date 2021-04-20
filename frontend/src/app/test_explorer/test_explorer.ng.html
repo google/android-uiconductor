@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -24,7 +24,10 @@
         <button mat-menu-item (click)=openNewProjectDialog()>New</button>
         <button mat-menu-item [matMenuTriggerFor]="switchProjectMenu">Open</button>
         <button mat-menu-item (click)=openImportProjectDialog()>Import</button>
+        <button mat-menu-item (click)=openShareProjectDialog()>Share Current Project</button>
+        <button mat-menu-item (click)=exportTopLevelTests()>Export Zip(Top Level Tests Only)</button>
         <button mat-menu-item (click)=exportCurrentProject()>Export Project Zip</button>
+
       </mat-menu>
 
       <mat-menu #switchProjectMenu="matMenu" >

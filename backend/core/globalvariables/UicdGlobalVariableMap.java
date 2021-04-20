@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import static com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility.NONE;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.auto.value.AutoValue;
@@ -43,9 +44,10 @@ import java.util.logging.Logger;
     setterVisibility = NONE,
     isGetterVisibility = NONE)
 public class UicdGlobalVariableMap {
-  protected Logger logger = LogManager.getLogManager().getLogger("uicd");
+  @JsonIgnore protected Logger logger = LogManager.getLogManager().getLogger("uicd");
   public static final List<String> PARAM_KEYWORD_LIST =
       new ArrayList<>(Arrays.asList("$nuwa_", "$uicd_"));
+  public static final String UICD_VAR_PREFIX = "$uicd_";
 
   // For the shell output there is no '$' before the keyword, otherwise it will conflict with logic
   // of global variable. It will treat this line as global variable and try to replace it. Most of
@@ -96,6 +98,9 @@ public class UicdGlobalVariableMap {
   }
 
   public void addVariable(String key, String value, boolean isExportFiled) {
+    if (!key.startsWith(UICD_VAR_PREFIX)) {
+      key = UICD_VAR_PREFIX + key;
+    }
     varMap.put(key, UicdGlobalVariableValue.create(value, isExportFiled));
   }
 
@@ -157,13 +162,14 @@ public class UicdGlobalVariableMap {
     }
   }
 
+  /** Defines the uicd global variable value */
   @JsonAutoDetect(
       fieldVisibility = ANY,
       getterVisibility = NONE,
       setterVisibility = NONE,
       isGetterVisibility = NONE)
   @AutoValue
-  abstract static class UicdGlobalVariableValue {
+  public abstract static class UicdGlobalVariableValue {
 
     abstract String value();
 

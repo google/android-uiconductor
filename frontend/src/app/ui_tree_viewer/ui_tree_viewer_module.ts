@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
+import {MatListModule} from '@angular/material/list';
+import {MatProgressBarModule} from '@angular/material/progress-bar';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSlideToggleModule} from '@angular/material/slide-toggle';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
@@ -27,6 +30,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 import {CopyXmlDialog} from './copy_xml_dialog';
+import {OCRViewerComponent} from './ocr_viewer';
 import {UiTreeViewer} from './ui_tree_viewer';
 
 @NgModule({
@@ -39,13 +43,16 @@ import {UiTreeViewer} from './ui_tree_viewer';
     MatButtonModule,
     MatDialogModule,
     MatFormFieldModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
     MatInputModule,
+    MatListModule,
     MatSelectModule,
     MatSnackBarModule,
     MatSlideToggleModule,
   ],
-  exports: [UiTreeViewer],
-  declarations: [UiTreeViewer, CopyXmlDialog],
+  exports: [UiTreeViewer, OCRViewerComponent],
+  declarations: [UiTreeViewer, CopyXmlDialog, OCRViewerComponent],
   entryComponents: [CopyXmlDialog]
 })
 export class UiTreeViewerModule {

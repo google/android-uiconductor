@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package com.google.uicd.backend.core.uicdactions;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdDeviceHttpConnectionResetException;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.utils.UicdSnippetClientDriver;
 import com.google.uicd.backend.core.xmlparser.TextValidator;
 import java.time.Duration;
@@ -104,7 +105,7 @@ public class SnippetValidationAction extends ValidationAction {
     }
     actionExecutionResult.setRegularOutput(logContent);
     actionExecutionResult.setActionId(this.getActionId().toString());
-    actionExecutionResult.setPlayStatus(this.playStatus);
+    actionExecutionResult.setPlayStatus(actionContext.getTopPlayStatus());
     return actionExecutionResult;
   }
 
@@ -131,13 +132,11 @@ public class SnippetValidationAction extends ValidationAction {
           validationResult =
               (executionResult != null) ? validate(actionContext, androidDeviceDriver) : false;
           if (!validationResult) {
-            actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-            this.playStatus = ActionContext.PlayStatus.FAIL;
+            actionContext.updateTopPlayStatus(PlayStatus.FAIL);
           }
         }
       } else {
-        actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-        this.playStatus = ActionContext.PlayStatus.FAIL;
+        actionContext.updateTopPlayStatus(PlayStatus.FAIL);
         logger.warning("An error happened during the RPC call.");
       }
     } catch (UicdExternalCommandException e) {

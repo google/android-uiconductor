@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -116,8 +116,8 @@ public class Device {
   private static final String BUILD_VERSION_SDK_KEY = "ro.build.version.sdk";
   private static final String PRODUCT_CPU_ABI_KEY = "ro.product.cpu.abi";
   private static final String BUILD_ID_KEY = "ro.build.id";
-  private final int minicapDevicePort = 1717;
-  private final int xmlDumperDevicePort = 6790;
+  private static final int MINICAP_DEVICE_PORT = 1717;
+  private static final int XML_DUMPER_DEVICE_PORT = 6790;
 
   private int minicapHostPort = 1717;
   private int minicapWebServerPort = 9002;
@@ -199,7 +199,7 @@ public class Device {
   }
 
   public int getMinicapDevicePort() {
-    return minicapDevicePort;
+    return MINICAP_DEVICE_PORT;
   }
 
   public int getMinicapHostPort() {
@@ -219,7 +219,7 @@ public class Device {
   }
 
   public int getXmlDumperDevicePort() {
-    return xmlDumperDevicePort;
+    return XML_DUMPER_DEVICE_PORT;
   }
 
   public int getXmlDumperHostPort() {

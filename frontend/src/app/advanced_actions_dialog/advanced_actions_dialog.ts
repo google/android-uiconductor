@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 import {QueryBuilderConfig} from 'angular2-query-builder';
 import {iif, ReplaySubject} from 'rxjs';
@@ -24,6 +24,8 @@ import {ImageResponse, Query, ScaledScreenDimensionsResponse, UuidResponse} from
 import {Bounds} from '../constants/rect';
 import {CLICK_STRATEGY_TYPES, CONTENT_MATCH_TYPES, ContentMatchType, ContextStorageType, DirectionType, ElementSelectorType, ICON_IMAGE_TYPES, IconImageType, PACKAGE_NAMES, PackageName, ScreenContentSearchType, STOP_TYPES, StopType, StrategyType, ValidationActionType, ValidationRequestDetails} from '../constants/screen_validation_constants';
 import {Circle, Rectangle, Shape} from '../constants/shape';
+import {PythonScriptActionDetails} from '../popup_dialogs/python_debugger_simple_dialog';
+import {PythonEditorSimpleComponent} from '../popup_dialogs/python_editor_simple';
 import {PanSwipeEvent} from '../screen_cast/screen_cast';
 import {FetchContentActionDetails} from '../screen_validation_flow/fetch_content_form';
 import {BackendManagerService} from '../services/backend_manager_service';
@@ -43,6 +45,7 @@ export interface CommandLineActionDetails extends ActionSummaryMetaData {
   expectedReturnCode?: number;
   isAdbCommand: boolean;
   needShellOutput: boolean;
+  uicdVariableName: string;
 }
 
 /** Text validator */
@@ -133,6 +136,7 @@ export interface LoopScreenContentValidationActionDetails extends
 export interface ConditionValidationActionDetails extends
     ValidationActionDetails {
   query: Query;
+  clickAfterValidation?: boolean;
 }
 
 /** Advanced Action model */
@@ -182,13 +186,6 @@ export interface MLImageValidationActionDetails extends
 /** Advanced Action model */
 export interface DoubleTapPowerButtonDetails extends ActionSummaryMetaData {}
 
-/** Advanced Action model */
-export interface PythonScriptActionDetails extends ActionSummaryMetaData {
-  script: string;
-  dependency: string;
-  expectedReturnCode?: number;
-}
-
 enum ShapeType {
   RECTANGULAR = 'RECTANGULAR',
   CIRCULAR = 'CIRCULAR',
@@ -200,9 +197,12 @@ enum ShapeType {
   templateUrl: './advanced_actions_dialog.ng.html',
   styleUrls: ['./advanced_actions_dialog.css'],
 })
-export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
+export class AdvancedActionDialogComponent implements OnInit, OnDestroy,
+                                                      AfterViewInit {
   @ViewChild('screenshot', {static: false}) screenshot!: ElementRef;
   @ViewChild('regionCanvas', {static: false}) regionCanvas!: ElementRef;
+  @ViewChild(PythonEditorSimpleComponent)
+  private readonly pythonEditorComponent!: PythonEditorSimpleComponent;
 
   readonly CONTENT_MATCH_TYPES = CONTENT_MATCH_TYPES;
   readonly PACKAGE_NAMES = PACKAGE_NAMES;
@@ -221,6 +221,7 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
   screenshotScaledHeight = 0;
   selectedRegions: Shape[] = [];
   regionShapeSelected = '';
+  cmdlineDirectSetVariable = false;
 
   advancedActionTypeList = [
     ACTIONS.COMMAND_LINE_ACTION,
@@ -285,9 +286,10 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     commandLine: '',
     commandlineExecutionTimeoutSec: 5,
     expectedReturnCode: 0,
-    delayAfterActionMs: 100,
+    delayAfterActionMs: 1000,
     isAdbCommand: false,
     needShellOutput: false,
+    uicdVariableName: '',
   };
 
   inputActionDetails: InputActionDetails = {
@@ -311,7 +313,7 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     type: ACTIONS.CLICK_ACTION.type,
     isByElement: true,
     isOcrMode: false,
-    strategy: StrategyType.TEXT,
+    strategy: StrategyType.TEXT_EQUALS,
     selector: '',
   };
 
@@ -419,6 +421,7 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
           ]
 
     },
+    clickAfterValidation: false,
   };
 
   screenContentValidationActionDetails: ScreenContentValidationActionDetails = {
@@ -511,7 +514,6 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
     name: ACTIONS.PYTHON_SCRIPT_ACTION.shortName,
     type: ACTIONS.PYTHON_SCRIPT_ACTION.type,
     script: '',
-    dependency: '',
     expectedReturnCode: 0,
   };
   /** Handle on-destroy Subject, used to unsubscribe. */
@@ -614,13 +616,11 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
           this.conditionValidationAction =
               this.data as ConditionValidationActionDetails;
           // `unknown`.
-          // tslint:disable:no-any no-unnecessary-type-assertion
           this.conditionValidationAction.query =
               JSON.parse(
                   JSON.stringify(this.conditionValidationAction.query),
                   (k, v: string) =>
                       v === 'true' ? true : v === 'false' ? false : v) as any;
-          // tslint:enable:no-any no-unnecessary-type-assertion
           this.selectedActionType = ACTIONS.CONDITION_VALIDATION_ACTION.type;
           break;
         case ACTIONS.DOUBLE_TAP_POWER_BUTTON_ACTION.actionType:
@@ -636,6 +636,10 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
         default:
           break;
       }
+      if (this.commandLineActionDetails.uicdVariableName &&
+          this.commandLineActionDetails.uicdVariableName !== '') {
+        this.cmdlineDirectSetVariable = true;
+      }
     }
 
     this.backendManagerService.getScaledScreenDimensions()
@@ -649,6 +653,15 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
         });
   }
 
+  ngAfterViewInit() {
+    // see go/strict-prop-init-fix for more details
+    // inject text value when editor is initialized
+    if (this.data.actionType === ACTIONS.PYTHON_SCRIPT_ACTION.actionType) {
+      this.pythonEditorComponent.setTextToEditor(
+          this.pythonScriptActionDetails.script);
+    }
+  }
+
   ngOnDestroy() {
     // Unsubscribes all pending subscriptions.
     this.destroyed.next();
@@ -656,7 +669,9 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
 
   saveAction() {
     let actionData: ActionSummaryMetaData = this.commandLineActionDetails;
-
+    if (!this.cmdlineDirectSetVariable) {
+      this.commandLineActionDetails.uicdVariableName = '';
+    }
     switch (this.selectedActionType) {
         // Save details for regular actions.
       case ACTIONS.COMMAND_LINE_ACTION.type:
@@ -713,6 +728,12 @@ export class AdvancedActionDialogComponent implements OnInit, OnDestroy {
         actionData = this.doubleTapPowerButtonDetails;
         break;
       case ACTIONS.PYTHON_SCRIPT_ACTION.type:
+        this.pythonScriptActionDetails = {
+          name: ACTIONS.PYTHON_SCRIPT_ACTION.shortName,
+          type: ACTIONS.PYTHON_SCRIPT_ACTION.type,
+          script: this.pythonEditorComponent.getTextFromEditor(),
+          expectedReturnCode: 0,
+        };
         actionData = this.pythonScriptActionDetails;
         break;
       default:

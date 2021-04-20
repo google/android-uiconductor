@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,8 +32,9 @@ import {ReplayDetailsDialog} from './replay_details_dialog';
 export class HistoryDialog implements OnInit, OnDestroy {
   private readonly destroyed = new ReplaySubject<void>(1);
   dataSource: TestHistoryEntity[] = [];
-  displayedColumns: string[] =
-      ['details', 'uuid', 'testUuid', 'name', 'result', 'runDate', 'author'];
+  displayedColumns: string[] = [
+    'details', 'executionId', 'testUuid', 'name', 'result', 'runDate', 'author'
+  ];
 
   constructor(
       private readonly dialog: MatDialog,
@@ -54,6 +55,10 @@ export class HistoryDialog implements OnInit, OnDestroy {
     this.dialog.open(
         ReplayDetailsDialog,
         {width: POPUP_DIALOG_DEFAULT_DIMENSION.width, data});
+  }
+
+  formatDate(inputDate: string) {
+    return new Date(inputDate);
   }
 
   ngOnDestroy() {

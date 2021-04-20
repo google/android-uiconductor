@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Google LLC
+ * Copyright 2021 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,24 @@
   z-index: 0;
 }
 
+.phone-canvas-widget-rotated {
+  background-color: white;
+  z-index: 0;
+  transform: rotate(270deg) translate(140px, 140px);
+}
+
 .canvas-wrapper {
-  padding-top: 10px;
+  margin-top: 10px;
   width: 360px;
   min-width: 360px;
   max-height: 100% !important;
+}
+
+.canvas-wrapper-rotated {
+  margin-top: 10px;
+  width: 640px;
+  min-width: 640px;
+  max-height: 360px;
 }
 
 .phone-canvas-widget2 {
@@ -86,6 +99,11 @@
 
 .screen-widget-root {
   position: relative;
+  height: 100%;
+}
+
+.phone-wrapper {
+  height: 100%;
 }
 
 .phone-overlay-wrapper {

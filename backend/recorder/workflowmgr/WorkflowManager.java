@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package com.google.uicd.backend.recorder.workflowmgr;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.api.client.util.Base64;
+import com.google.uicd.backend.controllers.responses.ActionSummaryMetaDataResponse;
 import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.constants.DeviceOrientation;
 import com.google.uicd.backend.core.constants.JsonFlag;
@@ -53,6 +54,7 @@ import com.google.uicd.backend.core.xmlparser.Position;
 import com.google.uicd.backend.core.xmlparser.XmlHelper;
 import com.google.uicd.backend.recorder.db.DbActionStorageManager;
 import com.google.uicd.backend.recorder.db.TestHistoryEntity;
+import com.google.uicd.backend.recorder.services.ProjectManager;
 import com.google.uicd.backend.recorder.services.TestHistoryManager;
 import com.google.uicd.backend.recorder.websocket.minicap.MinicapUtil;
 import java.awt.Point;
@@ -62,9 +64,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.UUID;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -86,8 +90,14 @@ public class WorkflowManager {
 
   @Autowired private ApplicationContext applicationContext;
 
+  protected final Map<String, Stack<String>> undoStackMap = new HashMap<>();
+
+  protected final Map<String, Stack<String>> redoStackMap = new HashMap<>();
+
   private ImageStorageManager imageStorageManager;
   @Autowired TestHistoryManager testHistoryManager;
+
+  @Autowired ProjectManager projectManager;
 
   private PlayMode playMode = PlayMode.SINGLE;
   private Logger logger = LogManager.getLogManager().getLogger("uicd");
@@ -96,12 +106,14 @@ public class WorkflowManager {
   private String globalVariableMapStr = "";
 
   public void addAction(String uuid) throws UicdActionException {
+    pushToUndoStack(true);
     workspaceCompoundAction.addAction(actionStorageManager.getActionByUUID(uuid));
   }
 
   private void addAction(BaseAction action) {
     action.setDeviceIndex(devicesDriverManager.getSelectedDeviceIndex());
     actionStorageManager.saveAction(action);
+    pushToUndoStack(true);
     workspaceCompoundAction.addAction(action);
     actionStorageManager.saveAction(workspaceCompoundAction);
   }
@@ -147,7 +159,7 @@ public class WorkflowManager {
   }
 
   /* actions from the user direct input on the cast screen */
-  public void recordAndClick(int x, int y, boolean isDoubleClick) {
+  public void recordAndClick(int x, int y, boolean isDoubleClick, boolean isStrictMode) {
     AndroidDeviceDriver androidDeviceDriver = devicesDriverManager.getSelectedAndroidDeviceDriver();
     try {
       Position pos = new Position(x, y);
@@ -156,8 +168,9 @@ public class WorkflowManager {
               androidDeviceDriver.fetchCurrentXML(),
               pos,
               androidDeviceDriver.getWidthRatio(),
-              androidDeviceDriver.getHeightRatio());
-      addAction(new ClickAction(nodeContext, isDoubleClick));
+              androidDeviceDriver.getHeightRatio(),
+              /*ignoreDupResourceId*/ true);
+      addAction(new ClickAction(nodeContext, isDoubleClick, isStrictMode));
       androidDeviceDriver.clickDevice(pos, isDoubleClick);
     } catch (UicdDeviceHttpConnectionResetException e) {
       logger.severe(e.getMessage());
@@ -279,6 +292,7 @@ public class WorkflowManager {
     return this.workspaceCompoundAction.toJson(JsonFlag.FRONTEND);
   }
 
+
   // Get workflow and load it to workspace
   public String loadWorkflow(String uuidStr) throws UicdActionException {
     this.workspaceCompoundAction = (CompoundAction) actionStorageManager.getActionByUUID(uuidStr);
@@ -299,8 +313,48 @@ public class WorkflowManager {
   public String saveCurrentWorkflow(String actionMetadataJson) {
     // Copying a testcase generates a workspace with new uuid
     workspaceCompoundAction = (CompoundAction) updateActionMetadata(actionMetadataJson);
-    actionStorageManager.saveAction(this.workspaceCompoundAction);
+    saveCompoundActionAndChildren(workspaceCompoundAction);
     return this.workspaceCompoundAction.toJson(JsonFlag.FRONTEND);
+  }
+
+  /* The parent compound action can make changes, such as shared with
+   * in children compound action, so we would need to store them again
+   * in the database
+   */
+  private void saveCompoundActionAndChildren (CompoundAction compoundAction){
+    String shareWith = compoundAction.getShareWith();
+    for (BaseAction childrenAction : compoundAction.childrenActions){
+      if (childrenAction instanceof CompoundAction){
+        if (!childrenAction.getShareWith().equals(shareWith)) {
+          CompoundAction childrenCompoundAction = (CompoundAction) childrenAction;
+          childrenAction.setShareWith(shareWith);
+          saveCompoundActionAndChildren(childrenCompoundAction);
+        }
+      } else {
+        childrenAction.setShareWith(shareWith);
+      }
+    }
+    actionStorageManager.saveAction(compoundAction);
+  }
+
+  /* pushes old state of the workflow in a stack
+   * Parameters:
+   *   emptyRedo: whether to empty the redo stack
+   *     set true if a new action is added,
+   *     only set false if new action is introduced
+   *     but clicking on a undo button itself.
+   *
+   *  In other words if a person adds an action, then redo should
+   *  not lead the user to last time undo was clicked
+   */
+  private void pushToUndoStack(boolean emptyRedo) {
+    if (emptyRedo) {
+      redoStackMap.put(workspaceCompoundAction.getActionId().toString(), new Stack<>());
+    }
+    Stack<String> undoStack =
+        undoStackMap.computeIfAbsent(
+            workspaceCompoundAction.getActionId().toString(), k -> new Stack<>());
+    undoStack.push(workspaceCompoundAction.toJson(JsonFlag.BACKEND));
   }
 
   public boolean saveCurrentWorkflowWithoutMetadata() {
@@ -316,18 +370,67 @@ public class WorkflowManager {
     return Optional.of(action.toJson(JsonFlag.FRONTEND));
   }
 
+  // only need some summary data. And the summary api should have enough data.
+  public ActionSummaryMetaDataResponse getActionSummary(String uuidStr)
+      throws UicdActionException {
+    BaseAction action = actionStorageManager.getActionByUUID(uuidStr);
+    if (action == null) {
+      logger.warning("Could not load action with UUID: " + uuidStr);
+      return ActionSummaryMetaDataResponse.createDefault();
+    }
+
+    return ActionSummaryMetaDataResponse.createdFromBaseAction(action);
+  }
+
   public void removeAction(int index) {
+    pushToUndoStack(true);
     workspaceCompoundAction.removeByIndex(index);
   }
 
-  public void removeLastAction() {
-    workspaceCompoundAction.removeLastAction();
+  public void undoAction() {
+    String currentUUID = workspaceCompoundAction.getActionId().toString();
+    if (!undoStackMap.containsKey(currentUUID)) {
+      return;
+    }
+    Stack<String> undoStack = undoStackMap.get(currentUUID);
+    if (undoStack.empty()) {
+      return;
+    }
+    if (!redoStackMap.containsKey(currentUUID)) {
+      Stack<String> redoStack = new Stack<>();
+      redoStackMap.put(currentUUID, redoStack);
+    }
+    Stack<String> redoStack = redoStackMap.get(currentUUID);
+    redoStack.push(workspaceCompoundAction.toJson(JsonFlag.BACKEND));
+    String lastActionJson = undoStack.pop();
+    changeCurrentTestCaseAfterUndoRedo(lastActionJson);
+  }
+
+  public void redoAction() {
+    String currentUUID = workspaceCompoundAction.getActionId().toString();
+    if (!redoStackMap.containsKey(currentUUID)) {
+      return;
+    }
+    Stack<String> redoStack = redoStackMap.get(currentUUID);
+    if (redoStack.empty()) {
+      return;
+    }
+    pushToUndoStack(false);
+    String nextActionJson = redoStack.pop();
+    changeCurrentTestCaseAfterUndoRedo(nextActionJson);
+  }
+
+  private void changeCurrentTestCaseAfterUndoRedo(String newAction) {
+    BaseAction nextAction = BaseAction.fromJson(newAction);
+    workspaceCompoundAction = (CompoundAction) nextAction;
     actionStorageManager.saveAction(workspaceCompoundAction);
+    actionStorageManager.updateCachedMap(workspaceCompoundAction);
   }
 
   public String createNewWorkSpace() {
     this.workspaceCompoundAction = new CompoundAction();
     actionStorageManager.saveAction(workspaceCompoundAction);
+    pushToUndoStack(true);
     return this.workspaceCompoundAction.toJson(JsonFlag.FRONTEND);
   }
 
@@ -392,6 +495,7 @@ public class WorkflowManager {
     actionContext.setPlaySpeedFactor(playSpeedFactor);
     ActionPlayer actionPlayer =
         new ActionPlayer(devicesDriverManager.getXmlDumperDriverList(), actionContext);
+    actionContext.setRootActionName(currentAction.getName());
     ActionExecutionResult actionExecutionResult = actionPlayer.playAction(currentAction);
     try {
       saveTestHistory(actionExecutionResult, currentAction);
@@ -414,14 +518,9 @@ public class WorkflowManager {
   }
 
   public BaseAction updateActionMetadata(String jsonData) {
-    return actionStorageManager.updateActionMetadata(jsonData);
-  }
-
-  public String copyAction(String uuid) throws UicdActionException, CloneNotSupportedException {
-    CompoundAction oldAction = (CompoundAction) actionStorageManager.getActionByUUID(uuid);
-    CompoundAction newAction = (CompoundAction) oldAction.clone();
-    actionStorageManager.saveAction(newAction);
-    return newAction.toJson(JsonFlag.FRONTEND);
+    BaseAction baseAction = actionStorageManager.updateActionMetadata(jsonData);
+    pushToUndoStack(true);
+    return baseAction;
   }
 
   /* Initialize objects that are not managed by Spring. WorkflowManager is actually the boundary of
@@ -433,6 +532,7 @@ public class WorkflowManager {
   public void init() {
     DeviceCallbackHandler.getInstance().setDeviceCallBack(MinicapUtil::deviceCallbackOperation);
     actionStorageManager.saveAction(workspaceCompoundAction);
+    pushToUndoStack(true);
     devicesDriverManager = DevicesDriverManager.getInstance();
     imageStorageManager = ImageStorageManager.getInstance();
   }
@@ -440,9 +540,11 @@ public class WorkflowManager {
   private void saveTestHistory(
       ActionExecutionResult actionExecutionResult, BaseAction currentAction) throws UicdException {
     TestHistoryEntity testCaseHistoryEntity = new TestHistoryEntity();
+    testCaseHistoryEntity.setTestName(currentAction.getName());
     testCaseHistoryEntity.setUuid(UUID.randomUUID().toString());
     testCaseHistoryEntity.setCreatedBy(UicdConfig.getInstance().getCurrentUser());
     testCaseHistoryEntity.setTestcaseUuid(currentAction.getActionId().toString());
+    testCaseHistoryEntity.setExecutionId(actionExecutionResult.getExecutionId());
     testCaseHistoryEntity.setTestDetails(actionExecutionResult.toJson());
     testCaseHistoryEntity.setTestMsg(
         currentAction.getActionTypeString() + ": " + currentAction.getDisplay());
@@ -472,10 +574,6 @@ public class WorkflowManager {
     devicesDriverManager.getSelectedAndroidDeviceDriver().dragStop(new Position(x, y));
   }
 
-  public CompoundAction getCurrentWorkflow() {
-    return this.workspaceCompoundAction;
-  }
-
   /**
    * Reorder the current workflow compound's children Action based on the order of actionIdList,
    * enable user to reorder by "drag and drop" on frontend.
@@ -483,6 +581,7 @@ public class WorkflowManager {
    * @param actionIdList the new order of the children actions
    */
   public void reorderActions(List<String> actionIdList) {
+    pushToUndoStack(true);
     if (this.workspaceCompoundAction == null) {
       logger.warning("Reorder empty workspace. Backend/Frontend out of sync.");
       return;
@@ -578,5 +677,9 @@ public class WorkflowManager {
 
   public Map<String, String> getUuidToBase64RefImgs(String uuid) throws UicdActionException {
     return actionStorageManager.getUuidToBase64RefImgs(uuid);
+  }
+
+  public CompoundAction getWorkspaceCompoundAction() {
+    return workspaceCompoundAction;
   }
 }

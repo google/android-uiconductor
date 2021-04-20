@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,17 +22,26 @@ import com.google.uicd.backend.core.exceptions.UicdActionException;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import com.google.uicd.backend.core.recorder.utils.ActionEntityFileUtil;
 import com.google.uicd.backend.core.uicdactions.BaseAction;
+import com.google.uicd.backend.core.uicdactions.ClickAction;
 import com.google.uicd.backend.core.uicdactions.CompoundAction;
+import com.google.uicd.backend.core.uicdactions.DragAction;
+import com.google.uicd.backend.core.uicdactions.LongClickAction;
+import com.google.uicd.backend.core.uicdactions.PythonScriptAction;
+import com.google.uicd.backend.core.uicdactions.ScreenContentValidationAction;
+import com.google.uicd.backend.core.uicdactions.SwipeAction;
+import com.google.uicd.backend.core.xmlparser.NodeContext;
 import com.google.uicd.backend.recorder.db.DbActionStorageManager;
 import com.google.uicd.backend.recorder.db.DbTestCaseTreeStorageManager;
 import com.google.uicd.backend.recorder.db.TestCaseTreeEntity;
 import com.google.uicd.backend.recorder.utils.TestCaseTreeFileUtil;
+import com.google.uicd.backend.recorder.workflowmgr.WorkflowManager;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +67,8 @@ public class TestCasesImportExportManager {
   @Autowired private DbTestCaseTreeStorageManager testCaseTreeStorageManager;
 
   @Autowired private DbActionStorageManager actionStorageManager;
+
+  @Autowired private WorkflowManager workflowManager;
 
   public void unzipAndImport(File zipFile, String projectId) throws UicdException {
     Path tmpFolderPath = getZipTmpFolderPath(projectId);
@@ -102,9 +113,20 @@ public class TestCasesImportExportManager {
     actionStorageManager.clearCache();
   }
 
+  public boolean hasPermissionToSoftCopy(BaseAction baseAction) {
+    String currentUser = UicdConfig.getInstance().getCurrentUser();
+    String shareWith = baseAction.getShareWith();
+    List<String> shareWithList = Arrays.asList(shareWith.split(","));
+    if (shareWithList.contains(currentUser) || baseAction.getCreatedBy().equals(currentUser)) {
+      return true;
+    }
+    return false;
+  }
+
   public String deepImportAction(String actionId) throws UicdActionException {
     List<ActionEntity> originalActionEntities = new ArrayList<>();
-    fetchActionRecursively(actionId, originalActionEntities);
+    List<BaseAction> pythonActionList = new ArrayList<>();
+    fetchActionRecursively(actionId, originalActionEntities, pythonActionList);
     HashMap<String, String> actionIdMapping = new HashMap<>();
     refurbishActionEntities(originalActionEntities, actionIdMapping);
 
@@ -118,6 +140,59 @@ public class TestCasesImportExportManager {
     return actionIdMapping.get(actionId);
   }
 
+  public ZipFile zipAndExportTopLevelCaseOnly(
+      String projectId, String projectName, String zipFileName) throws UicdException {
+    if (zipFileName.isEmpty()) {
+      zipFileName = projectName + ".zip";
+    }
+    Path zipFileFullPath = getZipFullPath(projectId, zipFileName);
+    Path tmpFolderPath = getZipTmpFolderPath(projectId);
+    // Clean tmp folder first, make sure it is a clean export
+    prepareTmpFolderForZip(zipFileFullPath, tmpFolderPath);
+    Optional<TestCaseTreeEntity> testCaseTreeEntityOptional =
+        testCaseTreeStorageManager.getFirstTreeByProjectId(projectId);
+
+    if (!testCaseTreeEntityOptional.isPresent()) {
+      throw new UicdException("Can not get current tree!");
+    }
+    List<ActionEntity> topLevelTests = new ArrayList<>();
+    final List<String> actionIdList =
+        getActionListFromTreeDetails(testCaseTreeEntityOptional.get().getTreeDetails());
+    for (String actionId : actionIdList) {
+      Optional<String> actionStrOptional = workflowManager.getWorkflow(actionId);
+      if (actionStrOptional.isPresent()) {
+        BaseAction action = BaseAction.fromJson(actionStrOptional.get());
+        if (action.getActionType() == ActionType.COMPOUND_ACTION) {
+          CompoundAction compoundAction = (CompoundAction) action;
+          if (compoundAction.isTopLevelWorkflow()) {
+            topLevelTests.add(new ActionEntity(action, true));
+          }
+        }
+      }
+    }
+
+    ActionEntityFileUtil.saveTestCases(topLevelTests, tmpFolderPath);
+    return genZipFile(zipFileFullPath, tmpFolderPath);
+  }
+
+  private ZipFile genZipFile(Path zipFileFullPath, Path tmpFolderPath) throws UicdException {
+    try {
+      ZipParameters zipParameters = new ZipParameters();
+      zipParameters.setIncludeRootFolder(false);
+      if (zipFileFullPath.toFile().exists()) {
+        FileUtils.forceDelete(zipFileFullPath.toFile());
+      }
+
+      ZipFile zipFile = new ZipFile(zipFileFullPath.toString());
+      zipFile.addFolder(new File(tmpFolderPath.toString()), zipParameters);
+      return zipFile;
+    } catch (ZipException e) {
+      throw new UicdException("Can not zip files." + e.getMessage());
+    } catch (IOException e) {
+      throw new UicdException("Can not delete old zip files." + e.getMessage());
+    }
+  }
+
   public ZipFile zipAndExport(String projectId, String projectName, String zipFileName)
       throws UicdException {
     if (zipFileName.isEmpty()) {
@@ -126,13 +201,7 @@ public class TestCasesImportExportManager {
     Path zipFileFullPath = getZipFullPath(projectId, zipFileName);
     Path tmpFolderPath = getZipTmpFolderPath(projectId);
     // Clean tmp folder first, make sure it is a clean export
-    try {
-      FileUtils.forceMkdir(tmpFolderPath.toFile());
-      FileUtils.forceMkdir(zipFileFullPath.getParent().toFile());
-      FileUtils.cleanDirectory(tmpFolderPath.toFile());
-    } catch (IOException e) {
-      throw new UicdException("Can not clean tmp folder." + e.getMessage());
-    }
+    prepareTmpFolderForZip(zipFileFullPath, tmpFolderPath);
     Optional<TestCaseTreeEntity> testCaseTreeEntityOptional =
         testCaseTreeStorageManager.getFirstTreeByProjectId(projectId);
 
@@ -142,8 +211,9 @@ public class TestCasesImportExportManager {
     List<ActionEntity> actionEntities = new ArrayList<>();
     final List<String> actionIdList =
         getActionListFromTreeDetails(testCaseTreeEntityOptional.get().getTreeDetails());
+    List<BaseAction> pythonActionList = new ArrayList<>();
     for (String actionId : actionIdList) {
-      fetchActionRecursively(actionId, actionEntities);
+      fetchActionRecursively(actionId, actionEntities, pythonActionList);
     }
 
     // Save actions to folder
@@ -151,19 +221,35 @@ public class TestCasesImportExportManager {
         actionEntities,
         Paths.get(tmpFolderPath.toString(), LocalStorageConstant.TESTCASES_FOLDERNAME));
 
+    for (BaseAction pyAction : pythonActionList) {
+      if (pyAction.getActionType() == ActionType.PYTHON_SCRIPT_ACTION) {
+        PythonScriptAction pythonScriptAction = (PythonScriptAction) pyAction;
+        ActionEntityFileUtil.saveToFile(
+            pythonScriptAction.script,
+            Paths.get(tmpFolderPath.toString(), LocalStorageConstant.PYTHON_SCRIPTS_FOLDERNAME)
+                .toString(),
+            String.format(
+                "%s_%s.py",
+                pythonScriptAction.getName(),
+                pythonScriptAction.getActionId().toString().substring(0, 6)));
+      }
+    }
     // Save tree to folder
     TestCaseTreeFileUtil.saveTestTree(
         testCaseTreeEntityOptional.get(),
         Paths.get(tmpFolderPath.toString(), LocalStorageConstant.TESTCASES_TREE_FOLDERNAME));
 
+    return genZipFile(zipFileFullPath, tmpFolderPath);
+  }
+
+  private void prepareTmpFolderForZip(Path zipFileFullPath, Path tmpFolderPath)
+      throws UicdException {
     try {
-      ZipParameters zipParameters = new ZipParameters();
-      zipParameters.setIncludeRootFolder(false);
-      ZipFile zipFile = new ZipFile(zipFileFullPath.toString());
-      zipFile.addFolder(new File(tmpFolderPath.toString()), zipParameters);
-      return zipFile;
-    } catch (ZipException e) {
-      throw new UicdException("Can not zip files." + e.getMessage());
+      FileUtils.forceMkdir(tmpFolderPath.toFile());
+      FileUtils.forceMkdir(zipFileFullPath.getParent().toFile());
+      FileUtils.cleanDirectory(tmpFolderPath.toFile());
+    } catch (IOException e) {
+      throw new UicdException("Can not clean tmp folder." + e.getMessage());
     }
   }
 
@@ -177,7 +263,7 @@ public class TestCasesImportExportManager {
    * @param targetProjectId
    * @throws UicdException
    */
-  public void deepCopyTree(String srcProjectId, String targetProjectId) throws UicdException {
+  public void copyTree(String srcProjectId, String targetProjectId) throws UicdException {
     Optional<TestCaseTreeEntity> srcProjectTestCaseTree =
         testCaseTreeStorageManager.getFirstTreeByProjectId(srcProjectId);
     String treeDetails = srcProjectTestCaseTree.get().getTreeDetails();
@@ -191,13 +277,12 @@ public class TestCasesImportExportManager {
         || !targetTestCaseTreeEntityOptional.isPresent()) {
       throw new UicdException("Can not find test tree.");
     }
-    targetTestCaseTreeEntityOptional
-        .get()
-        .setTreeDetails(srcTestCaseTreeEntityOptional.get().getTreeDetails());
+    targetTestCaseTreeEntityOptional.get().setTreeDetails(treeDetails);
 
     List<ActionEntity> originalActionEntities = new ArrayList<>();
+    List<BaseAction> pythonActionList = new ArrayList<>();
     for (String actionId : actionIdList) {
-      fetchActionRecursively(actionId, originalActionEntities);
+      fetchActionRecursively(actionId, originalActionEntities, pythonActionList);
     }
 
     /* clone the entities, otherwise entities are still in the attached state */
@@ -205,6 +290,7 @@ public class TestCasesImportExportManager {
     refurbishEntities(
         copiedActionEntities, targetTestCaseTreeEntityOptional.get(), /* ignoreTestTreeId */ true);
     actionStorageManager.saveActions(convertActionEntityListToActionList(copiedActionEntities));
+
     testCaseTreeStorageManager.save(targetTestCaseTreeEntityOptional.get());
     // Need clear cache, to make sure it will reload from db, otherwise, the compound action doesn't
     // have the child instance.
@@ -334,6 +420,8 @@ public class TestCasesImportExportManager {
           compoundAction.childrenIdList.set(i, uuidMapping.get(currentChildActionId));
           if (currentChildAction.isPresent()) {
             currentChildAction.get().setActionId(randomUUID);
+            currentChildAction.get().setCreatedBy(UicdConfig.getInstance().getCurrentUser());
+            generateRandomNodeContextUuid(currentChildAction.get(), uuidMapping);
           }
         }
       }
@@ -341,7 +429,61 @@ public class TestCasesImportExportManager {
     }
   }
 
-  private void fetchActionRecursively(String actionId, List<ActionEntity> actionEntities)
+  private void generateRandomNodeContextUuid(
+      BaseAction baseAction, HashMap<String, String> uuidMapping) {
+    List<NodeContext> nodeContextsToUpdate = new ArrayList<>();
+    switch (baseAction.getActionType()) {
+      case CLICK_ACTION:
+        ClickAction clickAction = (ClickAction) baseAction;
+        nodeContextsToUpdate.add(clickAction.getNodeContext());
+        break;
+      case DRAG_ACTION:
+        DragAction dragAction = (DragAction) baseAction;
+        nodeContextsToUpdate.add(dragAction.getNodeContext());
+        nodeContextsToUpdate.add(dragAction.getEndPointNodeContext());
+        break;
+      case LONG_CLICK_ACTION:
+        LongClickAction longClickAction = (LongClickAction) baseAction;
+        nodeContextsToUpdate.add(longClickAction.getNodeContext());
+        break;
+        // the following actions extend ScreenContentValidationAction
+        // that has NodeContext
+      case CONDITION_CLICK_ACTION:
+      case LOOP_SCREEN_CONTENT_VALIDATION_ACTION:
+      case SCROLL_SCREEN_CONTENT_VALIDATION_ACTION:
+      case ML_IMAGE_VALIDATION_ACTION:
+      case SCREEN_CONTENT_VALIDATION_ACTION:
+        ScreenContentValidationAction screenContentValidationAction =
+            (ScreenContentValidationAction) baseAction;
+        nodeContextsToUpdate.add(screenContentValidationAction.getSavedNodeContext());
+        break;
+      case SWIPE_ACTION:
+        SwipeAction swipeAction = (SwipeAction) baseAction;
+        nodeContextsToUpdate.add(swipeAction.getStartPointNodeContext());
+        nodeContextsToUpdate.add(swipeAction.getEndPointNodeContext());
+        break;
+      default:
+        // do nothing because remaining Action Type don't have NodeContext
+        return;
+    }
+    updateUuidAndMapping(nodeContextsToUpdate, uuidMapping);
+  }
+
+  private void updateUuidAndMapping(
+      List<NodeContext> nodeContextsToUpdate, HashMap<String, String> uuidMapping) {
+    for (NodeContext nodeContextToUpdate : nodeContextsToUpdate) {
+      if (nodeContextToUpdate != null) {
+        uuidMapping.computeIfAbsent(
+            nodeContextToUpdate.getUuid(), k -> UUID.randomUUID().toString());
+        nodeContextToUpdate.setUuid(uuidMapping.get(nodeContextToUpdate.getUuid()));
+        List<NodeContext> childNodeContexts = nodeContextToUpdate.getChildrenNodeContext();
+        updateUuidAndMapping(childNodeContexts, uuidMapping);
+      }
+    }
+  }
+
+  private void fetchActionRecursively(
+      String actionId, List<ActionEntity> actionEntities, List<BaseAction> pythonActionList)
       throws UicdActionException {
     // already contains action, skip
     if (actionEntities.stream().filter(o -> o.getUuid().equals(actionId)).findFirst().isPresent()) {
@@ -361,9 +503,13 @@ public class TestCasesImportExportManager {
           // In current design we already have the compound action in the childrenAction list,
           // however still need to call the fetchActionRecursively, so that it will be added to the
           // actionEntities and get deep copied later.
+          if (childAction.isPresent()
+              && childAction.get().getActionType() == ActionType.PYTHON_SCRIPT_ACTION) {
+            pythonActionList.add(childAction.get());
+          }
           if (!childAction.isPresent()
               || childAction.get().getActionType() == ActionType.COMPOUND_ACTION) {
-            fetchActionRecursively(childActionId, actionEntities);
+            fetchActionRecursively(childActionId, actionEntities, pythonActionList);
           }
         }
       }

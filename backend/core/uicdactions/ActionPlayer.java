@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 
 package com.google.uicd.backend.core.uicdactions;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
@@ -21,14 +22,21 @@ import com.google.uicd.backend.core.exceptions.UicdDeviceException;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayMode;
 import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import com.google.uicd.backend.core.uicdactions.ActionExecutionResult.OutputType;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /** Handles logic of playing back actions. */
 public class ActionPlayer {
 
+  private static final String FAILED_STEP_XML_DUMP_FILE_NAME = "FailedStepXmlDump.xml";
+  private static final String UICD_XML_DUMPER_PORT = "$uicd_xml_dumper_port";
+  public static final String UICD_CURRENT_EXECUTION_ID = "$uicd_current_execution_id";
   private final ActionContext actionContext;
   private final List<AndroidDeviceDriver> androidDeviceDriverList;
   private final PlayMode playMode;
@@ -56,12 +64,51 @@ public class ActionPlayer {
   public ActionExecutionResult playAction(BaseAction baseAction) throws UicdDeviceException {
     logger.info("Start play uicd action.");
     ActionExecutionResult actionExecutionResult = new ActionExecutionResult();
+    actionContext
+        .getGlobalVariableMap()
+        .addVariable(UICD_CURRENT_EXECUTION_ID, actionContext.getExecutionId().toString(), true);
+    if (!androidDeviceDriverList.isEmpty()) {
+      List<String> xmlHostPortList =
+          androidDeviceDriverList.stream()
+              .map(
+                  d ->
+                      String.format("%s:%d", d.getDeviceId(), d.getDevice().getXmlDumperHostPort()))
+              .collect(Collectors.toList());
+      if (!xmlHostPortList.isEmpty()) {
+        actionContext
+            .getGlobalVariableMap()
+            .addVariable(UICD_XML_DUMPER_PORT, String.join(";", xmlHostPortList));
+      }
+    }
     if (playMode == PlayMode.SINGLE || playMode == PlayMode.MULTIDEVICE) {
+
       actionExecutionResult = baseAction.playWithDelay(androidDeviceDriverList, actionContext);
+      if (actionExecutionResult.getPlayStatus() == PlayStatus.FAIL) {
+        writeFailedDumpXmlToFile();
+      }
     } else if (playMode == PlayMode.PLAYALL) {
       playActionOnAllDevices(baseAction, actionExecutionResult);
     }
     return actionExecutionResult;
+  }
+
+  private void writeFailedDumpXmlToFile() {
+    String failedXmlDumpFileFullPath =
+        actionContext.getOutputFileFullPath(
+            actionContext.getRootActionName() + "_" + FAILED_STEP_XML_DUMP_FILE_NAME);
+
+    List<String> lastXmlDump = actionContext.getFailedStepXmlDump();
+    if (lastXmlDump != null && !lastXmlDump.isEmpty()) {
+      String outputContent = String.join(System.lineSeparator(), lastXmlDump);
+      try {
+        Files.write(Paths.get(failedXmlDumpFileFullPath), outputContent.getBytes(UTF_8));
+      } catch (IOException e) {
+        logger.warning(
+            String.format(
+                "Can not write xmldmper output to file: %s. Detail error: %s",
+                failedXmlDumpFileFullPath, e.getMessage()));
+      }
+    }
   }
 
   private void playActionOnAllDevices(
@@ -70,12 +117,20 @@ public class ActionPlayer {
 
     List<CompletableFuture<ActionExecutionResult>> relevanceFutures = new ArrayList<>();
     for (int dIndex = 0; dIndex < androidDeviceDriverList.size(); dIndex++) {
+
       actionContext.setCurrentDeviceIndex(dIndex);
       actionContext.setPlayMode(PlayMode.SINGLE);
+      final ActionContext currentActionContext;
+      if (dIndex == 0) {
+        currentActionContext = actionContext;
+      } else {
+        currentActionContext = ActionContext.makeCopy(actionContext);
+      }
       // Variable used in lambda expression should be final or effectively final
       int idx = dIndex;
       relevanceFutures.add(
-          CompletableFuture.supplyAsync(() -> playSingleDevice(baseAction, actionContext, idx))
+          CompletableFuture.supplyAsync(
+                  () -> playSingleDevice(baseAction, currentActionContext, idx))
               .handle(
                   (result, ex) -> {
                     if (result != null) {

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,11 @@
 
 package com.google.uicd.backend.recorder.websocket.minicap;
 
+import com.google.common.base.Splitter;
+import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.devicesdriver.DevicesDriverManager;
+import com.google.uicd.backend.core.exceptions.UicdException;
+import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
 import com.google.uicd.backend.core.utils.ADBCommandLineUtil;
 import com.google.uicd.backend.core.utils.AdbForward;
 import com.google.uicd.backend.core.utils.UicdCoreDelegator;
@@ -23,6 +27,9 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +61,7 @@ public class MinicapService {
   private Thread minicapThread;
   private Thread dataReaderThread;
   private Thread imageParserThread;
+  private Process scrcpyProcess;
   private AdbForward forward;
 
   private BlockingQueue<byte[]> dataQueue = new LinkedBlockingQueue<>();
@@ -68,18 +76,18 @@ public class MinicapService {
     }
   }
 
-  /*
-  Usage: /data/local/tmp/minicap [-h] [-n <name>]
-    -d <id>:       Display ID. (0)
-    -n <name>:     Change the name of the abtract unix domain socket. (minicap)
-    -P <value>:    Display projection (<w>x<h>@<w>x<h>/{0|90|180|270}).
-    -Q <value>:    JPEG quality (0-100).
-    -s:            Take a screenshot and output it to stdout. Needs -P.
-    -S:            Skip frames when they cannot be consumed quickly enough.
-    -t:            Attempt to get the capture method running, then exit.
-    -i:            Get display information in JSON format. May segfault.
+  /**
+   * Usage: /data/local/tmp/minicap [-h] [-n <name>]
+   *  -d <id>:       Display ID. (0)
+   *  -n <name>:     Change the name of the abtract unix domain socket. (minicap)
+   *  -P <value>:    Display projection (<w>x<h>@<w>x<h>/{0|90|180|270}).
+   *  -Q <value>:    JPEG quality (0-100).
+   *  -s:            Take a screenshot and output it to stdout. Needs -P.
+   *  -S:            Skip frames when they cannot be consumed quickly enough.
+   *  -t:            Attempt to get the capture method running, then exit.
+   *  -i:            Get display information in JSON format. May segfault.
    */
-  private String getMinicapCommand(
+  private static String getMinicapCommand(
       int ow, int oh, int dw, int dh, int rotate, boolean shipFrame, String name, String[] args) {
     ArrayList<String> commands = new ArrayList<>();
     commands.add(String.format("LD_LIBRARY_PATH=%s", REMOTE_PATH));
@@ -104,8 +112,7 @@ public class MinicapService {
     forward = generateForwardInfo();
     try {
       adbCommandLineUtil.executeAdb(
-          String.format(
-              "adb forward tcp:%s localabstract:%s", forward.port(), forward.localAbstract()),
+          String.format("adb forward tcp:%s localabstract:%s", forward.port(), "scrcpy"),
           forward.serialNumber());
 
     } catch (Exception e) {
@@ -115,27 +122,34 @@ public class MinicapService {
     return forward;
   }
 
-  public void start(int ow, int oh, int dw, int dh, int rotate, boolean shipFrame, String[] args) {
-    AdbForward forward = createForward();
-    String command =
-        getMinicapCommand(ow, oh, dw, dh, rotate, shipFrame, forward.localAbstract(), args);
-    logger.info("start minicap:" + command);
-    minicapThread = startMinicapThread(command);
+  /** Generate forward info */
+  private AdbForward generateForwardInfo() {
+    List<String> adbOutput = new ArrayList<>();
+    try {
+      adbCommandLineUtil.executeAdb("forward --list", deviceId, adbOutput);
+    } catch (Exception e) {
+      logger.warning("Error while getting forward list: " + e.getMessage());
+    }
+    int maxNumber = 0;
+    for (String adbOutputLine : adbOutput) {
+      // 64b2b4d9 tcp:555 localabstract:xxx
+      AdbForward forward = AdbForward.create(adbOutputLine);
+      if (forward.isForward() && forward.serialNumber().equals(deviceId)) {
+        String l = forward.localAbstract();
+        List<String> s = Splitter.on('_').splitToList(l);
+        if (s.size() == 3) {
+          int n = Integer.parseInt(s.get(2));
+          if (n > maxNumber) {
+            maxNumber = n;
+          }
+        }
+      }
+    }
+    maxNumber += 1;
 
-    // consume data
-    startInitialThread("127.0.0.1", forward.port());
-    logger.info("forward port:" + forward.port());
-  }
-
-  public void start(int originalWidth, int originalHeight, final float scale, final int rotate) {
-    start(
-        originalWidth,
-        originalHeight,
-        (int) (originalWidth * scale),
-        (int) (originalHeight * scale),
-        rotate,
-        true,
-        null);
+    String forwardStr = String.format("%s_cap_%d", deviceId, maxNumber);
+    int freePort = DevicesDriverManager.getInstance().getDevice(deviceId).getMinicapHostPort();
+    return AdbForward.create(deviceId, freePort, forwardStr);
   }
 
   public void reStart(int originalWidth, int originalHeight, final float scale, final int rotate) {
@@ -159,6 +173,10 @@ public class MinicapService {
         UicdCoreDelegator.getInstance().logException(e);
       }
     }
+    if (scrcpyProcess != null) {
+      scrcpyProcess.destroy();
+    }
+
     start(originalWidth, originalHeight, scale, rotate);
   }
 
@@ -195,6 +213,10 @@ public class MinicapService {
         UicdCoreDelegator.getInstance().logException(e);
       }
     }
+
+    if (scrcpyProcess != null) {
+      scrcpyProcess.destroy();
+    }
   }
 
   private void removeForward() {
@@ -208,6 +230,63 @@ public class MinicapService {
     } catch (Exception e) {
       UicdCoreDelegator.getInstance().logException(e);
     }
+  }
+
+  public void startScrcpy(int port, int targetHeight) {
+    String forwardCmd = String.format("forward tcp:%s localabstract:scrcpy", port);
+    String startCommand =
+        String.format(
+            "shell CLASSPATH=/data/local/tmp/scrcpy-server.apk app_process /"
+                + " com.genymobile.scrcpy.Server 1.2.3_image INFO %d JPEG 80 0 - 0 false true",
+            targetHeight);
+    try {
+      adbCommandLineUtil.executeAdb(forwardCmd, deviceId);
+      scrcpyProcess = adbCommandLineUtil.executeAdb(startCommand, deviceId, false);
+      // need wait 1 sec to make sure the server is fully started.
+      Thread.sleep(Duration.ofSeconds(1).toMillis());
+    } catch (UicdExternalCommandException | InterruptedException e) {
+      UicdCoreDelegator.getInstance()
+          .logException(new UicdException("Start scrcpy failed:" + e.getMessage()));
+    }
+  }
+
+  public void start(int ow, int oh, int dw, int dh, int rotate, boolean shipFrame, String[] args) {
+    if (UicdConfig.getInstance().isEnableMinicap()) {
+      AdbForward forward = createForward();
+      String command =
+          getMinicapCommand(ow, oh, dw, dh, rotate, shipFrame, forward.localAbstract(), args);
+      logger.info("start minicap:" + command);
+      minicapThread = startMinicapThread(command);
+
+      // consume data
+      startInitialThread("127.0.0.1", forward.port());
+      imageParserThread = startImageParserThread();
+      logger.info("forward port:" + forward.port());
+    } else {
+      int hostScrcpyPort =
+          DevicesDriverManager.getInstance().getDevice(deviceId).getMinicapHostPort();
+      startScrcpy(hostScrcpyPort, dh);
+      imageParserThread = startScrcpyImageParserThread(hostScrcpyPort);
+      logger.info("forward port:" + hostScrcpyPort);
+    }
+  }
+
+
+  public void start(int originalWidth, int originalHeight, final float scale, final int rotate) {
+    start(
+        originalWidth,
+        originalHeight,
+        (int) (originalWidth * scale),
+        (int) (originalHeight * scale),
+        rotate,
+        true,
+        null);
+  }
+
+  public Thread startScrcpyImageParserThread(int port) {
+    Thread thread = new Thread(new ScrcpyParser(port));
+    thread.start();
+    return thread;
   }
 
   /**
@@ -273,36 +352,6 @@ public class MinicapService {
     return thread;
   }
 
-  /** Generate forward info */
-  private AdbForward generateForwardInfo() {
-    List<String> adbOutput = new ArrayList<>();
-    try {
-      adbCommandLineUtil.executeAdb("forward --list", deviceId, adbOutput);
-    } catch (Exception e) {
-      logger.warning("Error while getting forward list: " + e.getMessage());
-    }
-    int maxNumber = 0;
-    for (String adbOutputLine : adbOutput) {
-      // 64b2b4d9 tcp:555 localabstract:xxx
-      AdbForward forward = AdbForward.create(adbOutputLine);
-      if (forward.isForward() && forward.serialNumber().equals(deviceId)) {
-        String l = forward.localAbstract();
-        String[] s = l.split("_");
-        if (s.length == 3) {
-          int n = Integer.parseInt(s[2]);
-          if (n > maxNumber) {
-            maxNumber = n;
-          }
-        }
-      }
-    }
-    maxNumber += 1;
-
-    String forwardStr = String.format("%s_cap_%d", deviceId, maxNumber);
-    int freePort = DevicesDriverManager.getInstance().getDevice(deviceId).getMinicapHostPort();
-    return AdbForward.create(deviceId, freePort, forwardStr);
-  }
-
   private Thread startDataReaderThread(Socket minicapSocket) {
     Thread thread = new Thread(new DataReader(minicapSocket));
     thread.start();
@@ -359,6 +408,64 @@ public class MinicapService {
           dataQueue.add(buffer);
         } else {
           dataQueue.add(subArray(buffer, 0, len));
+        }
+      }
+    }
+  }
+
+  private class ScrcpyParser implements Runnable {
+    private final int scrcpyPort;
+
+    public ScrcpyParser(int port) {
+      this.scrcpyPort = port;
+    }
+
+    @Override
+    public void run() {
+      Socket socket;
+      InputStream socketInput = null;
+
+      try {
+        byte[] firstCharBuffer = new byte[1];
+        // Metadata size is 68.
+        byte[] metaDatabuffer = new byte[68];
+        socket = new Socket("localhost", scrcpyPort);
+        socketInput = socket.getInputStream();
+
+        // try to read first char, then connect socket1.
+        socketInput.read(firstCharBuffer);
+
+        // Need second socket to connect to server for the control message, currently we are not
+        // using it, but we still need connect.
+        new Socket("localhost", scrcpyPort);
+        socketInput.read(metaDatabuffer);
+
+      } catch (IOException e) {
+        logger.warning("Can not read first frame from scrcpy: " + e.getMessage());
+        onClose();
+      }
+
+      byte[] headBuffer = new byte[20];
+      byte[] frameSizeBuffer = new byte[4];
+      while (true) {
+        try {
+          // first 20 bytes: width(4), height(4) image format(4), timestamp(8)
+          socketInput.read(headBuffer);
+
+          // frame size
+          socketInput.read(frameSizeBuffer);
+
+          int readsize = ByteBuffer.wrap(frameSizeBuffer).order(ByteOrder.BIG_ENDIAN).getInt();
+          byte[] frameDataBuffer = new byte[readsize];
+          int offset = 0;
+          while (offset < readsize) {
+            int realReadSize = socketInput.read(frameDataBuffer, offset, readsize - offset);
+            offset += realReadSize;
+          }
+          imgQueue.add(frameDataBuffer);
+        } catch (Exception e) {
+          onClose();
+          break;
         }
       }
     }

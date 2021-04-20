@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -108,6 +108,11 @@ export class ScreenValidationFlowComponent {
   specialClick() {
     let observable = null;
     switch (this.selectedSpecialClick) {
+      case SpecialClickType.CLICK_WITH_CONTEXT:
+        observable = this.backendManagerService.tap(
+            (this.selectedBounds.x1 + this.selectedBounds.x2) / 2,
+            (this.selectedBounds.y1 + this.selectedBounds.y2) / 2, false);
+        break;
       case SpecialClickType.DOUBLE_CLICK:
         observable = this.backendManagerService.doubleClick(
             (this.selectedBounds.x1 + this.selectedBounds.x2) / 2,

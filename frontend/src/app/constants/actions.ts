@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -227,6 +227,7 @@ export interface ActionSummaryMetaData {
   type: string;
   playStatus?: string;
   createdBy?: string;
+  shareWith?: string;
   delayAfterActionMs?: number;
   deviceIndex?: number;
   forceDeviceOnChildren?: boolean;
@@ -234,8 +235,9 @@ export interface ActionSummaryMetaData {
   isRawXY?: boolean;
   actionDescription?: string;
   runAlways?: boolean;
+  runAlwaysRecursive?: boolean;
   isDirty?: boolean;
-  repeatTime?: string;
+  repeatTime?: number;
 }
 
 
@@ -245,6 +247,7 @@ export declare interface ActionModel {
   actionType: string;
   name: string;
   actionIndex: number;
+  actionDescription?: string;
 }
 
 /** Function to generate ActionModel from JSON data which backend returns. */

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ public abstract class ProjectRecord {
 
   public abstract String createdBy();
 
+  public abstract String getShareWith();
+
   public abstract Instant getCreatedAt();
 
   public static ProjectRecord create(
@@ -43,9 +45,16 @@ public abstract class ProjectRecord {
       String groupId,
       String projectName,
       String createdBy,
+      String shareWith,
       Instant createdAt) {
     return new AutoValue_ProjectRecord(
-        projectId, userId, groupId, projectName, createdBy, createdAt);
+        projectId,
+        userId,
+        groupId,
+        projectName,
+        createdBy,
+        shareWith == null ? "" : shareWith, // new field in db, default is null, need handle here.
+        createdAt);
   }
 
   public static ProjectRecord createdFromProjectEntity(ProjectEntity projectEntity) {
@@ -55,6 +64,7 @@ public abstract class ProjectRecord {
         projectEntity.getGroupId(),
         projectEntity.getProjectName(),
         projectEntity.getCreatedBy(),
+        projectEntity.getShareWith(),
         projectEntity.getCreatedAt());
   }
 }

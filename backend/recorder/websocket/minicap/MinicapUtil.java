@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ public class MinicapUtil {
       new HashMap<>();
   // The path to minicap on the device. It has to be linux format, don't use paths.get().
   private static final String MINICAP_TMP_DIR_ON_DEVICE = "/data/local/tmp/minicap-devel";
+  private static final String TMP_DIR_ON_DEVICE = "/data/local/tmp";
 
   public static String restartMinicap(String deviceId, int rotate) {
     String ret = "";
@@ -86,6 +87,21 @@ public class MinicapUtil {
     }
   }
 
+  private static void pushScrcpyFileToDevice(Device device) {
+    ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
+    try {
+      String scrcpyApkPath =
+          Paths.get(UicdConfig.getInstance().getDepsFolder(), "scrcpy", "scrcpy-server.apk")
+              .toString();
+      // Push static file
+      adbCommandLineUtil.executeAdb(
+          String.format("adb push %s %s", scrcpyApkPath, TMP_DIR_ON_DEVICE), device.getDeviceId());
+
+    } catch (UicdExternalCommandException e) {
+      logger.warning("Failed to push scrcpy files." + e.getMessage());
+    }
+  }
+
   private static void grantMinicapPermission(Device device) {
     ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
     try {
@@ -102,23 +118,13 @@ public class MinicapUtil {
     String buildId = device.getBuildId();
     Integer sdkIntVersion = Ints.tryParse(minicapVersionSuffix);
 
-    // For PPR1, the standard minicap.so for android-28 doesn't work. Keep this logic here since
-    // there are still some devices in PPR1.
-    if (Ascii.toUpperCase(buildId).contains("PPR1")
-        || Ascii.toUpperCase(device.getReleaseVersion()).equals("9")) {
-      minicapVersionSuffix = "28-ppr1";
-    }
-
-    List<String> androidRBuildIdKeyWordList = Arrays.asList("MASTER", "RP1A");
-    boolean isAndroidRBranch =
+    List<String> androidRBuildIdKeyWordList = Arrays.asList("MASTER", "SP1A");
+    boolean isAndroidSBranch =
         androidRBuildIdKeyWordList.stream()
             .parallel()
             .anyMatch(x -> Ascii.toUpperCase(buildId).contains(x));
-    // 29 (Android Q) is the max version minicap currently supports.
-    if (sdkIntVersion == null
-        || sdkIntVersion > 29
-        || isAndroidRBranch
-        || Ascii.equalsIgnoreCase(device.getReleaseVersion(), "11")) {
+    // 30 (Android R) is the max version minicap currently supports.
+    if (sdkIntVersion == null || sdkIntVersion > 30 || (sdkIntVersion == 30 && isAndroidSBranch)) {
       minicapVersionSuffix = "master";
     }
 
@@ -157,8 +163,13 @@ public class MinicapUtil {
             + serverPort);
 
     List<String> ret = new ArrayList<>();
-    pushMinicapFiles(androidDeviceDriver.getDevice());
-    grantMinicapPermission(androidDeviceDriver.getDevice());
+
+    if (UicdConfig.getInstance().isEnableMinicap()) {
+      pushMinicapFiles(androidDeviceDriver.getDevice());
+      grantMinicapPermission(androidDeviceDriver.getDevice());
+    } else {
+      pushScrcpyFileToDevice(androidDeviceDriver.getDevice());
+    }
 
     MinicapJettyServer minicapServer = deviceMinicapServerMapping.get(androidDeviceDriver);
 
@@ -205,15 +216,30 @@ public class MinicapUtil {
 
   public static void stopMinicap(String deviceId) {
     CommandLineUtil commandLineUtil = new CommandLineUtil();
-    String stopMinicapCmd =
-        String.format(
-            "adb -s %s shell ps | grep minicap | awk '{print $2}' | xargs adb -s %s shell kill",
-            deviceId, deviceId);
+    if (UicdConfig.getInstance().isEnableMinicap()) {
 
-    try {
-      commandLineUtil.execute(stopMinicapCmd, new ArrayList<>(), true);
-    } catch (UicdExternalCommandException e) {
-      logger.warning("Can not stop minicap.");
+      String stopMinicapCmd =
+          String.format(
+              "adb -s %s shell ps | grep minicap | awk '{print $2}' | xargs adb -s %s shell kill",
+              deviceId, deviceId);
+
+      try {
+        commandLineUtil.execute(stopMinicapCmd, new ArrayList<>(), true);
+      } catch (UicdExternalCommandException e) {
+        logger.warning("Can not stop minicap.");
+      }
+    } else {
+      String stopScrcpyCmd =
+          String.format(
+              "adb -s %s shell ps -A -f | grep scrcpy | awk '{print $2}' | xargs adb -s %s shell"
+                  + " kill",
+              deviceId, deviceId);
+
+      try {
+        commandLineUtil.execute(stopScrcpyCmd, new ArrayList<>(), true);
+      } catch (UicdExternalCommandException e) {
+        logger.warning("Can not stop scrcpy.");
+      }
     }
   }
 

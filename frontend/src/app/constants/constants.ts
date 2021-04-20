@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,24 @@ export enum BottomMenuTabs {
   UI_VIEWER,
 }
 
+/** Import Copy types */
+export enum ImportCopyType {
+  SOFTCOPY = 'SOFTCOPY',
+  HARDCOPY = 'HARDCOPY',
+}
+
+/** Direction model for the direction ratio buttons */
+export interface ImportCopyTypeModel {
+  value: ImportCopyType;
+  displayText: string;
+}
+
+/** Direction model for ratio button (swipe or scroll related actions) */
+export const IMPORT_COPY_TYPES: ImportCopyTypeModel[] = [
+  {value: ImportCopyType.SOFTCOPY, displayText: 'Soft Copy'},
+  {value: ImportCopyType.HARDCOPY, displayText: 'Hard Copy'},
+];
+
 /** Import types */
 export enum ImportType {
   UUID,
@@ -87,6 +105,7 @@ export enum MessageTypes {
   ADD_NODE_TO_TREE = 9,
   REFRESH_TEST_CASE_TREE = 10,
   REFRESH_OVERLAY = 11,
+  HIGHLIGHT_OCR = 12,
 }
 
 /** Default size of a popup dialog */
@@ -113,6 +132,7 @@ export enum TestStatusMsg {
 export enum CanvasOverlayColor {
   SELECTED = '#68b4e855',
   HOVER = '#00008055',
+  OCR_SELECT = '#00ff00ff',
 }
 
 /** Four directions that user can do when swiping */
@@ -127,4 +147,13 @@ export enum SwipeDirection {
 export enum RotateDirection {
   PORTRAIT = '0',
   LANDSCAPE = '1',
+}
+
+/** Enum for pdb debugger options */
+export enum PdbDebuggerOptions {
+  NEXT = 'NEXT',
+  STEP_IN = 'STEP_IN',
+  CONTINUE = 'CONTINUE',
+  BREAK = 'BREAK',
+  RUN = 'RUN',
 }

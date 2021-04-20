@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@ package com.google.uicd.backend.core.uicdactions.jsondbignores;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.google.uicd.backend.core.uicdactions.ActionExecutionResult;
 import java.util.List;
 
@@ -24,10 +26,28 @@ import java.util.List;
  *
  * @author tccyp@google.com
  */
+@SuppressWarnings("UnusedVariable")
 public abstract class BaseActionDBIgnoreFields {
 
   @JsonIgnore
   protected List<ActionExecutionResult> actionExecutionResults;
 
+  @JsonInclude(value = Include.CUSTOM, valueFilter = IsDirtyFilter.class)
+  private boolean isDirty;
 
+  @JsonInclude(value = Include.CUSTOM, valueFilter = DelayAfterActionMsFilter.class)
+  private int delayAfterActionMs;
+
+  @JsonInclude(Include.NON_DEFAULT)
+  private String actionDescription;
+
+  @JsonInclude(Include.NON_DEFAULT)
+  private int deviceIndex;
+
+  @JsonInclude(Include.NON_DEFAULT)
+  protected boolean runAlways;
+
+  @JsonInclude(Include.NON_DEFAULT)
+  private String shareWith;
 }
+

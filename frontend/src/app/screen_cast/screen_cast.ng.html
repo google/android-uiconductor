@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -73,24 +73,24 @@
                 <i class="fa fa-square"></i>
               </button>
             </div>
-            <div fxFlex="1" class="canvas-wrapper" fxLayoutGap="10px">
+            <div fxFlex="1" [class]="canvasWrapperCss" fxLayoutGap="10px">
               <div class="screen-widget-root" (tap)="tap($event.srcEvent)" (pan)="pan($event)" (pressup)="pressup($event)"
-                (press)="press($event.srcEvent)" tabindex="1">
+                (press)="press($event.srcEvent)" tabindex="0">
                 <div class="phone-wrapper">
-                  <canvas id="canvas-screen" class="phone-canvas-widget" #phoneScreen tabindex="1" [width]="canvasWidth"
+                  <canvas id="canvas-screen" [class]="canvasPhoneCss" #phoneScreen tabindex="0" [width]="canvasWidth"
                     [height]="canvasHeight">
                   </canvas>
                 </div>
                 <!-- This canvas will handle drawing the hovered tree nodes -->
                 <div class="phone-overlay-wrapper">
-                  <canvas id="canvas-overlay-hovered" class="phone-canvas-widget2" #overlayHovered tabindex="1"
-                    [width]="canvasWidth" [height]="canvasHeight">
+                  <canvas id="canvas-overlay-hovered" class="phone-canvas-widget2" #overlayHovered tabindex="0" [width]="canvasWidth"
+                  [height]="canvasHeight">
                   </canvas>
                 </div>
                 <!-- This canvas will handle the selected tree nodes -->
                 <div class="phone-overlay-wrapper">
-                  <canvas id="canvas-overlay-selected" class="phone-canvas-widget2" #overlaySelected tabindex="1"
-                    [width]="canvasWidth" [height]="canvasHeight">
+                  <canvas id="canvas-overlay-selected" class="phone-canvas-widget2" #overlaySelected tabindex="0" [width]="canvasWidth"
+                  [height]="canvasHeight">
                   </canvas>
                 </div>
               </div>

@@ -1,4 +1,3 @@
-# python3 - http://go/python3#lint
 """Train the model for classifying screenshots to two classes."""
 import argparse
 import os

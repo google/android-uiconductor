@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,14 +17,18 @@ package com.google.uicd.backend.core.recorder.utils;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.uicd.backend.core.config.UicdConfig;
 import com.google.uicd.backend.core.db.ActionEntity;
 import com.google.uicd.backend.core.exceptions.UicdActionException;
+import com.google.uicd.backend.core.uicdactions.BaseAction;
 import com.google.uicd.backend.recorder.utils.JsonUtilEx;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,16 +52,39 @@ public class ActionEntityFileUtil {
     } catch (IOException e) {
       throw new UicdActionException("Can not create folder: " + e.getMessage());
     }
+    HashMap<String, Integer> fileNameMap = new HashMap<>();
     for (ActionEntity actionEntity : entities) {
-      String content = JsonUtilEx.toJson(actionEntity);
+      String fileName = actionEntity.getName();
+      if (fileNameMap.containsKey(fileName)) {
+        fileName = String.format("%s_%d.uicd", fileName, fileNameMap.get(fileName));
+      }
+      fileNameMap.put(fileName, fileNameMap.getOrDefault(fileName, 0) + 1);
+
+      // Need construct baseaction first to get pretty print json.
+      BaseAction baseAction = BaseAction.fromJson(actionEntity.getDetails());
+      String content = JsonUtilEx.toJson(baseAction, true);
       try {
-        Files.write(
-            Paths.get(testcaseFolderPath.toString(), actionEntity.getUuid()),
-            content.getBytes(UTF_8));
+        Files.write(Paths.get(testcaseFolderPath.toString(), fileName), content.getBytes(UTF_8));
       } catch (IOException e) {
         throw new UicdActionException(
             "Can not export test cases: " + actionEntity.getUuid() + e.getMessage());
       }
+    }
+  }
+
+  public static void saveToFile(String content, String folder, String fileName)
+      throws UicdActionException {
+    try {
+      FileUtils.forceMkdir(Paths.get(folder).toFile());
+    } catch (IOException e) {
+      throw new UicdActionException("Can not create folder: " + e.getMessage());
+    }
+    Path filePath = Paths.get(folder, fileName);
+    try {
+      Files.write(filePath, content.getBytes(UTF_8));
+    } catch (IOException e) {
+      throw new UicdActionException(
+          "Can not export python action: " + filePath.toString() + e.getMessage());
     }
   }
 
@@ -118,7 +145,14 @@ public class ActionEntityFileUtil {
   public static ActionEntity loadSingleTestCases(Path testcasePath) throws UicdActionException {
     try {
       String testcaseContent = new String(Files.readAllBytes(testcasePath), UTF_8);
-      return JsonUtilEx.fromJson(testcaseContent, new TypeReference<ActionEntity>() {});
+      BaseAction action = JsonUtilEx.fromJson(testcaseContent, new TypeReference<BaseAction>() {});
+      ActionEntity actionEntity = new ActionEntity();
+      actionEntity.setName(action.getName());
+      actionEntity.setUuid(action.getActionId().toString());
+      actionEntity.setCreatedAt(Instant.now());
+      actionEntity.setCreatedBy(UicdConfig.getInstance().getCurrentUser());
+      actionEntity.setDetails(testcaseContent);
+      return actionEntity;
     } catch (IOException e) {
       throw new UicdActionException("Can find file in folder: " + testcasePath + e.getMessage());
     }

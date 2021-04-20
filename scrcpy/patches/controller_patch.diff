@@ -1,0 +1,12 @@
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/Controller.java
+===================================================================
+--- scrcpy.orig/server/src/main/java/com/genymobile/scrcpy/Controller.java
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/Controller.java
+@@ -237,6 +237,7 @@ public class Controller {
+     /**
+      * Schedule a call to set power mode to off after a small delay.
+      */
++    @SuppressWarnings("FutureReturnValueIgnored")
+     private static void schedulePowerModeOff() {
+         EXECUTOR.schedule(new Runnable() {
+             @Override

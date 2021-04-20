@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,9 @@ public abstract class TestHistoryRecord {
   public abstract String getTestcaseUuid();
 
   @Nullable
+  public abstract String getExecutionId();
+
+  @Nullable
   public abstract String getProjectId();
 
   @Nullable
@@ -39,7 +42,14 @@ public abstract class TestHistoryRecord {
   @Nullable
   public abstract String getGroupId();
 
+  @Nullable
   public abstract String getTestDetails();
+
+  @Nullable
+  public abstract String getTestName();
+
+  @Nullable
+  public abstract String getTestResult();
 
   public abstract String getCreatedBy();
 
@@ -48,24 +58,40 @@ public abstract class TestHistoryRecord {
   public static TestHistoryRecord create(
       String uuid,
       String testcaseUuid,
+      @Nullable String executionId,
       @Nullable String projectId,
       @Nullable String userId,
       @Nullable String groupId,
       String testDetails,
+      String testName,
+      String testResult,
       String createdBy,
       Instant createAt) {
     return new AutoValue_TestHistoryRecord(
-        uuid, testcaseUuid, projectId, userId, groupId, testDetails, createdBy, createAt);
+        uuid,
+        testcaseUuid,
+        executionId,
+        projectId,
+        userId,
+        groupId,
+        testDetails,
+        testName,
+        testResult,
+        createdBy,
+        createAt);
   }
 
   public static TestHistoryRecord createFromTestHistoryEntity(TestHistoryEntity testHistoryEntity) {
     return create(
         testHistoryEntity.getUuid(),
         testHistoryEntity.getTestcaseUuid(),
+        testHistoryEntity.getExecutionId(),
         testHistoryEntity.getProjectId(),
         testHistoryEntity.getUserId(),
         testHistoryEntity.getGroupId(),
         testHistoryEntity.getTestDetails(),
+        testHistoryEntity.getTestName(),
+        testHistoryEntity.getTestResult(),
         testHistoryEntity.getCreatedBy(),
         testHistoryEntity.getCreatedAt());
   }

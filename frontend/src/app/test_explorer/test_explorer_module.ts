@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,10 +30,15 @@ import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
+import {DialogsModule} from '../popup_dialogs/dialogs_module';
+import {HardAndSoftInfoDialogComponent} from '../popup_dialogs/hard_soft_import_action_info_dialog';
+
 import {ActionEditDialog} from './action_edit_dialog';
+import {ExportGoogle3Dialog} from './export_google3_dialog';
 import {ImportDialog} from './import_dialog';
 import {ImportProjectDialog} from './import_project_dialog';
 import {NewProjectDialog} from './new_project_dialog';
+import {ShareWithProjectDialog} from './share_with_project_dialog';
 import {TestExplorer} from './test_explorer';
 
 
@@ -41,6 +46,7 @@ import {TestExplorer} from './test_explorer';
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
+    DialogsModule,
     FlexLayoutModule,
     FormsModule,
     MatButtonModule,
@@ -58,11 +64,13 @@ import {TestExplorer} from './test_explorer';
   ],
   exports: [TestExplorer],
   declarations: [
-    TestExplorer, ActionEditDialog, ImportDialog, ImportProjectDialog,
-    NewProjectDialog
+    TestExplorer, ActionEditDialog, ExportGoogle3Dialog, ImportDialog,
+    ImportProjectDialog, NewProjectDialog, ShareWithProjectDialog
   ],
-  entryComponents:
-      [ActionEditDialog, ImportDialog, ImportProjectDialog, NewProjectDialog]
+  entryComponents: [
+    ActionEditDialog, HardAndSoftInfoDialogComponent, ExportGoogle3Dialog,
+    ImportDialog, ImportProjectDialog, NewProjectDialog, ShareWithProjectDialog
+  ]
 })
 export class TestExplorerModule {
 }

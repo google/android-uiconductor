@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,12 @@ export class Rect {
   constructor(
       public x: number, public y: number, public width: number,
       public height: number) {}
+  toString = ():
+      string => {
+        return `[${this.x},${this.y}][${this.width},${this.height}]`;
+      }
+
+  /** Create rect from x1,x2,y1,y2 */
   static createFromCoordinatesStr(coordinates: string) {
     const rect = new Rect(0, 0, 0, 0);
     if (!coordinates || coordinates.length <= 0) {
@@ -39,6 +45,26 @@ export class Rect {
     const endY = Rect.strToNumber(coordinatesArray[5]);
     rect.width = endX - rect.x;
     rect.height = endY - rect.y;
+    return rect;
+  }
+
+  static createFromBoundsStr(coordinates: string) {
+    const rect = new Rect(0, 0, 0, 0);
+    if (!coordinates || coordinates.length <= 0) {
+      return rect;
+    }
+    // comes in as [startX,startY][width,height] in a string
+    // returns array in form of:
+    // ["", "startX", "startY", "", "endX", "endY", "" ]
+    const coordinatesArray = coordinates.split(/[\[\],]/);
+    if (coordinatesArray.length !== 7) {
+      return rect;
+    }
+
+    rect.x = Rect.strToNumber(coordinatesArray[1]);
+    rect.y = Rect.strToNumber(coordinatesArray[2]);
+    rect.width = Rect.strToNumber(coordinatesArray[4]);
+    rect.height = Rect.strToNumber(coordinatesArray[5]);
     return rect;
   }
 
@@ -95,6 +121,31 @@ export class Bounds {
   /** Converts to [startX,startY][endX,endY] string format */
   toBoundsStr() {
     return `[${this.x1},${this.y1}][${this.x2},${this.y2}]`;
+  }
+  toString = ():
+      string => {
+        return `[${this.x1},${this.y1}][${this.x2},${this.y2}]`;
+      }
+
+  getDistanceToOriPoint() {
+    return Math.sqrt(this.x1 * this.x1 + this.y1 * this.y1);
+  }
+
+  area() {
+    return (this.x2 - this.x1) * (this.y2 - this.y1);
+  }
+
+  compare(r: Bounds) {
+    if (this.getDistanceToOriPoint() < r.getDistanceToOriPoint()) {
+      return -1;
+    } else if (this.getDistanceToOriPoint() === r.getDistanceToOriPoint()) {
+      if (this.area() === r.area()) {
+        return 0;
+      }
+      return this.area() < r.area() ? -1 : 1;
+    } else {
+      return 1;
+    }
   }
 }
 

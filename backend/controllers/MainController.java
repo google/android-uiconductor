@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.uicd.backend.app.Application;
 import com.google.uicd.backend.controllers.requests.PlayActionRequest;
+import com.google.uicd.backend.controllers.responses.ActionSummaryMetaDataResponse;
 import com.google.uicd.backend.controllers.responses.DevicesStatusResponse;
 import com.google.uicd.backend.controllers.responses.GetUserPresetGlobalVariableResponse;
 import com.google.uicd.backend.controllers.responses.ImageResponse;
 import com.google.uicd.backend.controllers.responses.ImagesResponse;
-import com.google.uicd.backend.controllers.responses.ProjectResponse;
 import com.google.uicd.backend.controllers.responses.ScreenDimensionsResponse;
 import com.google.uicd.backend.controllers.responses.UuidResponse;
 import com.google.uicd.backend.core.config.UicdConfig;
@@ -69,7 +69,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class MainController {
   private static final String DONE = "{\"status\":\"done\"}";
   private static final String FAILED = "{\"status\":\"failed\"}";
-  private static final boolean DOUBLE_CLICK = true;
   @Autowired WorkflowManager workflowManager;
   @Autowired ProjectManager projectManager;
   private DevicesDriverManager devicesDriverManager;
@@ -120,9 +119,12 @@ public class MainController {
 
   @CrossOrigin(origins = "*")
   @RequestMapping("/tap")
-  public Callable<String> tap(@RequestParam(value = "x") int x, @RequestParam(value = "y") int y) {
+  public Callable<String> tap(
+      @RequestParam(value = "x") int x,
+      @RequestParam(value = "y") int y,
+      @RequestParam(value = "isStrictMode") boolean isStrictMode) {
     return () -> {
-      workflowManager.recordAndClick(x, y, !DOUBLE_CLICK);
+      workflowManager.recordAndClick(x, y, false, isStrictMode);
       return DONE;
     };
   }
@@ -193,7 +195,7 @@ public class MainController {
       if (xPoints.length != yPoints.length) {
         return FAILED;
       }
-      ArrayList<Point> pointList = new ArrayList();
+      ArrayList<Point> pointList = new ArrayList<>();
       for (int i = 0; i < xPoints.length; i++) {
         pointList.add(new Point(Integer.parseInt(xPoints[i]), Integer.parseInt(yPoints[i])));
       }
@@ -221,7 +223,7 @@ public class MainController {
   public Callable<String> doubleClick(
       @RequestParam(value = "x") Integer x, @RequestParam(value = "y") Integer y) {
     return () -> {
-      workflowManager.recordAndClick(x, y, DOUBLE_CLICK);
+      workflowManager.recordAndClick(x, y, /* isDoubleClick */ true, /* isStrictMode */ true);
       return DONE;
     };
   }
@@ -358,9 +360,18 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping("/removeLastAction")
-  public String setPlayMode() {
-    workflowManager.removeLastAction();
+  @RequestMapping("/undo")
+  public String undo() {
+    // Will undo the action, and the FE will refresh the workflow automatically
+    workflowManager.undoAction();
+    return DONE;
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/redo")
+  public String redo() {
+    // Will redo the action, and the FE will refresh the workflow automatically
+    workflowManager.redoAction();
     return DONE;
   }
 
@@ -403,17 +414,30 @@ public class MainController {
   }
 
   @CrossOrigin(origins = "*")
-  @RequestMapping("/getActionDetails")
-  public String getActionDetails(@RequestParam(value = "uuidStr") String uuidStr) {
-    try {
-      Optional<String> actionDetails = workflowManager.getActionDetails(uuidStr);
-      if (actionDetails.isPresent()) {
-        return actionDetails.get();
+  @RequestMapping("/getActionSummary")
+  public Callable<ActionSummaryMetaDataResponse> getActionSummary(
+      @RequestParam(value = "uuidStr") String uuidStr) {
+    return () -> {
+      try {
+        return workflowManager.getActionSummary(uuidStr);
+      } catch (UicdActionException e) {
+        UicdCoreDelegator.getInstance().logException(e);
       }
-    } catch (UicdActionException e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
-    return FAILED;
+      return ActionSummaryMetaDataResponse.createDefault();
+    };
+  }
+
+  @CrossOrigin(origins = "*")
+  @RequestMapping("/getActionDetails")
+  public Callable<String> getActionDetails(@RequestParam(value = "uuidStr") String uuidStr) {
+    return () -> {
+      try {
+        return workflowManager.getActionDetails(uuidStr).orElse("");
+      } catch (UicdActionException e) {
+        UicdCoreDelegator.getInstance().logException(e);
+      }
+      return "";
+    };
   }
 
   @CrossOrigin(origins = "*")
@@ -442,17 +466,6 @@ public class MainController {
         return workflow.get();
       }
     } catch (UicdActionException e) {
-      UicdCoreDelegator.getInstance().logException(e);
-    }
-    return FAILED;
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping("/copyAction")
-  public String copyAction(@RequestParam(value = "uuidStr") String uuidStr) {
-    try {
-      return workflowManager.copyAction(uuidStr);
-    } catch (UicdActionException | CloneNotSupportedException e) {
       UicdCoreDelegator.getInstance().logException(e);
     }
     return FAILED;
@@ -817,37 +830,6 @@ public class MainController {
     return () ->
         ScreenDimensionsResponse.create(
             workflowManager.getScaledScreenWidth(), workflowManager.getScaledScreenHeight());
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/createProject", method = RequestMethod.POST)
-  public Callable<ProjectResponse> createProject(@RequestBody String projectName) {
-    return () -> projectManager.createProject(projectName);
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/deleteProjectByProjectId", method = RequestMethod.POST)
-  public Callable<ProjectResponse> deleteProject(@RequestBody String projectId) {
-    return () -> projectManager.deleteProjectByProjectId(projectId);
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping("/getProjectList")
-  public Callable<ProjectResponse> getProjectListOfCurrentUser() {
-    return () -> projectManager.getProjectListOfCurrentUser();
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/getProjectListByUsername", method = RequestMethod.GET)
-  public Callable<ProjectResponse> getProjectListByUsername(
-      @RequestParam(value = "username") String username) {
-    return () -> projectManager.getProjectListByUsername(username);
-  }
-
-  @CrossOrigin(origins = "*")
-  @RequestMapping(value = "/setCurrentProject", method = RequestMethod.POST)
-  public Callable<ProjectResponse> setCurrentProject(@RequestBody String projectId) {
-    return () -> projectManager.setCurrentProject(projectId);
   }
 
   @CrossOrigin(origins = "*")

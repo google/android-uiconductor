@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,6 +60,10 @@ public class DbProjectStorageManager {
     return projectRepository.findByCreatedBy(currentUser);
   }
 
+  public List<ProjectEntity> getCurrentUserSharedProjectList() {
+    return projectRepository.findByShareWithContaining(currentUser);
+  }
+
   public List<ProjectEntity> getProjectListByUsername(String username) {
     return projectRepository.findByCreatedBy(username);
   }
@@ -71,5 +75,9 @@ public class DbProjectStorageManager {
   public boolean deleteProjectByProjectId(String projectId) throws UicdException {
     projectRepository.deleteByProjectId(projectId);
     return true;
+  }
+
+  public void saveProject(ProjectEntity projectEntity) {
+    projectRepository.save(projectEntity);
   }
 }

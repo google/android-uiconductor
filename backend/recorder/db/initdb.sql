@@ -30,6 +30,7 @@ CREATE TABLE `yuidb`.`yui_test_history` (
   `testcase_uuid` VARCHAR(60),
   `user_id` VARCHAR(60),
   `project_id` VARCHAR(60),
+  `execution_id` VARCHAR(60),
   `group_id` VARCHAR(60),
   `test_result` VARCHAR(500) NOT NULL,
   `test_msg` BLOB NULL,

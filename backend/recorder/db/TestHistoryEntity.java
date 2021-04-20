@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,8 +37,10 @@ public class TestHistoryEntity {
   private String testcaseUuid;
   private String userId;
   private String projectId;
+  private String executionId;
   private String groupId;
   private String testResult;
+  private String testName;
   private String testMsg;
 
   @Column(length = 1000000)
@@ -119,5 +121,21 @@ public class TestHistoryEntity {
       UicdCoreDelegator.getInstance().logException(e);
     }
     return jsonDataString;
+  }
+
+  public String getTestName() {
+    return testName;
+  }
+
+  public void setTestName(String testName) {
+    this.testName = testName;
+  }
+
+  public String getExecutionId() {
+    return executionId;
+  }
+
+  public void setExecutionId(String executionId) {
+    this.executionId = executionId;
   }
 }

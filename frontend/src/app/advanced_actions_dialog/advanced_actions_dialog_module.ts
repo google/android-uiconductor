@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import {BrowserModule} from '@angular/platform-browser';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {QueryBuilderModule} from 'angular2-query-builder';
 
+import {DialogsModule} from '../popup_dialogs/dialogs_module';
 import {ScreenValidationFlowModule} from '../screen_validation_flow/screen_validation_flow_module';
 
 import {AdvancedActionDialogComponent} from './advanced_actions_dialog';
@@ -45,25 +46,16 @@ import {SnippetActionInfoDialogComponent} from './snippet_action_info_dialog';
     ScriptActionInfoDialogComponent,
   ],
   imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    CommonModule,
-    FormsModule,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatIconModule,
-    MatInputModule,
-    MatRadioModule,
-    MatOptionModule,
-    MatSelectModule,
-    MatProgressBarModule,
-    ReactiveFormsModule,
-    QueryBuilderModule,
-    ScreenValidationFlowModule,
+    BrowserModule,         BrowserAnimationsModule,
+    CommonModule,          DialogsModule,
+    FormsModule,           MatButtonModule,
+    MatButtonToggleModule, MatCardModule,
+    MatCheckboxModule,     MatChipsModule,
+    MatDialogModule,       MatIconModule,
+    MatInputModule,        MatRadioModule,
+    MatOptionModule,       MatSelectModule,
+    MatProgressBarModule,  QueryBuilderModule,
+    ReactiveFormsModule,   ScreenValidationFlowModule,
   ],
   exports: [AdvancedActionDialogComponent],
 })

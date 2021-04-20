@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,14 @@ public class DragAction extends BaseAction {
 
   public List<Point> dragPoints;
   public NodeContext nodeContext;
+
+  public NodeContext getNodeContext() {
+    return nodeContext;
+  }
+
+  public NodeContext getEndPointNodeContext() {
+    return endPointNodeContext;
+  }
 
   private NodeContext endPointNodeContext;
   @JsonIgnore private final PositionHelper positionHelper;

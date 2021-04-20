@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@
     </mat-select>
   </mat-form-field>
 </div>
-<div class="row">
+<div class="row" *ngIf="!isConditionalClick()">
   <mat-form-field>
     <mat-select placeholder="Stop Type" [(ngModel)]="validationActionDetails.stopType" (ngModelChange)="emitUpdate()">
       <mat-option *ngFor="let c of STOP_TYPES" [value]="c.value">{{ c.displayText }}</mat-option>

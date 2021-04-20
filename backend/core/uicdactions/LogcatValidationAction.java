@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,13 +75,14 @@ public class LogcatValidationAction extends ValidationAction {
   @Override
   public boolean validateRaw(ActionContext actionContext, AndroidDeviceDriver androidDeviceDriver) {
     List<String> outputs = getLogcatOutput();
-    this.setTextValidator(
+    // Need create a tmp validator so that the global variable won't affect the original one.
+    TextValidator tmpTextValidator =
         new TextValidator(
             actionContext.expandUicdGlobalVariable(
                 textValidator.getPatternValue(), androidDeviceDriver.getDeviceId()),
-            textValidator.getContentMatchType()));
+            textValidator.getContentMatchType());
     for (String line : outputs) {
-      if (textValidator.isMatch(line)) {
+      if (tmpTextValidator.isMatch(line)) {
         return true;
       }
     }
@@ -103,10 +104,7 @@ public class LogcatValidationAction extends ValidationAction {
     saveLogToLocalFile(actionContext, androidDeviceDriver);
     if (!logcatOnly) {
       validationResult = validate(actionContext, androidDeviceDriver);
-      if (!validationResult) {
-        actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-        this.playStatus = ActionContext.PlayStatus.FAIL;
-      }
+      updatePlayStatus(actionContext, this.validationResult, androidDeviceDriver);
     }
     return 0;
   }
@@ -139,7 +137,7 @@ public class LogcatValidationAction extends ValidationAction {
       logger.warning(e.getMessage());
     }
     actionExecutionResult.setActionId(this.getActionId().toString());
-    actionExecutionResult.setPlayStatus(this.playStatus);
+    actionExecutionResult.setPlayStatus(actionContext.getTopPlayStatus());
     return actionExecutionResult;
   }
 

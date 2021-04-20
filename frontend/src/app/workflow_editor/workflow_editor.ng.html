@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -50,11 +50,15 @@
       <i class="fa fa-superpowers center-icon-img"></i>
       Global Variable Settings
     </button>
-    <button mat-raised-button (click)="removeLast()" class="remove-last-btn" [disabled]="isReplaying">
+    <button mat-raised-button (click)="undo()" class="undo-last-action" [disabled]="isReplaying">
       <i class="fa fa-undo center-icon-img"></i>
-      Remove Last Action
+      Undo
     </button>
-    <button mat-raised-button (click)="openPdbDebuggerDialog()" [disabled]="isReplaying">
+    <button mat-raised-button (click)="redo()" class="redo-last-undo" [disabled]="isReplaying">
+      <i class="fa fa-repeat center-icon-img"></i>
+      Redo
+    </button>
+    <button mat-raised-button (click)="openPdbDebuggerDialog()" [disabled]="isReplaying" *ngIf="showPython">
       <i class="fa fa-plus-circle center-icon-img"></i>
       Python Debugger
     </button>
@@ -81,7 +85,7 @@
         <li *ngFor="let action of workflowModel.childrenActions; let i = index"
           (click)="isReplaying || openActionEditDialog(action.actionId, i)" class="list-group-item action-item"
           [style.background-color]="getBackgroundColor(action)" dnd-sortable (onDropSuccess)="onDropSuccess()"
-          [sortableIndex]="i">
+          [sortableIndex]="i" [matTooltip]="getActionToolTip(action)">
           <div class="expand-icon" *ngIf="getTextByType(action)==='CPD'" matTooltip="click to open">
             <i class="fa fa-plus-circle center-icon-img" (click)="expandCompoundAction(action, $event)"></i>
           </div>

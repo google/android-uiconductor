@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,15 +73,39 @@ export class TestCaseManagerService {
   }
 
   /**
-   * Send request to backend to deep copy the action with the given actionId.
-   * Return the created action with new uuid and all its children action are
-   * also with new uuid.
+   * Send request to backend to copy the action with the given actionId.
+   * Return the created action
    */
-  importTestCaseByActionId(actionId: string):
+  importTestCaseByActionId(actionId: string, userPreferredCopyType: string):
       Observable<ActionSummaryMetaData> {
     return this.http.get<ActionSummaryMetaData>(
-        BACKEND_BASE_URL + '/importTestCaseByActionId',
-        {params: new HttpParams().set('actionId', actionId)});
+        BACKEND_BASE_URL + '/importTestCaseByActionId', {
+          params: new HttpParams()
+                      .set('actionId', actionId)
+                      .set('copyRequest', userPreferredCopyType)
+        });
+  }
+
+  /** Send request to backend to import a test from Google3 */
+  importTestCaseFromGoogle3(citcClient: string, path: string):
+      Observable<ActionSummaryMetaData> {
+    return this.http.get<ActionSummaryMetaData>(
+        BACKEND_BASE_URL + '/importTestCaseFromGoogle3', {
+          params:
+              new HttpParams().set('citcClient', citcClient).set('path', path)
+        });
+  }
+
+  /** Send request to backend to export the test to Google3 */
+  exportTestCaseFromGoogle3(citcClient: string, path: string, uuid: string):
+      Observable<ActionSummaryMetaData> {
+    return this.http.get<ActionSummaryMetaData>(
+        BACKEND_BASE_URL + '/exportTestCaseFromGoogle3', {
+          params: new HttpParams()
+                      .set('citcClient', citcClient)
+                      .set('path', path)
+                      .set('uuid', uuid)
+        });
   }
 }
 

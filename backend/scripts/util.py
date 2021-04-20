@@ -1,4 +1,3 @@
-# python3 - http://go/python3#lint
 """Util functions for logging."""
 import datetime.datetime
 import time

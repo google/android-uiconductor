@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ export interface ValidationActionModel {
  */
 export enum SpecialClickType {
   // go/keep-sorted start
+  CLICK_WITH_CONTEXT,
   DOUBLE_CLICK,
   DRAG_WITH_CONTEXT,
   LONG_CLICK,
@@ -114,6 +115,10 @@ export const VALIDATION_ACTIONS: ValidationActionModel[] = [
 
 /** Special click related actions */
 export const SPECIAL_CLICK_ACTIONS: SpecialClickModel[] = [
+  {
+    value: SpecialClickType.CLICK_WITH_CONTEXT,
+    displayText: 'Click With Context'
+  },
   {value: SpecialClickType.LONG_CLICK, displayText: 'Long Click'},
   {value: SpecialClickType.DOUBLE_CLICK, displayText: 'Double Click'},
   {value: SpecialClickType.DRAG_WITH_CONTEXT, displayText: 'Drag With Context'},
@@ -293,11 +298,13 @@ export enum StrategyType {
   RESOURCEID = 'RESOURCEID',
   XPATH = 'XPATH',
   TEXT = 'TEXT',
+  TEXT_EQUALS = 'TEXT_EQUALS',
 }
 
 /** Model for different strategy to select screen content */
 export const CLICK_STRATEGY_TYPES: StrategyTypeModel[] = [
-  {value: StrategyType.TEXT, displayText: 'Text'},
+  {value: StrategyType.TEXT, displayText: 'Text Contains'},
+  {value: StrategyType.TEXT_EQUALS, displayText: 'Text Equals'},
   {value: StrategyType.RESOURCEID, displayText: 'Resource Id'},
   {value: StrategyType.XPATH, displayText: 'XPath'},
 ];

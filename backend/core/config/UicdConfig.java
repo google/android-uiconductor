@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.common.base.Ascii;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.uicd.backend.core.constants.OCREngineType;
 import com.google.uicd.backend.core.exceptions.UicdException;
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,6 +58,7 @@ public class UicdConfig {
   private static final String XML_DUMPER_APK_FOLDER_NAME = "xmldumper_apks/";
   private static final String OUTPUT_FOLDER_NAME = "output/";
   private static final String INPUT_FOLDER_NAME = "input/";
+  private static final String TMP_FOLDER_NAME = "tmp/";
   private static final String UICD_DEP_FOLDER_PATH = "deps";
   private static final String ADB_FORWARD_START_PORT = "adb_forward_start_port";
   private static final String LOG_OUTPUT_LEVEL = "log_output_level";
@@ -64,6 +66,10 @@ public class UicdConfig {
   private static final String XMLDUMPER_PACKAGE_PREFIX = "xmldumper_package_prefix";
   private static final String REFERENCE_IMAGE_STORAGE = "reference_image_storage";
   private static final String UICD_LOCAL_MODE = "uicd_local_mode";
+  private static final String UICD_OCR_ENGINE_TYPE = "uicd_ocr_engine_type";
+
+  private static final String UICD_DISABLE_XML_DUMPER_FLAG = "disable_xml_dumper";
+  private static final String UICD_ENABLE_MINICAP_FLAG = "enable_minicap";
 
   private String adbShellPath = "adb";
   private String currentUser = System.getProperty("user.name");
@@ -74,18 +80,22 @@ public class UicdConfig {
   private final HashMap<Long, String> uicdBasePathThreadMap = new HashMap<>();
   private int mysqlPort = 3308;
   private String mysqlConnectionString = "";
-  private int adbForwardStartPort = 6790;
+  private int adbForwardStartPort = -1;
   private Level logLevel = Level.INFO;
-  private String xmlDumperApkVersion = "1.0.2";
+  private String xmlDumperApkVersion = "3.1.2";
   // For internal version localMode will be overwrite to false in start.sh when start UICD. Open
   // sourced version will have run in local mode as default.
   private boolean localMode = true;
+  private boolean disableXMLDumper = false;
+  private boolean enableMinicap = false;
 
   // Default package name, can be override in the config file. In open source version of Uicd, it is
   // using a different package name.
   private String xmldumperPackagePrefix = "com.google.uicd.xmldumper";
 
   private String referenceImageStorage = "local";
+
+  private OCREngineType orcEngineType = OCREngineType.DISABLE;
 
   public static UicdConfig getInstance() {
     return instance;
@@ -106,8 +116,8 @@ public class UicdConfig {
     }
     return "jdbc:mysql://localhost:"
         + getMysqlPort()
-        + "/yuidb?autoReconnect=true&user=root&password=admin&useUnicode=true"
-        + "&characterEncoding=utf-8";
+        + "/yuidb?autoReconnect=true&user=root&password=a667F407DE7C6AD07358FA&useUnicode=true"
+        + "&characterEncoding=UTF-8&charset=utf8mb4&collation=utf8mb4_unicode_ci";
   }
 
   public synchronized String getBaseFolder() {
@@ -128,12 +138,17 @@ public class UicdConfig {
     uicdBasePathThreadMap.put(Thread.currentThread().getId(), uicdDataPath);
   }
 
-  /* Home folder for uicd output file */
+  /* Home folder for uicd output files */
   public String getTestOutputFolder() {
     return Paths.get(getBaseFolder(), OUTPUT_FOLDER_NAME).toString();
   }
 
-  /* Home folder for uicd input file */
+  /* Home folder for uicd tmp files */
+  public String getTestTmpFolder() {
+    return Paths.get(getBaseFolder(), TMP_FOLDER_NAME).toString();
+  }
+
+  /* Home folder for uicd input files */
   public String getTestInputFolder() {
     return Paths.get(getBaseFolder(), INPUT_FOLDER_NAME).toString();
   }
@@ -192,6 +207,15 @@ public class UicdConfig {
     if (configVars.containsKey(UICD_LOCAL_MODE)) {
       this.localMode = Boolean.parseBoolean(configVars.get(UICD_LOCAL_MODE));
     }
+    if (configVars.containsKey(UICD_OCR_ENGINE_TYPE)) {
+      this.orcEngineType = OCREngineType.fromString(configVars.get(UICD_OCR_ENGINE_TYPE));
+    }
+    if (configVars.containsKey(UICD_DISABLE_XML_DUMPER_FLAG)) {
+      this.disableXMLDumper = Boolean.parseBoolean(configVars.get(UICD_DISABLE_XML_DUMPER_FLAG));
+    }
+    if (configVars.containsKey(UICD_ENABLE_MINICAP_FLAG)) {
+      this.enableMinicap = Boolean.parseBoolean(configVars.get(UICD_ENABLE_MINICAP_FLAG));
+    }
   }
 
   public void loadFromConfigFile(String cfgFilePath) throws UicdException {
@@ -249,5 +273,21 @@ public class UicdConfig {
 
   public boolean isLocalMode() {
     return localMode;
+  }
+
+  public OCREngineType getOrcEngineType() {
+    return orcEngineType;
+  }
+
+  public boolean isDisableXMLDumper() {
+    return disableXMLDumper;
+  }
+
+  public boolean isEnableMinicap() {
+    return enableMinicap;
+  }
+
+  public void setEnableMinicap(boolean enableMinicap) {
+    this.enableMinicap = enableMinicap;
   }
 }

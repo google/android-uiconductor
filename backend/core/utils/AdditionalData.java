@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,26 @@
 
 package com.google.uicd.backend.core.utils;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 /** The class for storing additional data belonging to workflow. */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AdditionalData {
   private String version = "1";
   private String globalVariableStr = "";
+
+  @JsonInclude(Include.NON_EMPTY)
+  private String filePath = "";
+
+  public String getFilePath() {
+    return filePath;
+  }
+
+  public void setFilePath(String filePath) {
+    this.filePath = filePath;
+  }
 
   public String getVersion() {
     return version;

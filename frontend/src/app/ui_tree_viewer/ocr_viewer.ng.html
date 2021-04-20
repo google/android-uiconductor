@@ -1,0 +1,34 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div fxLayout="column" fxLayoutGap="10px" fxFill>
+    <div fxLayout="row wrap" fxLayoutGap="10px" >
+      <button mat-raised-button (click)="showOCRDetails()" [disabled]="orcLoading">Show OCR Details XML</button>
+      <button mat-raised-button (click)="orderByText()" [disabled]="orcLoading">OrderByText</button>
+      <button mat-raised-button (click)="orderByPosition()" [disabled]="orcLoading">OrderByPosition</button>
+    </div>
+    <div class="device-prepare-overlay" *ngIf="orcLoading">
+        <mat-progress-bar mode="indeterminate" class="device-prepare-overlay-progressbar">
+        </mat-progress-bar>
+        Processing image...It might take couple of seconds...
+      </div>
+    <div fxLayout="row wrap" class ="ocr-result-list" fxFill>
+        <ul>
+            <li *ngFor="let item of records" class ="ocr-result-list-item" (click)="onRecordClicked(item)">
+                    <b>{{item.text}} </b>{{item.bounds}} 
+            </li>
+        </ul>
+    </div>
+  </div>

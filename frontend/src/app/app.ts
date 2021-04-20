@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -164,6 +164,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   tabChange(e: MatTabChangeEvent) {
     this.showUiTree = (e.index === BottomMenuTabs.UI_VIEWER);
+    this.controlMessageService.sendMessage(
+        {messageType: MessageTypes.CLEAR_CANVAS, extra: ''});
   }
 
   versionInfo() {

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,16 +40,24 @@ public class ActionEntity {
   public ActionEntity() {}
 
   public ActionEntity(BaseAction baseAction) {
+    this(baseAction, false);
+  }
+  public ActionEntity(BaseAction baseAction, boolean rawExport) {
     this.uuid = baseAction.getActionId().toString();
-    try {
-      if (baseAction.getActionType() == ActionType.COMPOUND_ACTION) {
-        CompoundAction compoundAction = (CompoundAction) baseAction;
-        baseAction = (BaseAction) compoundAction.cloneWithoutCompoundChildrenChildren();
+    if (rawExport) {
+      this.details = baseAction.toJson(JsonFlag.EXPORT);
+    } else {
+      try {
+        if (baseAction.getActionType() == ActionType.COMPOUND_ACTION) {
+          CompoundAction compoundAction = (CompoundAction) baseAction;
+          baseAction = (BaseAction) compoundAction.cloneWithoutCompoundChildrenChildren();
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.warning(e.getMessage());
       }
-    } catch (CloneNotSupportedException e) {
-      logger.warning(e.getMessage());
+      this.details = baseAction.toJson(JsonFlag.BACKEND);
     }
-    this.details = baseAction.toJson(JsonFlag.BACKEND);
+
     this.type = baseAction.getActionTypeString();
     // The name field in the db is 100 characters, if user put super long name, it will crash the
     // save logic

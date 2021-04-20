@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,9 +44,12 @@ public class XmlHelper {
    * @param pos position of a click action in UI streaming
    * @param xRatio x-resolution of real cell phone / x-resolution of streaming in UI
    * @param yRatio y-resolution of real cell phone / y-resolution of streaming in UI
+   * @param ignoreDupResourceId whether to remove the duplicate resourceid (in the setting view), we
+   *     should always remove it, however to make sure the old logic still work, when the flag is
+   *     false, will use the exactly the old logic.
    */
   public static NodeContext getContextFromPos(
-      List<String> xmls, Position pos, double xRatio, double yRatio) {
+      List<String> xmls, Position pos, double xRatio, double yRatio, boolean ignoreDupResourceId) {
     XmlParser xmlParser = new XmlParser(xmls, xRatio, yRatio);
     Optional<NodeContext> smallestNode =
         xmlParser.findSmallestNode(xmlParser.getNodeContextsList(), pos, xRatio, yRatio);
@@ -60,10 +63,20 @@ public class XmlHelper {
           .get()
           .setRelativePos(clickedNode.get().getBounds().getCenter().getOffSetPosition(pos));
     }
+
     rootNode.get().setLeafNodeContext(clickedNode.get());
     rootNode.get().setRelativePos(rootNode.get().getBounds().getCenter().getOffSetPosition(pos));
     rootNode.get().setClickedPos(pos);
+    if (ignoreDupResourceId) {
+      removeNotUniqueResourceId(rootNode.get(), xmlParser);
+      removeNotUniqueResourceId(rootNode.get().getLeafNodeContext(), xmlParser);
+    }
     return rootNode.get();
+  }
+
+  public static NodeContext getContextFromPos(
+      List<String> xmls, Position pos, double xRatio, double yRatio) {
+    return getContextFromPos(xmls, pos, xRatio, yRatio, false);
   }
 
   /**
@@ -345,5 +358,14 @@ public class XmlHelper {
 
   private static Position getPosFromSingleNodeContext(NodeContext nodeContext) {
     return nodeContext.getBounds().getCenter().getOffSetPosition(nodeContext.getRelativePos());
+  }
+
+  private static void removeNotUniqueResourceId(NodeContext nodeContext, XmlParser xmlParser) {
+    if (nodeContext == null) {
+      return;
+    }
+    if (!xmlParser.isUniqueResourceId(nodeContext.getResourceId())) {
+      nodeContext.setResourceId("");
+    }
   }
 }

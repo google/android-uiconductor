@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,6 +93,10 @@ public class DevicesDriverManager {
   public void startXmlDumperServer(String deviceId, boolean isUpdateApk)
       throws UicdExternalCommandException {
     AndroidDeviceDriver androidDeviceDriver = androidDriverLinkedMap.get(deviceId);
+    if (UicdConfig.getInstance().isDisableXMLDumper()) {
+      logger.info("xml dumper disabled, skip install and start.");
+      return;
+    }
     if (isUpdateApk) {
       adbCommandLineUtil.updateXmlDumperApk(
           androidDeviceDriver.getDeviceId(), androidDeviceDriver.getDevice().getApiLevel());
@@ -182,15 +186,27 @@ public class DevicesDriverManager {
       String forwardCmd = "forward tcp:%d tcp:%d";
       // find a random port here for xmlDumperHostPort
       int freePort;
-      synchronized (this) {
-        freePort = getNewPort();
-        adbCommandLineUtil.executeAdb(
-            String.format(forwardCmd, freePort, device.getXmlDumperDevicePort()), deviceId);
+      // In some cases we want to fixed ports instead of random generated ports, e.g. when we do the
+      // port forwarding through ssh for minicap/xmldumper
+      int adbForwardStartPort = UicdConfig.getInstance().getAdbForwardStartPort();
+      if (adbForwardStartPort <= 0) {
+        synchronized (this) {
+          freePort = getNewPort();
+          adbCommandLineUtil.executeAdb(
+              String.format(forwardCmd, freePort, device.getXmlDumperDevicePort()), deviceId);
+        }
+        device.setXmlDumperHostPort(freePort);
+        device.setMinicapHostPort(getNewPort());
+        device.setMinicapWebServerPort(getNewPort());
+        device.setSnippetClientHostPort(getNewPort());
+      } else {
+        // To make it simple, 10 ports for each device, should only run in local mode.
+        int deviceOffset = deviceIndex * 10;
+        device.setXmlDumperHostPort(adbForwardStartPort + deviceOffset);
+        device.setMinicapHostPort(adbForwardStartPort + deviceOffset + 1);
+        device.setMinicapWebServerPort(adbForwardStartPort + deviceOffset + 2);
+        device.setSnippetClientHostPort(adbForwardStartPort + deviceOffset + 3);
       }
-      device.setXmlDumperHostPort(freePort);
-      device.setMinicapHostPort(getNewPort());
-      device.setMinicapWebServerPort(getNewPort());
-      device.setSnippetClientHostPort(getNewPort());
       logger.info(device.toString());
       AndroidDeviceDriver androidDeviceDriver = new AndroidDeviceDriver(device);
       androidDriverLinkedMap.put(deviceId, androidDeviceDriver);

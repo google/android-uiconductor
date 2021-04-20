@@ -1,4 +1,3 @@
-# python3 - http://go/python3#lint
 """Upload trained model weights to Google Cloud Storage."""
 import argparse
 import os

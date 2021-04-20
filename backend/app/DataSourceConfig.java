@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ public class DataSourceConfig {
       properties.put("spring.jpa.hibernate.ddl-auto", "update");
     } else {
       properties.put("spring.datasource.url", UicdConfig.getInstance().getDBConnStr());
-      properties.put("spring.datasource.driverClassName", "com.mysql.jdbc.Driver");
+      properties.put("spring.datasource.driverClassName", "com.mysql.cj.jdbc.Driver");
       properties.put("spring.datasource.username", "root");
-      properties.put("spring.datasource.password", "admin");
+      properties.put("spring.datasource.password", "a667F407DE7C6AD07358FA");
       properties.put("spring.jpa.database-platform", "org.hibernate.dialect.MySQLDialect");
       properties.put("spring.jpa.hibernate.ddl-auto", "none");
     }

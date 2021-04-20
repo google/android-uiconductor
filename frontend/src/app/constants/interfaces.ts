@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+import {ImportCopyType} from './constants';
+import {Bounds} from './rect';
 
 /** Define all interfaces used in frontend */
 export interface Action {
@@ -31,6 +34,13 @@ export interface ScreenContentSummary {
   displayText: string;
   resourceId: string;
   checked: boolean;
+}
+
+/** Defines exported data properties */
+export interface ExportedTestCaseData {
+  isTopLevelWorkflow?: boolean;
+  additionalData:
+      {version: string; filePath: string; globalVariableStr: string};
 }
 
 /** Response indicates devices already inititialzed in backend */
@@ -61,6 +71,7 @@ export interface TestHistoryEntity {
   createdAt: {nano: number; epochSecond: number;};
   createdBy: string;
   uuid: string;
+  executionId: string;
   testDetails: string;
   testMsg: string;
   testcaseUuid: string;
@@ -132,6 +143,7 @@ export interface ProjectRecord {
   userId?: string;
   projectName: string;
   projectId: string;
+  shareWith?: string;
 }
 
 /** Query interface for ConditionValidationAction */
@@ -157,8 +169,31 @@ export declare interface UpdateTestCaseTreeRequest {
   projectId: string;
 }
 
-/** Defined the request interface for deep copy the project. */
-export interface ProjectDeepCopyRequest {
+/** Defined the request interface to copy the project. */
+export interface ProjectCopyRequest {
   srcProjectId: string;
   targetProjectId: string;
+}
+
+/** Defined the response record from ocr engine. */
+export interface OcrRecord {
+  text: string;
+  bounds: Bounds;
+}
+
+/** Defined the response details from ocr engine. */
+export interface OcrDetailsResponse {
+  boundsStringMapping: OcrRecord[];
+}
+
+/** Defined the request details from python debugger. */
+export interface PythonDebuggerRequest {
+  pythonScript: string;
+  breakLines: string;
+}
+
+/** Defined the response details from python debugger. */
+export interface PythonDebuggerResponse {
+  result: string;
+  currentLineIndex: number;
 }

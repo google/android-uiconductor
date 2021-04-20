@@ -1,5 +1,5 @@
 <!--
-  Copyright 2020 Google LLC
+  Copyright 2021 Google LLC
 
   Licensed under the Apache License, Version 2.0 (the "License");
   you may not use this file except in compliance with the License.
@@ -15,27 +15,23 @@
 -->
 <h1 mat-dialog-title> Action Details </h1>
 <div mat-dialog-content fxLayout="column">
-  <h5 class="createdByLabel" *ngIf="currentUser !== actionData.createdBy">
-    Created by: <span *ngIf="!actionData.createdBy">No Owner</span>
-    <span *ngIf="actionData.createdBy">{{actionData.createdBy}}</span>, Editing is restricted!
-  </h5>
   <mat-form-field>
         <input matInput placeholder="Action Id" [(ngModel)]="actionData.actionId" readonly>
   </mat-form-field>
 
   <mat-form-field>
-    <input matInput placeholder="Name" [(ngModel)]="actionData.name" required [disabled]="currentUser !== actionData.createdBy">
+    <input matInput placeholder="Name" [(ngModel)]="actionData.name" required>
     <mat-error *ngIf="!actionData.name">You must input a name.</mat-error>
   </mat-form-field>
 
   <mat-checkbox *ngIf="isMultiPlayMode() && isCompoundAction()" placeholder="Force device index on all children actions" [(ngModel)]="actionData.forceDeviceOnChildren">Force device index on all children actions</mat-checkbox>
 
   <mat-form-field *ngIf="isMultiPlayMode()">
-    <input matInput placeholder="Device index" type="number" min="0" [(ngModel)]="actionData.deviceIndex" [disabled]="currentUser !== actionData.createdBy">
+    <input matInput placeholder="Device index" type="number" min="0" [(ngModel)]="actionData.deviceIndex">
   </mat-form-field>
 
   <mat-form-field *ngIf="!isMLImageValidation()">
-    <input matInput placeholder="Delay After (ms)" type="number" [(ngModel)]="actionData.delayAfterActionMs" [disabled]="currentUser !== actionData.createdBy">
+    <input matInput placeholder="Delay After (ms)" type="number" [(ngModel)]="actionData.delayAfterActionMs">
   </mat-form-field>
 
   <mat-form-field *ngIf="isMLImageValidation()">
@@ -52,8 +48,12 @@
 
   <mat-checkbox *ngIf="isClickAction()" placeholder="Is Raw xy" [disabled]="false" [(ngModel)]="actionData.isRawXY">is raw XY</mat-checkbox>
 
+  <mat-form-field *ngIf="isCompoundAction()">
+    <input matInput placeholder="Share With" [(ngModel)]="actionData.shareWith">
+  </mat-form-field>
+
   <mat-form-field *ngIf="!isMLImageValidation()">
-    <textarea matInput placeholder="Description" [(ngModel)]="actionData.actionDescription" [disabled]="currentUser !== actionData.createdBy"></textarea>
+    <textarea matInput placeholder="Description" [(ngModel)]="actionData.actionDescription"></textarea>
   </mat-form-field>
 
   <mat-form-field *ngIf="data.isSaveWorkflow || isNewWorkflow || data.isMoveAction">
@@ -62,7 +62,9 @@
     </mat-select>
   </mat-form-field>
 
-  <mat-checkbox [(ngModel)]="actionData.runAlways" [disabled]="currentUser !== actionData.createdBy">Run Always (run current step even if previous step failed)</mat-checkbox>
+  <mat-checkbox [(ngModel)]="actionData.runAlways">Run Always (run current step even if previous step failed)</mat-checkbox>
+  <mat-checkbox *ngIf="isCompoundAction() && actionData.runAlways" [(ngModel)]="actionData.runAlwaysRecursive">Recursive(run always Recursively)</mat-checkbox>
+  <mat-checkbox *ngIf="isCompoundAction()" [(ngModel)]="actionData.isTopLevelWorkflow">Is top level workflow?</mat-checkbox>
 </div>
 <div mat-dialog-actions>
   <button mat-raised-button (click)="saveAction()">Save</button>

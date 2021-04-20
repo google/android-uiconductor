@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -71,15 +71,7 @@ public class LoopScreenContentValidationAction extends ScreenContentValidationAc
       this.validationResult =
           this.isStopWhenFalse() ? this.validationResult : !this.validationResult;
 
-      if (!this.validationResult) {
-        if (isStopCurrentLevel()) {
-          actionContext.removeStatus(androidDeviceDriver.getDeviceId());
-          this.playStatus = ActionContext.PlayStatus.SKIPPED;
-        } else {
-          actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-          this.playStatus = ActionContext.PlayStatus.FAIL;
-        }
-      }
+      updatePlayStatus(actionContext, this.validationResult, androidDeviceDriver);
     } catch (InterruptedException e) {
       throw new UicdException(e.getMessage());
     }

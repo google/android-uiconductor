@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,12 +31,20 @@ public class JsonUtilEx {
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
 
   public static String toJson(Object value) {
+    return toJson(value, false);
+  }
+
+  public static String toJson(Object value, boolean outputWithFormat) {
     String jsonDataString = "";
     ObjectMapper mapper = new ObjectMapper();
     JavaTimeModule module = new JavaTimeModule();
     mapper.registerModule(module);
     try {
-      jsonDataString = mapper.writeValueAsString(value);
+      if (outputWithFormat) {
+        jsonDataString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value);
+      } else {
+        jsonDataString = mapper.writeValueAsString(value);
+      }
     } catch (JsonProcessingException e) {
       logger.warning("Error while converting to json: " + e.getMessage());
     }

@@ -1,4 +1,3 @@
-# python3 - http://go/python3#lint
 """Predict the class for a given image using a trained model."""
 import argparse
 import os

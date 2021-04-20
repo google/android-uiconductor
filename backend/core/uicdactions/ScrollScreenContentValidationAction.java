@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,15 +77,7 @@ public class ScrollScreenContentValidationAction extends ScreenContentValidation
         // Sometimes validation fails when the screen is still scrolling.
         Thread.sleep(SLEEP_MILLS);
       }
-      if (!this.validationResult) {
-        actionContext.setFailStatus(androidDeviceDriver.getDeviceId());
-        this.playStatus = ActionContext.PlayStatus.FAIL;
-      }
-
-      if (isStopCurrentLevel() && !this.validationResult) {
-        actionContext.removeStatus(androidDeviceDriver.getDeviceId());
-        this.playStatus = ActionContext.PlayStatus.SKIPPED;
-      }
+      updatePlayStatus(actionContext, this.validationResult, androidDeviceDriver);
     } catch (InterruptedException e) {
       throw new UicdException(e.getMessage());
     }

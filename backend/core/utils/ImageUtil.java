@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import javax.imageio.ImageIO;
 /** Helper class for saving image screenshot, decoding BASE64 image data and image matching. */
 public class ImageUtil {
   private static final Logger logger = LogManager.getLogManager().getLogger("uicd");
-  private static final String REDIRECT = " > ";
 
   /**
    * Decodes the BASE64 image data and saves it into a .png file.
@@ -81,7 +80,13 @@ public class ImageUtil {
     } catch (IOException e) {
       logger.warning(e.getMessage());
     }
-    String commandLine = String.join(REDIRECT, "adb exec-out screencap -p", imagePath);
+    // adb shell screencap -p /sdcard/screencap.png && adb pull /sdcard/screencap.png
+    String commandLine =
+        String.join(
+            " ",
+            "adb shell screencap -p /sdcard/uicdscreenshot.png && adb pull"
+                + " /sdcard/uicdscreenshot.png",
+            imagePath);
     try {
       ADBCommandLineUtil adbCommandLineUtil = new ADBCommandLineUtil();
       adbCommandLineUtil.executeAdb(commandLine, deviceId, /* waitfor */ true);

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public class ScreenContentValidationAction extends ValidationAction {
   @JsonIgnore protected PositionHelper positionHelper;
   @JsonIgnore protected String validateInfo;
 
-  private ContextStorageType contextStorageType = ContextStorageType.CONTEXT_BASED;
+  protected ContextStorageType contextStorageType = ContextStorageType.CONTEXT_BASED;
   private ScreenContentSearchType screenContentSearchType;
   private String selectedText;
   private ElementSelectorType selectedType;
@@ -74,6 +74,7 @@ public class ScreenContentValidationAction extends ValidationAction {
     this.positionHelper = new PositionHelper();
   }
 
+  @Override
   protected void clear() {
     super.clear();
     foundNodeContext = new NodeContext();
@@ -147,6 +148,7 @@ public class ScreenContentValidationAction extends ValidationAction {
                 this.textValidator.getPatternValue(), androidDeviceDriver.getDeviceId()),
             this.textValidator.getContentMatchType());
     List<String> xmls = androidDeviceDriver.fetchCurrentXML();
+    actionContext.setLastXmlDump(xmls);
     // first we validate content
     if (savedNodeContext == null || this.contextStorageType != ContextStorageType.CONTEXT_BASED) {
       XmlParser xmlParser =
@@ -247,29 +249,38 @@ public class ScreenContentValidationAction extends ValidationAction {
     } else {
       foundsText = foundNodeContext == null ? "unknown" : foundNodeContext.getDisplayEstimate();
     }
+    String logContent = setValidationLogContent(actionExecutionResult, targetText, foundsText);
+    actionExecutionResult.setPlayStatus(actionContext.getTopPlayStatus());
+    logger.info(logContent);
+    return actionExecutionResult;
+  }
+
+  protected String setValidationLogContent(ActionExecutionResult actionExecutionResult,
+      String targetText, String foundsText) {
     String logContent;
     if (isOcrMode) {
       logContent =
           String.format(
-              "Validation Result: %b. StopType: %s. %s",
-              this.validationResult, this.stopType, this.validateInfo);
+              "Validation Result: %b. %s %s",
+              this.validationResult, getStopTypeStr(), this.validateInfo);
     } else {
       logContent =
           String.format(
-              "Validation Result: %b. StopType: %s. Looking for %s: %s of %s, found node: %s,",
+              "Validation Result: %b.%s Looking for %s: %s, found node: %s,",
               this.validationResult,
-              this.stopType,
+              getStopTypeStr(),
               selectedType,
-              selectedText,
               targetText,
               foundsText);
     }
 
     actionExecutionResult.setRegularOutput(logContent);
     actionExecutionResult.setActionId(this.getActionId().toString());
-    actionExecutionResult.setPlayStatus(this.playStatus);
-    logger.info(logContent);
-    return actionExecutionResult;
+    return logContent;
+  }
+
+  protected String getStopTypeStr() {
+    return String.format("StopType: %s. ", this.stopType);
   }
 
   private void createDefaultTextValidator() {

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
 
 package com.google.uicd.backend.core.uicdactions;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.uicd.backend.core.devicesdriver.AndroidDeviceDriver;
 import com.google.uicd.backend.core.exceptions.UicdExternalCommandException;
-import com.google.uicd.backend.core.globalvariables.UicdGlobalVariableMap;
+import com.google.uicd.backend.core.globalvariables.UicdGlobalVariableShellUpdateUtil;
+import com.google.uicd.backend.core.uicdactions.ActionContext.PlayStatus;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,11 +29,10 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
 
   public String commandLine;
   public boolean isAdbCommand;
-  public boolean logOutput;
   public String expectedReturnCode;
   public Integer commandlineExecutionTimeoutSec;
   public boolean needShellOutput;
-  private String outputPath;
+  private String uicdVariableName;
   @JsonIgnore private String exitValue;
 
 
@@ -41,12 +43,14 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
       String commandLine,
       String expectedReturnCode,
       Integer commandlineExecutionTimeoutSec,
-      boolean needShellOutput) {
+      boolean needShellOutput,
+      String uicdVariableName) {
     this.isAdbCommand = isAdbCommand;
     this.commandLine = commandLine;
     this.expectedReturnCode = expectedReturnCode;
     this.commandlineExecutionTimeoutSec = commandlineExecutionTimeoutSec;
     this.needShellOutput = needShellOutput;
+    this.uicdVariableName = uicdVariableName;
     setName(commandLine);
   }
 
@@ -64,6 +68,7 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
     this.commandlineExecutionTimeoutSec = commandLineAction.commandlineExecutionTimeoutSec;
     this.needShellOutput = commandLineAction.needShellOutput;
     this.isAdbCommand = commandLineAction.isAdbCommand;
+    this.uicdVariableName = commandLineAction.uicdVariableName;
   }
 
   @Override
@@ -81,33 +86,15 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
       exitValue = String.valueOf(process.exitValue());
       boolean isValid = validate(actionContext, androidDeviceDriver);
       if (!isValid) {
-        actionContext.setFailStatus(deviceId);
-        this.playStatus = ActionContext.PlayStatus.FAIL;
+        actionContext.updateTopPlayStatus(PlayStatus.FAIL);
       }
     }
 
-    // Process output from command line. We are looking for a str in the standard output like this:
-    // 'uicd_shell_output:{"$uicd_var1": {"value": "app uicd", "exportFiled": false}}"
-    StringBuilder sb = new StringBuilder();
-    for (String s : output) {
-      logger.info(s);
-      if (needShellOutput && UicdGlobalVariableMap.containsShellOutputKeyWord(s)) {
-
-        String jsonContent = s;
-        for (String keyWord : UicdGlobalVariableMap.SHELL_OUTPUT_KEYWORD_LIST) {
-          jsonContent = s.replace(keyWord, "");
-        }
-        // only allow keys that start with "$uicd" in the map.
-        if (UicdGlobalVariableMap.containsGlobalVariableKeyWord(jsonContent)) {
-          sb.append(jsonContent);
-        } else {
-          logger.warning(
-              String.format("Keys should start with $uicd, instead found %s", jsonContent));
-        }
-      }
-    }
-    if (sb.length() > 0) {
-      actionContext.getGlobalVariableMap().fillRawMapByJsonOrPlainStr(sb.toString());
+    if (!isNullOrEmpty(uicdVariableName) && !output.isEmpty()) {
+      actionContext.getGlobalVariableMap().addVariable(uicdVariableName, output.get(0), true);
+    } else if (needShellOutput) {
+      UicdGlobalVariableShellUpdateUtil.updateGlobalVariableMap
+          (output, actionContext.getGlobalVariableMap());
     }
     return 0;
   }
@@ -118,13 +105,9 @@ public class CommandLineAction extends BaseAction implements IValidatorAction {
     ActionExecutionResult actionExecutionResult = new ActionExecutionResult();
     String displayWithParameters =
         actionContext.expandUicdGlobalVariable(this.commandLine, androidDeviceDriver.getDeviceId());
-    if (logOutput) {
-      actionExecutionResult.setLogOutput(outputPath, displayWithParameters);
-    } else {
-      actionExecutionResult.setRegularOutput(displayWithParameters);
-    }
+    actionExecutionResult.setRegularOutput(displayWithParameters);
     actionExecutionResult.setActionId(this.getActionId().toString());
-    actionExecutionResult.setPlayStatus(this.playStatus);
+    actionExecutionResult.setPlayStatus(actionContext.getTopPlayStatus());
     return actionExecutionResult;
   }
 

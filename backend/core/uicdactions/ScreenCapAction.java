@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class ScreenCapAction extends BaseAction {
 
   @Override
   public String getDisplay() {
-    return "Take Screenshot";
+    return name;
   }
 
   @Override
@@ -56,6 +56,9 @@ public class ScreenCapAction extends BaseAction {
   @Override
   protected ActionExecutionResult genActionExecutionResults(
       AndroidDeviceDriver androidDeviceDriver, ActionContext actionContext) {
+    // If current action is skiped, the genActionExecutionResults will still get called, since we
+    // didn't call play(), will have the screencapPath from last time, which is incorrect.
+    setScreenCapPath(actionContext);
     ActionExecutionResult actionExecutionResult =
         super.genActionExecutionResults(androidDeviceDriver, actionContext);
     try {

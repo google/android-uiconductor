@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,8 @@ public class ProjectEntity {
   private String userId;
   private String groupId;
   private String projectName;
+
+  private String shareWith;
   private String createdBy;
   private Instant createdAt;
 
@@ -49,6 +51,7 @@ public class ProjectEntity {
     this.projectName = projectName;
     this.createdBy = createdBy;
     this.createdAt = createdAt;
+    this.shareWith = "";
   }
 
   public String getProjectId() {
@@ -97,5 +100,13 @@ public class ProjectEntity {
 
   public void setCreatedAt(Instant createdAt) {
     this.createdAt = createdAt;
+  }
+
+  public String getShareWith() {
+    return shareWith;
+  }
+
+  public void setShareWith(String shareWith) {
+    this.shareWith = shareWith;
   }
 }
