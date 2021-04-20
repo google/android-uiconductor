@@ -26,10 +26,9 @@ mkdir -p uicdcli
 
 # build uicd xmldumper server
 cd $root_dir/xmldumper
-./gradlew assembleDebug assembleAndroidTest
+./gradlew assembleDebug
 
-cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk $release_dir/deps/xmldumper_apks/uicd-xmldumper-server-test-v1.0.1.apk
-cp app/build/outputs/apk/debug/app-debug.apk $release_dir/deps/xmldumper_apks/uicd-xmldumper-server-v1.0.1.apk
+cp app/build/outputs/apk/debug/app-debug.apk $release_dir/deps/xmldumper_apks/uicd-xmldumper-server-v3.1.2.apk
 
 # build backend jar
 cd $root_dir/backend
@@ -60,7 +59,7 @@ chmod a+x $release_dir/start.sh
 # nuwacfg
 cd $release_dir
 chmod -R a+rw .
-echo -e "username=$(whoami)\nuicdbasepath=$PWD\nxmldumperversion=1.0.1\nmysqlconnectionstr=<mysqlconnectionstr>\n" > ./uicd.cfg
+echo -e "username=$(whoami)\nuicdbasepath=$PWD\nxmldumperversion=3.1.2\nmysqlconnectionstr=<mysqlconnectionstr>\nuicd_local_mode=false\n" > ./uicd.cfg
 
 
 # deps
