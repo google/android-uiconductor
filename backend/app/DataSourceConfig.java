@@ -43,7 +43,7 @@ public class DataSourceConfig {
       properties.put("spring.datasource.url", UicdConfig.getInstance().getDBConnStr());
       properties.put("spring.datasource.driverClassName", "com.mysql.cj.jdbc.Driver");
       properties.put("spring.datasource.username", "root");
-      properties.put("spring.datasource.password", "a667F407DE7C6AD07358FA");
+      properties.put("spring.datasource.password", "admin");
       properties.put("spring.jpa.database-platform", "org.hibernate.dialect.MySQLDialect");
       properties.put("spring.jpa.hibernate.ddl-auto", "none");
     }
