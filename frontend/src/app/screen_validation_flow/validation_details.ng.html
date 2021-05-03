@@ -1,0 +1,95 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="row">Validation Step</div>
+<div class="row" *ngIf="!validationActionDetails.ocrMode">
+  <mat-form-field class="selector-css">
+    <mat-select placeholder="Selector Type" [(ngModel)]="validationActionDetails.elementSelectorType"
+      (ngModelChange)="updateContentData(); emitUpdate();" class="slot-selector">
+      <mat-option *ngFor="let c of ELEMENT_SELECTOR_TYPES" [value]="c.value" class='mat-option'>
+        {{ c.displayText }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+<div class="row">
+  <mat-form-field>
+    <input class="input-highlight" matInput placeholder="Please input" [(ngModel)]="validationActionDetails.contentData"
+      (ngModelChange)="emitUpdate()" name="contentDataInput">
+  </mat-form-field>
+</div>
+<div>
+  <mat-checkbox placeholder="OCR Enabled" [(ngModel)]="validationActionDetails.ocrMode" (ngModelChange)="emitUpdate()">
+    Use OCR</mat-checkbox>
+</div>
+<div class="row" *ngIf="!validationActionDetails.ocrMode">Advanced</div>
+<div *ngIf="!validationActionDetails.ocrMode">
+  <mat-checkbox placeholder="Is Match Node Context" [(ngModel)]="matchNodeContext" (ngModelChange)="emitUpdate()">Match
+    Node Context</mat-checkbox>
+</div>
+<div *ngIf="!matchNodeContext && !validationActionDetails.ocrMode">
+  <mat-form-field class="selector-css">
+    <mat-select placeholder="Match Type" [(ngModel)]="validationActionDetails.contentMatchType"
+      (ngModelChange)="emitUpdate()" class="slot-selector">
+      <mat-option *ngFor="let c of CONTENT_MATCH_TYPES" [value]="c.value" class='mat-option'>
+        {{ c.displayText }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select placeholder="Search Range" [(ngModel)]="validationActionDetails.screenContentSearchType"
+      (ngModelChange)="emitUpdate()">
+      <mat-option *ngFor="let c of SCREEN_CONTENT_SEARCH_TYPES" [value]="c.value" class='mat-option'>
+        {{ c.displayText }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+<div class="row" *ngIf="!isConditionalClick()">
+  <mat-form-field>
+    <mat-select placeholder="Stop Type" [(ngModel)]="validationActionDetails.stopType" (ngModelChange)="emitUpdate()">
+      <mat-option *ngFor="let c of STOP_TYPES" [value]="c.value">{{ c.displayText }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-mini-fab color="primary" (click)="openValidationDetailsInfoDlg()" matTooltip="Show Info"
+    matTooltipPosition="right" matTooltipShowDelay="500">
+    <i class="fa fa-info"></i>
+  </button>
+</div>
+<div class="row" *ngIf="isConditionalClick()">
+  <b>Note: Validation failure for Conditional Click does not fail the test, it only bypasses the click operation.</b>
+</div>
+<div class="row" *ngIf="isLoopValidation()">Timeout (in seconds):
+  <mat-form-field>
+    <textarea rows="1" cols="10" matInput [(ngModel)]="validationActionDetails.timeout"
+      (ngModelChange)="emitUpdate()"></textarea>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select placeholder="Wait Until" [(ngModel)]="selectedWaitUntilType" (ngModelChange)="emitUpdate()">
+      <mat-option *ngFor="let c of WAIT_UNTIL_TYPES" [value]="c.value">{{ c.displayText }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<div class="row" *ngIf="isScrollValidation()">Max Scroll Number:
+  <mat-form-field>
+    <input class="input-highlight" matInput placeholder="Max Scroll Number"
+      [(ngModel)]="validationActionDetails.scrollMaxNumber" (ngModelChange)="emitUpdate()">
+  </mat-form-field>
+</div>
+<div *ngIf="showButtons">
+  <button mat-raised-button color="primary" name="previousPage" (click)='previousPageClicked()'>Back</button>
+  <button mat-raised-button color="primary" name="closePopup" (click)='closePopup()'>Add Action</button>
+</div>

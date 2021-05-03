@@ -1,0 +1,84 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<mat-tab-group>
+  <mat-tab label="Devices">
+    <mat-form-field>
+      <mat-select placeholder="Play Mode:" [(value)]="selectedPlayMode" (selectionChange)="changePlayMode($event)">
+        <mat-option *ngFor="let playMode of playModes" [value]="playMode.name">
+          {{playMode.display}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div class="currentDevice" *ngIf="(currentDevice | async)">
+      <b> Current Device: </b>{{(currentDevice | async).deviceId}}
+    </div>
+    <div>
+      <table mat-table [dataSource]="dataSource">
+        <ng-container matColumnDef="position">
+          <th mat-header-cell *matHeaderCellDef> Slot </th>
+          <td mat-cell *matCellDef="let element"> {{element.position}} </td>
+        </ng-container>
+        <ng-container matColumnDef="device_serial">
+          <th mat-header-cell *matHeaderCellDef> Device Serial </th>
+          <td mat-cell *matCellDef="let element"> {{element.deviceSerial}} </td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef> Status </th>
+          <td mat-cell *matCellDef="let element">
+            <div [ngSwitch]="element.status">
+              <div *ngSwitchCase="0">
+                No available device on this slot.
+              </div>
+
+              <div *ngSwitchCase="1">
+                <button mat-raised-button (click)="initDevice(element.deviceSerial)">
+                  Ready
+                </button>
+              </div>
+
+              <div *ngSwitchCase="2">
+                <button mat-raised-button (click)="initDevice(element.deviceSerial)">
+                  Connected
+                </button>
+              </div>
+
+              <div *ngSwitchCase="3">
+                Connecting...
+              </div>
+
+              <div *ngSwitchDefault>
+                UNKNOWN
+              </div>
+            </div>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="selected">
+          <th mat-header-cell *matHeaderCellDef> Selected </th>
+          <td mat-cell *matCellDef="let element">
+            <div class="star-icon" *ngIf="element.deviceSerial === (currentDevice | async).deviceId">
+              <i class="material-icons">star_rate</i>
+            </div>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </mat-tab>
+  <mat-tab label="TV Remote">
+    <tv-remote></tv-remote>
+  </mat-tab>
+</mat-tab-group>

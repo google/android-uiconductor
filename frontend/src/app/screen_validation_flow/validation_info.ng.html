@@ -1,0 +1,94 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div>
+    <h2>Validation Option Details</h2>
+    <h3>Match Node Context</h3>
+    <table class='info-table'>
+        <thead>
+          <tr>
+              <th>Type</th>
+              <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+              <td>True</td>
+              <td>Match Context(UI hierarchy based match,
+                search the element not only by the text, but also by the element around it).
+                Useful when doing the condition click.
+              </td>
+          </tr>
+          <tr>
+              <td>False</td>
+              <td>Directly match the target text.</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Search Range</h3>
+      <table class='info-table'>
+        <thead>
+          <tr>
+              <th>Type</th>
+              <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+              <td>Strict</td>
+              <td>Search for text within a 100px radius on the screen (Physical device resolution).</td>
+          </tr>
+          <tr>
+              <td>Around</td>
+            <td><b>Default value</b>. Search for text within a 300px radius on the screen (Physical device resolution).</td>
+          </tr>
+          <tr>
+              <td>Full Screen</td>
+              <td>Search for text on the entire screen. Note: Only use this if the text is unique enough to only appear once on the screen.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Stop Type</h3>
+      <table class='info-table'>
+          <thead>
+            <tr>
+                <th>Type</th>
+                <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+                <td>Fail Test If Validation False</td>
+                <td>Stop and fail the test if the validation is false.</td>
+            </tr>
+            <tr>
+                <td>Fail Test If Validation True</td>
+              <td>Stop and fail the test if the validation is true.</td>
+            </tr>
+            <tr>
+                <td>Stop Current Compound If False</td>
+                <td>Break the current compound action if the validation is false but continue test sequence. Note: This validation does not fail the test.</td>
+            </tr>
+            <tr>
+                <td>Stop Current Compound If True</td>
+                <td>Break the current compound action if the validation is true but continue test sequence. Note: This validation does not fail the test.</td>
+            </tr>
+          </tbody>
+        </table>
+
+      <div class="foot-note" >*More details on uicd userguide</div>
+      <button mat-raised-button color="primary" (click)="onOkClick()">OK</button>
+  </div>

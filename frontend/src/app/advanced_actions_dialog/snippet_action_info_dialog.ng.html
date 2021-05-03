@@ -1,0 +1,59 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div>
+    <h2>On-Device Snippet Details</h2>
+    <table class='info-table'>
+        <thead>
+            <tr>
+                <th>Field Name</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Package Name</td>
+                <td>This field specifies the snippet package in the APK that has been installed onto the connected device.
+                    Once selected, Nuwa will fetch all the methods under that package and list them in the Method Name box.
+                    Note: If the package cannot be found, the method list will be empty.
+                </td>
+            </tr>
+            <tr>
+                <td>Method Name</td>
+                <td>Each method name entry contains the method name, the arguments list it requires, and the type of the return value.</td>
+            </tr>
+            <tr>
+                <td>Arguments</td>
+                <td>You should enter the corresponding arguments that the selected snippet call requires here.
+                    The arguments should be separated by ',' and every one of them is kept in the correct format of the variable type.
+                    For example, the input of method <b>wifiConnectSimple(String, String)</b> can be <b>GoogleGuest, null</b>.
+                </td>
+            </tr>
+            <tr>
+                <td>Timeout Limit</td>
+                <td>This field is to set how long to wait (in milliseconds) for the snippet to complete and return.
+                </td>
+            </tr>
+            <tr>
+                <td>Snippet Service Only (No validation)</td>
+                <td>This field is to set whether you want to validate the return value or not. If the snippet you select returns null, this box will be automatically selected.
+                    Note that if you uncheck this box for snippets that do not return a value, it will cause the action to fail.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="foot-note" >*More details can be found in go/uicd</div>
+    <button mat-raised-button color="primary" (click)="onOkClick()">OK</button>
+</div>

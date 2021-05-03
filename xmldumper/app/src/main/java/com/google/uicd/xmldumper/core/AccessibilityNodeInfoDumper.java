@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,20 @@
 
 package com.google.uicd.xmldumper.core;
 
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
+import static java.lang.Math.max;
+
+import android.app.Service;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.uiautomator.UiDevice;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Xml;
+import android.view.Display;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityNodeInfo;
+import androidx.test.uiautomator.UiDevice;
 import com.google.uicd.xmldumper.utils.UicdDevice;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -90,14 +97,8 @@ public class AccessibilityNodeInfoDumper {
       serializer.startTag("", "hierarchy");
 
       if (root != null) {
-        int width = -1;
-        int height = -1;
-
-        UiDevice mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        height = mDevice.getDisplayHeight();
-        width = mDevice.getDisplayWidth();
-
-        dumpNodeRec(root, serializer, 0, width, height, withClassName);
+        Point physicalSize = getDevicePhysicalSize();
+        dumpNodeRec(root, serializer, 0, physicalSize.x, physicalSize.y, withClassName);
       }
 
       serializer.endTag("", "hierarchy");
@@ -108,6 +109,27 @@ public class AccessibilityNodeInfoDumper {
     return xmlDump.toString();
   }
 
+  public static Point getDevicePhysicalSize() {
+    int width = 0;
+    int height = 0;
+    try {
+      UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
+      height = mDevice.getDisplayHeight();
+      width = mDevice.getDisplayWidth();
+    } catch (NullPointerException e) {
+      Log.e(TAG, "Failed get display size, using getRealMetrics instead. " + e.getMessage());
+    }
+    WindowManager windowManager = (WindowManager) getInstrumentation().getContext()
+        .getSystemService(Service.WINDOW_SERVICE);
+    Display display =  windowManager.getDefaultDisplay();
+    DisplayMetrics metrics = new DisplayMetrics();
+    display.getRealMetrics(metrics);
+    height = max(height, metrics.heightPixels);
+    width = max(width, metrics.widthPixels);
+    return new Point(width, height);
+
+  }
+
   private static void dumpNodeRec(
       AccessibilityNodeInfo node,
       XmlSerializer serializer,
@@ -116,8 +138,7 @@ public class AccessibilityNodeInfoDumper {
       int height,
       boolean withClassName)
       throws IOException {
-
-    serializer.startTag("", withClassName ? node.getClassName().toString() : "node");
+    serializer.startTag("", withClassName ? safeTagString(node.getClassName()) : "node");
 
     if (!nafExcludedClass(node) && !nafCheck(node)) {
       serializer.attribute("", "NAF", Boolean.toString(true));
@@ -165,7 +186,7 @@ public class AccessibilityNodeInfoDumper {
         Log.i(TAG, String.format("Null child %d/%d, parent: %s", i, count, node.toString()));
       }
     }
-    serializer.endTag("", withClassName ? node.getClassName().toString() : "node");
+    serializer.endTag("", withClassName ? safeTagString(node.getClassName()) : "node");
   }
 
   /**
@@ -236,6 +257,12 @@ public class AccessibilityNodeInfoDumper {
     return false;
   }
 
+  // DocumentBuilder failed to parse XML tags with special characters
+  //    e.g. android.support.v7.app.ActionBar$Tab
+  private static String safeTagString(CharSequence cs) {
+    return safeCharSeqToString(cs).replaceAll("[!@#$%^&*(),.?\":{}|<>]", "");
+  }
+
   private static String safeCharSeqToString(CharSequence cs) {
     return cs == null ? "" : stripInvalidXMLChars(cs);
   }
@@ -266,7 +293,11 @@ public class AccessibilityNodeInfoDumper {
     displayRect.left = 0;
     displayRect.right = width;
     displayRect.bottom = height;
-    nodeRect.intersect(displayRect);
+    // go/bugpattern/RectIntersectReturnValueIgnored
+    // Return value of android.graphics.Rect.intersect() must be checked.
+    if (!nodeRect.intersect(displayRect)) {
+      nodeRect.setEmpty();
+    }
     return nodeRect;
   }
 }

@@ -1,0 +1,76 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="main-container" fxLayout='column' fxFill>
+  <div class="device-prepare-overlay" *ngIf="devicePrepareLoading">
+    <mat-progress-bar mode="indeterminate" class="device-prepare-overlay-progressbar">
+    </mat-progress-bar>
+  </div>
+  <div fxFlex="64px">
+    <mat-toolbar color="primary" class='main-toolbar'>
+      <button mat-icon-button (click)='openDevicePickerDialog()' class='device-picker-btn'>
+        <mat-icon matTooltip="Reinitialize devices" class="material-icons">menu</mat-icon>
+      </button>
+      <span>UIConductor</span>
+      <span class="toolbar-spacer"></span>
+      <button mat-icon-button class="toolbar-icon" (click)='softRestart()'>
+        <mat-icon matTooltip="Restart UIConductor" class="material-icons">refresh</mat-icon>
+      </button>
+      <button mat-icon-button class="toolbar-icon" (click)='versionInfo()'>
+        <mat-icon matTooltip="Version Info" class="material-icons">info</mat-icon>
+      </button>
+    </mat-toolbar>
+  </div>
+  <div class="split-body ex-percent" fxFlex>
+    <as-split unit="percent">
+      <as-split-area size="25">
+        <as-split direction="vertical" restrictMove="true">
+          <as-split-area size="75">
+            <screen-cast></screen-cast>
+          </as-split-area>
+          <as-split-area size="25">
+            <app-device-manager></app-device-manager>
+          </as-split-area>
+        </as-split>
+      </as-split-area>
+      <as-split-area size="55">
+        <as-split direction="vertical" restrictMove="true">
+          <as-split-area size="70">
+            <workflow-editor></workflow-editor>
+          </as-split-area>
+          <as-split-area size="30">
+            <mat-tab-group (selectedTabChange)="tabChange($event)">
+              <mat-tab label="Log">
+                <log-panel></log-panel>
+              </mat-tab>
+              <mat-tab label="UI Viewer">
+                <ui-tree-viewer *ngIf="showUiTree"></ui-tree-viewer>
+              </mat-tab>
+              <mat-tab label="OCR Viewer">
+                <app-ocr-viewer></app-ocr-viewer>
+              </mat-tab>
+            </mat-tab-group>
+          </as-split-area>
+        </as-split>
+      </as-split-area>
+      <as-split-area size="20">
+        <test-explorer></test-explorer>
+      </as-split-area>
+    </as-split>
+  </div>
+  <div class="footer-div" fxFlex="25px">
+    <span class="footer-content">UIConductor @Google</span>
+  </div>
+</div>

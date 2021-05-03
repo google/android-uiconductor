@@ -1,0 +1,14 @@
+need install gradlew first, can not checkin the binary due to the G3 limitation
+To build the xmldumper run the gradlew command, currently works on gradle 6.5
+gradle wrapper
+./gradlew assembleDebug
+
+it will generate the following apk
+./app/build/outputs/apk/debug/app-debug.apk
+
+manually copy and rename to uicd-xmldumper-server-xxxx.apk and
+uicd-xmldumper-server-test-xxxx.apk
+
+
+It also supports blaze build now:
+blaze build -- java/com/google/uicd/xmldumper:xmldumper

@@ -1,0 +1,79 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<mat-horizontal-stepper #stepper class="validation-stepper">
+  <mat-step>
+    <form>
+      <ng-template matStepLabel>Select Action Type</ng-template>
+      <div class='validation-flow-step'>
+        <div>
+          <h3>Please select action type:</h3>
+        </div>
+        <div>
+          <mat-radio-group placeholder="" [(ngModel)]="selectedValidationGroup" name="validationGroup">
+            <mat-radio-button class='validation-group-radio' *ngFor="let c of VALIDATION_GROUPS" [value]="c.value">
+              {{ c.displayText }}
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+        <div *ngIf="showValidationActions()">
+          <div>
+            <h3>Please select validation subtype:</h3>
+          </div>
+          <mat-radio-group placeholder="" [(ngModel)]="selectedValidationAction" name="validationAction">
+            <mat-radio-button *ngFor="let c of VALIDATION_ACTIONS" [value]="c.value">
+              {{ c.displayText }}
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+        <div *ngIf="showSpecialActions()">
+          <div>
+            <h3>Please select special click subtype:</h3>
+          </div>
+          <mat-radio-group placeholder="" [(ngModel)]="selectedSpecialClick" name="specialClickType">
+            <mat-radio-button *ngFor="let c of SPECIAL_CLICK_ACTIONS" [value]="c.value">
+              {{ c.displayText }}
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+        <div *ngIf="showDirection()">
+          <div>
+            <h3>Please select scroll direction:</h3>
+          </div>
+          <mat-radio-group placeholder="" [(ngModel)]="selectedDirection" name="directionModel">
+            <mat-radio-button *ngFor="let c of DIRECTIONS" [value]="c.value">
+              {{ c.displayText }}
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+      </div>
+      <div>
+        <button mat-raised-button color="primary" (click)="nextPage(stepper)">{{getNextButtonText()}}</button>
+      </div>
+    </form>
+  </mat-step>
+  <mat-step>
+    <form class="step-two-form">
+      <ng-template matStepLabel>Fill Action Details</ng-template>
+      <fetch-content-form *ngIf="showFetchContentAction()" [selectedBounds]="selectedBounds"
+                          (actionAdded)='closePopup()' (previousPage)='previousPage(stepper)'></fetch-content-form>
+
+      <validation-details *ngIf="showValidationActions()" [selectedBounds]="selectedBounds"
+                          [scrollDirectionType]="selectedDirection" [selectedActionType]='selectedActionType' (actionAdded)='closePopup()'
+                          (previousPage)='previousPage(stepper)'>
+      </validation-details>
+    </form>
+  </mat-step>
+</mat-horizontal-stepper>

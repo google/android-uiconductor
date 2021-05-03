@@ -1,0 +1,58 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div>
+    <h2>Script Configuration Details</h2>
+    <table class='info-table'>
+        <thead>
+            <tr>
+                <th>Field Name</th>
+                <th>Description & Examples</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Script Argument List</td>
+                <td>This field specifies arguments to run the Python script with. Arguments can be configured in two ways:
+                    1. List the arguments in order, for example: '1,2,3 Android Nuwa'. To use them in the script, reference them as follows:<br>
+                    <b>import sys<br>
+                    str = sys.argv[2] # this will give you 'Nuwa'<br>
+                    print str<br>
+                    </b>
+                    2. List the arguments with explicit names, for example: '--systemVersion=Oreo' and reference the name directly in the script as follows:<br>
+                    <b>import argparse<br>
+                    parser = argparse.ArgumentParser(description='manual to this script')<br>
+                    parser.add_argument('--systemVersion', type=str, default = None)<br>
+                    args = parser.parse_args()<br>
+                    print args.systemVersion<br>
+                    </b>
+                </td>
+            </tr>
+            <tr>
+                <td>Script Code Content</td>
+                <td>This field contains the code content of the script. Note that you should import the 'android' library first, as this provides APIs to interact with the connected device.
+                    Refer to this <a href="http://www.mithril.com.au/android/doc/">link</a> for more information on the available APIs.
+                    Please note that the script should conform to Python2 syntax. The following is an example Python script to trigger a notification on the screen:<br>
+                    <b>import android<br>
+                    droid = android.Android()<br>
+                    droid.makeToast('Hello, Android!')<br>
+                    </b>
+                </td>
+            </tr>
+        </tbody>
+    </table>  
+    <div class="foot-note" >*More details can be found in go/uicd</div>
+    <button mat-raised-button color="primary" (click)="onOkClick()">OK</button>
+</div>

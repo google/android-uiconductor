@@ -1,0 +1,21 @@
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/ScreenEncoder.java
+===================================================================
+--- scrcpy.orig/server/src/main/java/com/genymobile/scrcpy/ScreenEncoder.java
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/ScreenEncoder.java
+@@ -13,6 +13,7 @@ import android.media.MediaCodec;
+ import android.media.MediaCodecInfo;
+ import android.media.MediaCodecList;
+ import android.media.MediaFormat;
++import android.os.Build;
+ import android.os.IBinder;
+ import android.os.Looper;
+ import android.view.Surface;
+@@ -393,7 +394,7 @@ public class ScreenEncoder implements De
+     }
+ 
+     private static IBinder createDisplay() {
+-        return SurfaceControl.createDisplay("scrcpy", true);
++        return SurfaceControl.createDisplay("scrcpy", Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q);
+     }
+ 
+     private static void configure(MediaCodec codec, MediaFormat format) {

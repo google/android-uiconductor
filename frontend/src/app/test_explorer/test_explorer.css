@@ -1,0 +1,97 @@
+/*
+ * Copyright 2021 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+.action-list-tree {
+  height: 100%;
+}
+
+.test-case-header {
+  background-color: #f5f5f5;
+  margin: 0px;
+}
+
+.test-case-title {
+  font-size: 18px;
+  display: inline-flex;
+  padding-left: 15px;
+  padding-bottom: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.workspaceButton {
+  float: right;
+  display: inline-flex;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-right: 2px;
+}
+
+li {
+  overflow: hidden;
+  background: #f5f5f5;
+  list-style: none;
+  white-space:nowrap;
+  margin-right: 10px;
+  display: inline-flex;
+  line-height: 30px;
+  text-align: center;
+}
+
+li a {
+    opacity: 0;
+    color: #f5f5f5;
+    max-width: 0;
+    display: inline-flex;
+    text-decoration: none;
+    transition: max-width 1s ease-out .1s, opacity 1s ease-out .1s, color;
+    padding-left: 2px;
+}
+
+li a:hover {
+    color: black;
+}
+
+li:hover a {
+    opacity: 1;
+    max-width: 150px;
+    transition: max-width 1s ease-out .1s, opacity 1s ease-out .1s, color .2s;
+}
+
+.fa-lg {
+  line-height: 30px;
+}
+
+.mat-raised-button {
+  float:right;
+  margin-top: 5px;
+  margin-right: 5px;
+}
+
+.trash-hover:hover{
+  background-color: #ff6666;
+}
+
+.project-button{
+  padding-left:6px;
+}
+
+.trash-align{
+  padding: 0;
+  min-width: 32px;
+  box-shadow:none;
+  float: left;
+}

@@ -1,0 +1,61 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<h1 mat-dialog-title>Choose Your Device:</h1>
+
+<mat-dialog-content>
+  <div fxLayout="row wrap" fxLayoutGap="20px">
+    <div *ngFor="let device of devices" fxFlex="30">
+
+      <mat-card class="device-card">
+        <mat-card-title class='device-card-title'>{{device.serial}}</mat-card-title>
+        <mat-card-content>
+          <ul>
+            <li>{{device.product}}</li>
+            <li>{{device.model}}</li>
+            <li>{{device.device}}</li>
+          </ul>
+
+          <mat-form-field>
+            <mat-select placeholder="Device Slot" [(ngModel)]="device.slot" (ngModelChange)="updateAvailableSlot($event)" class="slot-selector">
+              <mat-option [value]="-1" class='mat-option'></mat-option>
+              <mat-option *ngFor="let option of slotOptions" [value]="option.index" [disabled]="option.disabled" class='mat-option'>
+                Slot {{ option.index }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+        </mat-card-content>
+      </mat-card>
+
+
+    </div>
+    <!-- No devices found card -->
+    <mat-card *ngIf="devices?.length == 0" class="error-card">
+      <mat-card-title>
+        No device detected. Please connect a device to the host and run adb devices to check.
+      </mat-card-title>
+    </mat-card>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions >
+  <button mat-raised-button (click)="confirmSelection()" color="primary" [mat-dialog-close]="true" cdkFocusInitial class="init-btn">
+    Initialize
+  </button>
+  <button mat-raised-button mat-dialog-close>
+    Cancel
+  </button>
+</mat-dialog-actions>

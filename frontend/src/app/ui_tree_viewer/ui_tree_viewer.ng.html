@@ -1,0 +1,49 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div fxLayout="column" fxLayoutGap="10px" fxFill>
+  <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="center center">
+    <mat-slide-toggle (change)="toggleHighlight($event)">Highlight</mat-slide-toggle>
+    <mat-slide-toggle (change)="toggleInspectDevice($event)">Inspect Device</mat-slide-toggle>
+    <button mat-raised-button (click)="expandAll()">Expand All</button>
+    <button mat-raised-button (click)="closeAll()">Close All</button>
+    <button mat-raised-button (click)="fetchXML()">Refresh XML</button>
+    <button mat-raised-button (click)="showXML()">Show XML</button>
+    <mat-slide-toggle (change)="toggleAttributes($event)" [checked]="true">Toggle Attributes</mat-slide-toggle>
+  </div>
+  <div fxLayout="row wrap" fxLayoutGap="20px">
+    <mat-form-field fxFlex="2 2 auto">
+      <input matInput placeholder="Press enter to search" [(ngModel)]="searchStr" (keyup.enter)="searchTree()">
+    </mat-form-field>
+    <mat-form-field fxFlex="1 1 auto">
+      <mat-select placeholder="Search Type" [(ngModel)]="searchType">
+        <mat-option *ngFor="let t of searchTypes" [value]="t">
+          {{t}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+  <div fxLayout="row wrap">
+    <div class="treeArea" fxFlex>
+      <div #jsTree></div>
+    </div>
+    <div class="attributeList" *ngIf="showAttributes" fxFlex>
+      <div *ngFor="let attr of attributes" class="attributeItem">
+        <div class="attributeTitle">{{ attr.name }}</div>
+        <div class="attributeValue">{{ attr.value }}</div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,55 @@
+Index: scrcpy/app/src/config.h
+===================================================================
+--- /dev/null
++++ scrcpy/app/src/config.h
+@@ -0,0 +1,24 @@
++#ifndef _CONFIG_H_
++#define _CONFIG_H_
++
++// #define NDEBUG
++
++#define SCRCPY_VERSION "1.2.3"
++
++// #define PREFIX
++
++#define PORTABLE
++
++#define DEFAULT_LOCAL_PORT 27183
++
++#define DEFAULT_MAX_SIZE 0
++
++#define DEFAULT_BIT_RATE 8000000
++
++// #define HIDPI_SUPPORT
++
++// #define WINDOWS_NOCONSOLE
++
++// #define SERVER_DEBUGGER
++
++#endif
+Index: scrcpy/app/src/util/log.h
+===================================================================
+--- scrcpy.orig/app/src/util/log.h
++++ scrcpy/app/src/util/log.h
+@@ -1,7 +1,7 @@
+ #ifndef LOG_H
+ #define LOG_H
+ 
+-#include <SDL2/SDL_log.h>
++#include "SDL_log.h"
+ 
+ #define LOGV(...) SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+ #define LOGD(...) SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, __VA_ARGS__)
+Index: scrcpy/app/src/util/str_util.c
+===================================================================
+--- scrcpy.orig/app/src/util/str_util.c
++++ scrcpy/app/src/util/str_util.c
+@@ -10,7 +10,7 @@
+ # include <tchar.h>
+ #endif
+ 
+-#include <SDL2/SDL_stdinc.h>
++#include "SDL_stdinc.h"
+ 
+ #include "config.h"
+ 

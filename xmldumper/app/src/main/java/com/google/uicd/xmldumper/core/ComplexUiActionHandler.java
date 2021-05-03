@@ -1,4 +1,4 @@
-// Copyright 2018 Google LLC
+// Copyright 2021 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,65 +14,82 @@
 
 package com.google.uicd.xmldumper.core;
 
-import static com.google.uicd.xmldumper.utils.AndroidPlatformReflectionUtils.getField;
-import static com.google.uicd.xmldumper.utils.AndroidPlatformReflectionUtils.invoke;
-import static com.google.uicd.xmldumper.utils.AndroidPlatformReflectionUtils.method;
+import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
+import android.app.UiAutomation;
 import android.graphics.Point;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.uiautomator.UiAutomatorBridge;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject;
-import android.support.test.uiautomator.UiSelector;
+import android.os.SystemClock;
+import android.view.InputDevice;
+import android.view.MotionEvent;
+import android.view.MotionEvent.PointerCoords;
+import android.view.MotionEvent.PointerProperties;
+import androidx.test.uiautomator.Configurator;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiSelector;
+
 
 /** Handler to perform complex ui actions such as zoom, touchDown, touchMove, touchUp */
 public class ComplexUiActionHandler {
 
-  private static final String CLASS_INTERACTION_CONTROLLER =
-      "android.support.test.uiautomator.InteractionController";
-  private static final String CLASS_UI_AUTOMATOR_BRIDGE =
-      "android.support.test.uiautomator.UiAutomatorBridge";
-  private static final String FIELD_UI_AUTOMATOR_BRIDGE = "mUiAutomationBridge";
-  private static final String FIELD_INTERACTION_CONTROLLER = "mInteractionController";
-  private static final String METHOD_TOUCH_DOWN = "touchDown";
-  private static final String METHOD_TOUCH_MOVE = "touchMove";
-  private static final String METHOD_TOUCH_UP = "touchUp";
   private static final int ZOOM_STEPS = 20;
-
   /*
    * For low level actions such as touchUp, touchDown, touchMove, currently UiAutomator doesn't
-   * provide public interface. The only way is using methods in uiautomatorBridge through
-   * reflection.
+   * provide public interface. The only way is to call injectInputEvent.
    */
-  public static UiAutomatorBridge getUiAutomatorBridge() {
-    UiAutomatorBridge uiAutomatorBridge = (UiAutomatorBridge)
-        getField(UiDevice.class, FIELD_UI_AUTOMATOR_BRIDGE,
-            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()));
-    return uiAutomatorBridge;
+  public static void touchDown(UiAutomation uiAutomation, int x, int y) {
+    long eventTimeInMs = SystemClock.uptimeMillis();
+    MotionEvent event = getMotionEvent(eventTimeInMs, eventTimeInMs, MotionEvent.ACTION_DOWN, x, y);
+    uiAutomation.injectInputEvent(event, true);
   }
 
-  public static void touchDown(UiAutomatorBridge uiAutomatorBridge, int x, int y) {
-    touchEvent(uiAutomatorBridge, x, y, METHOD_TOUCH_DOWN);
+  public static void touchMove(UiAutomation uiAutomation, int x, int y) {
+    long eventTimeInMs = SystemClock.uptimeMillis();
+    MotionEvent event = getMotionEvent(eventTimeInMs, eventTimeInMs, MotionEvent.ACTION_MOVE, x, y);
+    uiAutomation.injectInputEvent(event, true);
   }
 
-  public static void touchMove(UiAutomatorBridge uiAutomatorBridge, int x, int y) {
-    touchEvent(uiAutomatorBridge, x, y, METHOD_TOUCH_MOVE);
-  }
-
-  public static void touchUp(UiAutomatorBridge uiAutomatorBridge, int x, int y) {
-    touchEvent(uiAutomatorBridge, x, y, METHOD_TOUCH_UP);
+  public static void touchUp(UiAutomation uiAutomation, int x, int y) {
+    long eventTimeInMs = SystemClock.uptimeMillis();
+    MotionEvent event = getMotionEvent(eventTimeInMs, eventTimeInMs, MotionEvent.ACTION_UP, x, y);
+    uiAutomation.injectInputEvent(event, true);
   }
 
   public static void zoom(Point startPoint1, Point startPoint2, Point endPoint1, Point endPoint2) {
-    UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    UiDevice uiDevice = UiDevice.getInstance(getInstrumentation());
     UiObject uiObject = uiDevice.findObject(new UiSelector());
     uiObject.performTwoPointerGesture(startPoint1, startPoint2, endPoint1, endPoint2, ZOOM_STEPS);
   }
 
-  private static void touchEvent(UiAutomatorBridge uiAutomatorBridge, int x, int y, String event) {
-    Object interactionController = getField(CLASS_UI_AUTOMATOR_BRIDGE, FIELD_INTERACTION_CONTROLLER,
-        uiAutomatorBridge);
-    invoke(method(
-        CLASS_INTERACTION_CONTROLLER, event, int.class, int.class), interactionController, x, y);
+  public static void injectMotionEvent(
+      UiAutomation uiAutomation,
+      int x,
+      int y,
+      int action,
+      long duration) {
+    long eventTimeInMs = SystemClock.uptimeMillis();
+    MotionEvent event = getMotionEvent(
+          eventTimeInMs, eventTimeInMs + duration, action, x, y);
+    uiAutomation.injectInputEvent(event, true);
   }
+
+  /** Helper function to obtain a MotionEvent. */
+  private static MotionEvent getMotionEvent(long downTime, long eventTime, int action,
+      float x, float y) {
+
+    PointerProperties properties = new PointerProperties();
+    properties.id = 0;
+    properties.toolType = Configurator.getInstance().getToolType();
+
+    PointerCoords coords = new PointerCoords();
+    coords.pressure = 1;
+    coords.size = 1;
+    coords.x = x;
+    coords.y = y;
+
+    return MotionEvent.obtain(downTime, eventTime, action, 1,
+        new PointerProperties[] { properties }, new PointerCoords[] { coords },
+        0, 0, 1.0f, 1.0f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0);
+  }
+
 }

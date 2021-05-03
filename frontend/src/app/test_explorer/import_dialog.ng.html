@@ -1,0 +1,58 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div mat-dialog-content fxLayout="column">
+  <div fxLayout="column">
+    <mat-form-field>
+      <mat-select placeholder="Select an import type" [(ngModel)]="selectedImportType">
+        <mat-option *ngFor="let importType of importTypes" [value]="importType">
+          {{importType}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div [ngSwitch]="selectedImportType">
+      <div *ngSwitchCase="IMPORT_UUID">
+        <mat-form-field class="inputField">
+          <input matInput placeholder="Import by UUID" [(ngModel)]="uuidImportText">
+        </mat-form-field>
+        <div fxLayout="row">
+          <mat-radio-group placeholder="" [(ngModel)]="selectedUserImportType">
+            <mat-radio-button *ngFor="let importFromUserType of IMPORT_COPY_TYPES" [value]="importFromUserType.value">
+              {{ importFromUserType.displayText }}
+            </mat-radio-button>
+          </mat-radio-group>
+          <span>
+            <button mat-mini-fab color="primary" (click)="openActionInfoDialog()" matTooltip="Show Info"
+              matTooltipPosition="right" matTooltipShowDelay="500" style="margin-left:15px">
+              <i class="fa fa-info"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+      <div *ngSwitchCase="IMPORT_GOOGLE3">
+        <mat-form-field >
+          <input matInput placeholder="citc client" [(ngModel)]="citcClient">
+        </mat-form-field><br>
+        <mat-form-field >
+          <input matInput placeholder="Google3 file path" [(ngModel)]="filePath">
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button mat-raised-button (click)="importTest()">Import</button>
+  <button mat-raised-button mat-dialog-close>Close</button>
+</div>

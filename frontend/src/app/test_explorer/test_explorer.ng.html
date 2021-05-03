@@ -1,0 +1,51 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div class="save-main-div" fxFlexFill fxLayout='column'>
+  <div class="test-case-header" fxLayout='column'>
+    <div>
+      <h3 class="test-case-title">Saved Test Cases in Project: {{selectedProject.projectName}}</h3>
+      <button mat-raised-button [matMenuTriggerFor]="projectMenu" style="float:right;" (click)=getProjectList()>
+          Project
+      </button>
+      <mat-menu #projectMenu="matMenu">
+        <button mat-menu-item (click)=openNewProjectDialog()>New</button>
+        <button mat-menu-item [matMenuTriggerFor]="switchProjectMenu">Open</button>
+        <button mat-menu-item (click)=openImportProjectDialog()>Import</button>
+        <button mat-menu-item (click)=openShareProjectDialog()>Share Current Project</button>
+        <button mat-menu-item (click)=exportTopLevelTests()>Export Zip(Top Level Tests Only)</button>
+        <button mat-menu-item (click)=exportCurrentProject()>Export Project Zip</button>
+
+      </mat-menu>
+
+      <mat-menu #switchProjectMenu="matMenu" >
+        <button mat-menu-item *ngFor="let project of projectList"  (click)=selectProject(project) class="project-button">
+          <button mat-raised-button (click)="deleteProject(project, $event)" class="trash-hover trash-align">
+            <i class="fa fa-trash center-icon-img" ></i>
+          </button>
+          {{project.projectName}}
+        </button>
+      </mat-menu>
+
+      <li class="workspaceButton" (click)="createFolder('#', 'New Workspace')">
+        <i class="fa fa-plus-square fa-lg" aria-hidden="true"></i><a href="#">New Workspace</a>
+      </li>
+    </div>
+    <input matInput placeholder="Press enter to search" class="mat-elevation-z8" [(ngModel)]="searchStr" (keyup.enter)="searchTree()">
+  </div>
+  <div class="action-list-tree" fxFlex="2 1 inherit">
+    <div #jsTree></div>
+  </div>
+</div>

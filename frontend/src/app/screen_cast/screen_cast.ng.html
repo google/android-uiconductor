@@ -1,0 +1,102 @@
+<!--
+  Copyright 2021 Google LLC
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<div>
+  <div class="phone-sidenav">
+    <div fxLayout='column'>
+      <div style="padding-left:10px;">
+        <div>
+          <div fxLayout='row' class="recorder-main" fxFlexFill>
+            <div fxFlex="60px" fxLayoutGap="15px" fxFlexFill fxLayout='column' class='btn-container'>
+              <button mat-mini-fab color="primary" (click)="quickSwipe(swipeDirection.LEFT)" matTooltip="Swipe Left"
+                matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-arrow-left"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="quickSwipe(swipeDirection.RIGHT)" matTooltip="Swipe Right"
+                matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-arrow-right"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="quickSwipe(swipeDirection.UP)" matTooltip="Swipe Up"
+                matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-arrow-up"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="quickSwipe(swipeDirection.DOWN)" matTooltip="Swipe Down"
+                matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-arrow-down"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="rotateScreen(rotateDirection.PORTRAIT)"
+                matTooltip="Portrait Mode" matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-mobile fa-2x"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="rotateScreen(rotateDirection.LANDSCAPE)"
+                matTooltip="Landscape Mode" matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-mobile fa-2x fa-rotate-90"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="power()" matTooltip="Power" matTooltipPosition="right"
+                matTooltipShowDelay="500">
+                <i class="fa fa-power-off fa-lg"></i>
+              </button>
+
+              <button mat-mini-fab color="primary" (click)="volumeUp()" matTooltip="Volume Up"
+                matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-volume-up fa-lg"></i>
+              </button>
+
+              <button mat-mini-fab color="primary" (click)="volumeDown()" matTooltip="Volume Down"
+                matTooltipPosition="right" matTooltipShowDelay="500">
+                <i class="fa fa-volume-down fa-lg"></i>
+              </button>
+              <button mat-mini-fab color="primary" (click)="back()" matTooltip="Back" matTooltipPosition="right"
+                matTooltipShowDelay="500">
+                <i class="fa fa-chevron-left"></i>
+              </button>
+
+              <button mat-mini-fab color="primary" (click)="home()" matTooltip="Home" matTooltipPosition="right"
+                matTooltipShowDelay="500">
+                <i class="fa fa-home fa-lg"></i>
+              </button>
+
+              <button mat-mini-fab color="primary" (click)="overview()" matTooltip="Overview" matTooltipPosition="right"
+                matTooltipShowDelay="500">
+                <i class="fa fa-square"></i>
+              </button>
+            </div>
+            <div fxFlex="1" [class]="canvasWrapperCss" fxLayoutGap="10px">
+              <div class="screen-widget-root" (tap)="tap($event.srcEvent)" (pan)="pan($event)" (pressup)="pressup($event)"
+                (press)="press($event.srcEvent)" tabindex="0">
+                <div class="phone-wrapper">
+                  <canvas id="canvas-screen" [class]="canvasPhoneCss" #phoneScreen tabindex="0" [width]="canvasWidth"
+                    [height]="canvasHeight">
+                  </canvas>
+                </div>
+                <!-- This canvas will handle drawing the hovered tree nodes -->
+                <div class="phone-overlay-wrapper">
+                  <canvas id="canvas-overlay-hovered" class="phone-canvas-widget2" #overlayHovered tabindex="0" [width]="canvasWidth"
+                  [height]="canvasHeight">
+                  </canvas>
+                </div>
+                <!-- This canvas will handle the selected tree nodes -->
+                <div class="phone-overlay-wrapper">
+                  <canvas id="canvas-overlay-selected" class="phone-canvas-widget2" #overlaySelected tabindex="0" [width]="canvasWidth"
+                  [height]="canvasHeight">
+                  </canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

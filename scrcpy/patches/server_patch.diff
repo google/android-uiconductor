@@ -1,0 +1,517 @@
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/BuildConfig.java
+===================================================================
+--- /dev/null
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/BuildConfig.java
+@@ -0,0 +1,6 @@
++package com.genymobile.scrcpy;
++
++public final class BuildConfig {
++  public static final boolean DEBUG = false;
++  public static final String VERSION_NAME = "1.2.3";
++}
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/DesktopConnection.java
+===================================================================
+--- scrcpy.orig/server/src/main/java/com/genymobile/scrcpy/DesktopConnection.java
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/DesktopConnection.java
+@@ -41,7 +41,8 @@ public final class DesktopConnection imp
+         return localSocket;
+     }
+ 
+-    public static DesktopConnection open(Device device, boolean tunnelForward) throws IOException {
++    public static DesktopConnection open(Device device, boolean tunnelForward, boolean isEncoding)
++        throws IOException {
+         LocalSocket videoSocket;
+         LocalSocket controlSocket;
+         if (tunnelForward) {
+@@ -49,7 +50,13 @@ public final class DesktopConnection imp
+             try {
+                 videoSocket = localServerSocket.accept();
+                 // send one byte so the client may read() to detect a connection error
+-                videoSocket.getOutputStream().write(0);
++                char isEncodingChar;
++                if (isEncoding) {
++                    isEncodingChar = 'y';
++                } else {
++                    isEncodingChar = 'n';
++                }
++                videoSocket.getOutputStream().write((int)isEncodingChar);
+                 try {
+                     controlSocket = localServerSocket.accept();
+                 } catch (IOException | RuntimeException e) {
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/Options.java
+===================================================================
+--- scrcpy.orig/server/src/main/java/com/genymobile/scrcpy/Options.java
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/Options.java
+@@ -18,6 +18,13 @@ public class Options {
+     private String codecOptions;
+     private String encoderName;
+ 
++    // The frames can be either encoded H.264 video stream or images without encoding.
++    private boolean isEncoding;
++    // Options for images.
++    private ScreenEncoder.ColorFormat colorFormat;
++    private int compressQuality = 100;
++
++
+     public Ln.Level getLogLevel() {
+         return logLevel;
+     }
+@@ -129,4 +136,30 @@ public class Options {
+     public void setEncoderName(String encoderName) {
+         this.encoderName = encoderName;
+     }
++
++    public void setIsEncoding(boolean isEncoding) {
++        this.isEncoding = isEncoding;
++    }
++
++    public boolean getIsEncoding() {
++        return isEncoding;
++    }
++
++    public void setColorFormat(ScreenEncoder.ColorFormat colorFormat) {
++        this.colorFormat = colorFormat;
++    }
++
++    public ScreenEncoder.ColorFormat getColorFormat() {
++        return colorFormat;
++    }
++
++    public void setCompressQuality(int compressQuality) {
++        if (compressQuality >= 0 && compressQuality <= 100) {
++            this.compressQuality = compressQuality;
++        }
++    }
++
++    public int getCompreeQuality() {
++        return compressQuality;
++    }
+ }
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/ScreenEncoder.java
+===================================================================
+--- scrcpy.orig/server/src/main/java/com/genymobile/scrcpy/ScreenEncoder.java
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/ScreenEncoder.java
+@@ -2,15 +2,24 @@ package com.genymobile.scrcpy;
+ 
+ import com.genymobile.scrcpy.wrappers.SurfaceControl;
+ 
++import android.annotation.SuppressLint;
++import android.graphics.Bitmap.CompressFormat;
++import android.graphics.Bitmap;
++import android.graphics.PixelFormat;
+ import android.graphics.Rect;
++import android.media.Image;
++import android.media.ImageReader;
+ import android.media.MediaCodec;
+ import android.media.MediaCodecInfo;
+ import android.media.MediaCodecList;
+ import android.media.MediaFormat;
+ import android.os.IBinder;
++import android.os.Looper;
+ import android.view.Surface;
+ 
++import java.io.ByteArrayOutputStream;
+ import java.io.FileDescriptor;
++import java.io.FileOutputStream;
+ import java.io.IOException;
+ import java.nio.ByteBuffer;
+ import java.util.ArrayList;
+@@ -27,7 +36,7 @@ public class ScreenEncoder implements De
+     private static final int NO_PTS = -1;
+ 
+     private final AtomicBoolean rotationChanged = new AtomicBoolean();
+-    private final ByteBuffer headerBuffer = ByteBuffer.allocate(12);
++    private final ByteBuffer headerBuffer = ByteBuffer.allocate(24);
+ 
+     private String encoderName;
+     private List<CodecOption> codecOptions;
+@@ -36,12 +45,18 @@ public class ScreenEncoder implements De
+     private boolean sendFrameMeta;
+     private long ptsOrigin;
+ 
+-    public ScreenEncoder(boolean sendFrameMeta, int bitRate, int maxFps, List<CodecOption> codecOptions, String encoderName) {
++    private final boolean isEncoding;
++
++    public ScreenEncoder(boolean sendFrameMeta, int bitRate, int maxFps, List<CodecOption> codecOptions, String encoderName, boolean isEncoding, ColorFormat colorFormat, int compressQuality) {
+         this.sendFrameMeta = sendFrameMeta;
+         this.bitRate = bitRate;
+         this.maxFps = maxFps;
+         this.codecOptions = codecOptions;
+         this.encoderName = encoderName;
++
++        this.isEncoding = isEncoding;
++        this.colorFormat = colorFormat;
++        this.compressQuality = compressQuality;
+     }
+ 
+     @Override
+@@ -53,21 +68,161 @@ public class ScreenEncoder implements De
+         return rotationChanged.getAndSet(false);
+     }
+ 
+-    public void streamScreen(Device device, FileDescriptor fd) throws IOException {
+-        Workarounds.prepareMainLooper();
++    public void streamScreen(Device device, FileDescriptor fd)
++        throws IOException {
++        if (isEncoding) {
++          try {
++              Workarounds.prepareMainLooper();
++              internalStreamScreen(device, fd);
++          } catch (NullPointerException e) {
++              // Retry with workarounds enabled:
++              // <https://github.com/Genymobile/scrcpy/issues/365>
++              // <https://github.com/Genymobile/scrcpy/issues/940>
++              Ln.d("Applying workarounds to avoid NullPointerException");
++              Workarounds.fillAppInfo();
++              internalStreamScreen(device, fd);
++          }
++        } else {
++              Looper.prepareMainLooper();
++              device.setRotationListener(this);
++              setupStreamScreenWithoutEncoding(device, fd);
++              Looper.loop();
++        }
++    }
+ 
+-        try {
+-            internalStreamScreen(device, fd);
+-        } catch (NullPointerException e) {
+-            // Retry with workarounds enabled:
+-            // <https://github.com/Genymobile/scrcpy/issues/365>
+-            // <https://github.com/Genymobile/scrcpy/issues/940>
+-            Ln.d("Applying workarounds to avoid NullPointerException");
+-            Workarounds.fillAppInfo();
+-            internalStreamScreen(device, fd);
++    // Use global variable to avoid memory leak.
++    // Local variables cannot be garbage collected in time,
++    // thus will cause serious memory leak for unknown reasons.
++    Image image = null;
++    FileOutputStream fileOutputStream;
++    ByteArrayOutputStream outStream;
++    ImageReader imageReader;
++    IBinder display;
++
++    enum ColorFormat {
++        ARGB8888,
++        JPEG,
++    }
++
++    ColorFormat colorFormat;
++    int compressQuality = 100;
++
++    @SuppressLint("WrongConstant")
++    private void setupStreamScreenWithoutEncoding(Device device, FileDescriptor fd) {
++        display = createDisplay();
++        ScreenInfo screenInfo = device.getScreenInfo();
++        Rect contentRect = screenInfo.getContentRect();
++        // include the locked video orientation
++        Rect videoRect = screenInfo.getVideoSize().toRect();
++        // does not include the locked video orientation
++        Rect unlockedVideoRect = screenInfo.getUnlockedVideoSize().toRect();
++        int videoRotation = screenInfo.getVideoRotation();
++        int layerStack = device.getLayerStack();
++
++        imageReader = ImageReader.newInstance(
++            videoRect.width(),
++            videoRect.height(),
++            PixelFormat.RGBA_8888,
++            3
++        );
++        setDisplaySurface(
++            display,
++            imageReader.getSurface(),
++            videoRotation,
++            contentRect,
++            unlockedVideoRect,
++            layerStack
++        );
++
++        fileOutputStream = new FileOutputStream(fd);
++        outStream = new ByteArrayOutputStream();
++
++        imageReader.setOnImageAvailableListener(
++            new ScreenImageAvailableListener(fd, device),
++            null
++        );
++    }
++
++    /*
++     * Compress and send image via tcp socket when a screen image is available.
++     * Reset itself if screen rotates.
++     */
++    class ScreenImageAvailableListener implements ImageReader.OnImageAvailableListener {
++        FileDescriptor fd;
++        Device device;
++        public ScreenImageAvailableListener(FileDescriptor fd, Device device) {
++            this.fd = fd;
++            this.device = device;
++        }
++        @Override
++        public void onImageAvailable(ImageReader reader) {
++            try {
++                // Need to restart image reader with new size.
++                if (consumeRotationChange()) {
++                    destroyDisplay(display);
++                    imageReader.close();
++                    setupStreamScreenWithoutEncoding(device, fd);
++                }
++                image = reader.acquireLatestImage();
++                switch (colorFormat) {
++                    case ARGB8888:
++                        sendARGB8888(image, fd);
++                        break;
++                    case JPEG:
++                        compressCropSendJPEG(image, fd);
++                        break;
++                }
++            } catch (Exception e) {
++                Ln.e("IOException at OnImageAvailableListener", e);
++            } finally {
++                if (image != null) {
++                    image.close();
++                    image = null;
++                }
++            }
+         }
+     }
+ 
++    private synchronized void sendARGB8888(Image image, FileDescriptor fd)
++        throws IOException {
++        if (image == null) {
++          return;
++        }
++        int width = image.getWidth();
++        int height = image.getHeight();
++        int pixelStride = image.getPlanes()[0].getPixelStride();
++        int rowStride = image.getPlanes()[0].getRowStride();
++        int rowPadding = rowStride - pixelStride * width;
++        ByteBuffer buffer = image.getPlanes()[0].getBuffer();
++        writeFrameMeta(fd, buffer.remaining(), width + rowPadding / pixelStride, height,
++            /*ARGB8888 color format =*/ 0, /*timestamp=*/(long) -1);
++        IO.writeFully(fd, buffer);
++    }
++
++    private synchronized void compressCropSendJPEG(Image image, FileDescriptor fd)
++        throws IOException {
++        if (image == null) {
++            return;
++        }
++        int width = image.getWidth();
++        int height = image.getHeight();
++        final Image.Plane[] planes = image.getPlanes();
++        final ByteBuffer buffer = planes[0].getBuffer();
++        int pixelStride = planes[0].getPixelStride();
++        int rowStride = planes[0].getRowStride();
++        int rowPadding = rowStride - pixelStride * width;
++        Bitmap bitmap = Bitmap.createBitmap(imageReader.getWidth() + rowPadding / pixelStride,
++                        imageReader.getHeight(), Bitmap.Config.ARGB_8888);
++        bitmap.copyPixelsFromBuffer(buffer);
++        bitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
++        bitmap.compress(CompressFormat.JPEG, compressQuality, outStream);
++        writeFrameMeta(fd, outStream.size(), width, height,
++                       /*JPEG color format =*/1, /*timestamp=*/(long) -1);
++        outStream.writeTo(fileOutputStream);
++        outStream.flush();
++        outStream.reset();
++    }
++
+     private void internalStreamScreen(Device device, FileDescriptor fd) throws IOException {
+         MediaFormat format = createFormat(bitRate, maxFps, codecOptions);
+         device.setRotationListener(this);
+@@ -136,6 +291,19 @@ public class ScreenEncoder implements De
+         return !eof;
+     }
+ 
++    private void writeFrameMeta(FileDescriptor fd, int packetSize,
++                                int width, int height, int colorFormat, long timestamp)
++        throws IOException {
++        headerBuffer.clear();
++        headerBuffer.putInt(width);
++        headerBuffer.putInt(height);
++        headerBuffer.putInt(colorFormat);
++        headerBuffer.putLong(timestamp);
++        headerBuffer.putInt(packetSize);
++        headerBuffer.flip();
++        IO.writeFully(fd, headerBuffer);
++    }
++
+     private void writeFrameMeta(FileDescriptor fd, MediaCodec.BufferInfo bufferInfo, int packetSize) throws IOException {
+         headerBuffer.clear();
+ 
+Index: scrcpy/server/src/main/java/com/genymobile/scrcpy/Server.java
+===================================================================
+--- scrcpy.orig/server/src/main/java/com/genymobile/scrcpy/Server.java
++++ scrcpy/server/src/main/java/com/genymobile/scrcpy/Server.java
+@@ -53,10 +53,11 @@ public final class Server {
+         CleanUp.configure(mustDisableShowTouchesOnCleanUp, restoreStayOn, true);
+ 
+         boolean tunnelForward = options.isTunnelForward();
++        boolean isEncoding = options.getIsEncoding();
+ 
+-        try (DesktopConnection connection = DesktopConnection.open(device, tunnelForward)) {
++        try (DesktopConnection connection = DesktopConnection.open(device, tunnelForward, isEncoding)) {
+             ScreenEncoder screenEncoder = new ScreenEncoder(options.getSendFrameMeta(), options.getBitRate(), options.getMaxFps(), codecOptions,
+-                    options.getEncoderName());
++                    options.getEncoderName(), options.getIsEncoding(), options.getColorFormat(), options.getCompreeQuality());
+ 
+             Thread controllerThread = null;
+             Thread deviceMessageSenderThread = null;
+@@ -129,61 +130,120 @@ public final class Server {
+             throw new IllegalArgumentException("Missing client version");
+         }
+ 
++        Options options = new Options();
++
+         String clientVersion = args[0];
+-        if (!clientVersion.equals(BuildConfig.VERSION_NAME)) {
+-            throw new IllegalArgumentException(
+-                    "The server version (" + BuildConfig.VERSION_NAME + ") does not match the client " + "(" + clientVersion + ")");
+-        }
+ 
+-        final int expectedParameters = 15;
+-        if (args.length != expectedParameters) {
+-            throw new IllegalArgumentException("Expecting " + expectedParameters + " parameters");
+-        }
++        if (clientVersion.equals(BuildConfig.VERSION_NAME)) {
++            final int expectedParameters = 15;
++            if (args.length != expectedParameters) {
++                throw new IllegalArgumentException(
++                    "Expecting " + expectedParameters + " parameters.");
++            }
+ 
+-        Options options = new Options();
++            options.setIsEncoding(true);
+ 
+-        Ln.Level level = Ln.Level.valueOf(args[1].toUpperCase(Locale.ENGLISH));
+-        options.setLogLevel(level);
++            Ln.Level level = Ln.Level.valueOf(args[1].toUpperCase(Locale.ENGLISH));
++            options.setLogLevel(level);
+ 
+-        int maxSize = Integer.parseInt(args[2]) & ~7; // multiple of 8
+-        options.setMaxSize(maxSize);
++            int maxSize = Integer.parseInt(args[2]) & ~7; // multiple of 8
++            options.setMaxSize(maxSize);
+ 
+-        int bitRate = Integer.parseInt(args[3]);
+-        options.setBitRate(bitRate);
++            int bitRate = Integer.parseInt(args[3]);
++            options.setBitRate(bitRate);
+ 
+-        int maxFps = Integer.parseInt(args[4]);
+-        options.setMaxFps(maxFps);
++            int maxFps = Integer.parseInt(args[4]);
++            options.setMaxFps(maxFps);
+ 
+-        int lockedVideoOrientation = Integer.parseInt(args[5]);
+-        options.setLockedVideoOrientation(lockedVideoOrientation);
++            int lockedVideoOrientation = Integer.parseInt(args[5]);
++            options.setLockedVideoOrientation(lockedVideoOrientation);
+ 
+-        // use "adb forward" instead of "adb tunnel"? (so the server must listen)
+-        boolean tunnelForward = Boolean.parseBoolean(args[6]);
+-        options.setTunnelForward(tunnelForward);
++            // use "adb forward" instead of "adb tunnel"? (so the server must listen)
++            boolean tunnelForward = Boolean.parseBoolean(args[6]);
++            options.setTunnelForward(tunnelForward);
+ 
+-        Rect crop = parseCrop(args[7]);
+-        options.setCrop(crop);
++            Rect crop = parseCrop(args[7]);
++            options.setCrop(crop);
+ 
+-        boolean sendFrameMeta = Boolean.parseBoolean(args[8]);
+-        options.setSendFrameMeta(sendFrameMeta);
++            boolean sendFrameMeta = Boolean.parseBoolean(args[8]);
++            options.setSendFrameMeta(sendFrameMeta);
+ 
+-        boolean control = Boolean.parseBoolean(args[9]);
+-        options.setControl(control);
++            boolean control = Boolean.parseBoolean(args[9]);
++            options.setControl(control);
+ 
+-        int displayId = Integer.parseInt(args[10]);
+-        options.setDisplayId(displayId);
++            int displayId = Integer.parseInt(args[10]);
++            options.setDisplayId(displayId);
+ 
+-        boolean showTouches = Boolean.parseBoolean(args[11]);
+-        options.setShowTouches(showTouches);
++            boolean showTouches = Boolean.parseBoolean(args[11]);
++            options.setShowTouches(showTouches);
+ 
+-        boolean stayAwake = Boolean.parseBoolean(args[12]);
+-        options.setStayAwake(stayAwake);
++            boolean stayAwake = Boolean.parseBoolean(args[12]);
++            options.setStayAwake(stayAwake);
+ 
+-        String codecOptions = args[13];
+-        options.setCodecOptions(codecOptions);
++            String codecOptions = args[13];
++            options.setCodecOptions(codecOptions);
+ 
+-        String encoderName = "-".equals(args[14]) ? null : args[14];
+-        options.setEncoderName(encoderName);
++            String encoderName = "-".equals(args[14]) ? null : args[14];
++            options.setEncoderName(encoderName);
++
++        } else if (clientVersion.equals(BuildConfig.VERSION_NAME + "_image")) {
++            final int expectedParameters = 10;
++            if (args.length != expectedParameters) {
++                throw new IllegalArgumentException(
++                    "Expecting " + expectedParameters + " parameters.");
++            }
++
++            options.setIsEncoding(false);
++
++            options.setBitRate(8000000); // will not be used.
++            options.setMaxFps(0); // will not be used.
++            options.setCodecOptions("-"); // will not be used.
++
++            options.setTunnelForward(true); // will always use adb forward rather than reverse.
++            options.setSendFrameMeta(true); // will always send frame meta.
++            options.setControl(true); // will always control the device.
++
++            // Suggested value: INFO.
++            Ln.Level level = Ln.Level.valueOf(args[1].toUpperCase(Locale.ENGLISH));
++            options.setLogLevel(level);
++
++            // Suggested values: 512, 1024.
++            int maxSize = Integer.parseInt(args[2]) & ~7; // multiple of 8
++            options.setMaxSize(maxSize);
++
++            // Legal values: ARGB8888, JPEG.
++            ScreenEncoder.ColorFormat colorFormat =
++                ScreenEncoder.ColorFormat.valueOf(args[3].toUpperCase(Locale.ENGLISH));
++            options.setColorFormat(colorFormat);
++
++            // Only used when colorFormat = JPEG.
++            int compressQuality = Integer.parseInt(args[4]);
++            options.setCompressQuality(compressQuality);
++
++            // Suggested value: 0.
++            int lockedVideoOrientation = Integer.parseInt(args[5]);
++            options.setLockedVideoOrientation(lockedVideoOrientation);
++
++            // Suggested value: -.
++            Rect crop = parseCrop(args[6]);
++            options.setCrop(crop);
++
++            // Suggested value: 0.
++            int displayId = Integer.parseInt(args[7]);
++            options.setDisplayId(displayId);
++
++            // Suggested value: false.
++            boolean showTouches = Boolean.parseBoolean(args[8]);
++            options.setShowTouches(showTouches);
++
++            // Suggested value: true.
++            boolean stayAwake = Boolean.parseBoolean(args[9]);
++            options.setStayAwake(stayAwake);
++        } else {
++            throw new IllegalArgumentException(
++                    "The server version (" + BuildConfig.VERSION_NAME
++                    + ") does not match the client " + "(" + clientVersion + ")");
++        }
+ 
+         return options;
+     }
