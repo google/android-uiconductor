@@ -41,16 +41,23 @@ cp -f target/uicd-service-*.jar $release_dir
 # build frontend
 cd $root_dir/frontend
 npm install
-ng build  --bh "localhost"
+ng build --base-href "localhost"
 cp -r dist $release_dir
 
-# build uicd CLI
-cd $root_dir/backend/src/com/google/uicd/backend/core
+# Build UICD CLI
+cd $root_dir/backend/core
 mvn install
-cd $root_dir/backend/src/com/google/uicd/backend/commandline
+cd $root_dir/backend/commandline
 mvn package
-cp $root_dir/backend/src/com/google/uicd/backend/commandline/target/uicd-commandline-0.1.0-jar-with-dependencies.jar $release_dir/uicdcli/uicd-commandline.jar
-cp $root_dir/backend/src/com/google/uicd/backend/commandline/uicdcli.sh $release_dir/uicdcli
+cp $root_dir/backend/commandline/target/commandline-0.1.0-jar-with-dependencies.jar $release_dir/uicdcli/uicd-commandline.jar
+cp $root_dir/backend/commandline/uicdcli.sh $release_dir/uicdcli
+
+# Build Python UIAutomator
+pushd $(mktemp -d)
+cp -r $root_dir/python_uiautomator .
+cp $root_dir/backend/scripts/python_uiautomator_setup.py ./setup.py
+tar -zcvf $release_dir/pyuiautomator.tar.gz .
+popd
 
 # uicd start.sh
 cp $root_dir/misc/start_sample.sh $release_dir/start.sh
@@ -61,9 +68,6 @@ cd $release_dir
 chmod -R a+rw .
 echo -e "username=$(whoami)\nuicdbasepath=$PWD\nxmldumperversion=3.1.2\nmysqlconnectionstr=<mysqlconnectionstr>\nuicd_local_mode=false\n" > ./uicd.cfg
 
-
-# deps
-cp -r $root_dir/misc/minicap $release_dir/deps
 echo "Finished build UIConductor"
 
 
