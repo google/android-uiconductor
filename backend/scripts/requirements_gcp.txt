@@ -9,7 +9,7 @@ google-resumable-media==0.3.2
 googleapis-common-protos==1.6.0
 idna==2.8
 pkg-resources==0.0.0
-protobuf==3.9.0
+protobuf==3.18.3
 pyasn1==0.4.5
 pyasn1-modules==0.2.5
 pytz==2019.1
